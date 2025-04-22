@@ -37,7 +37,7 @@ def parse(path: str) -> lair.Lair:
                 towns,
                 explorers,
                 dahan,
-                _tipe,
+                tipe,
                 gathers_to_land_key,
                 _island_idx,
             ) = row
@@ -52,7 +52,7 @@ def parse(path: str) -> lair.Lair:
             else:
                 gathers_to = lands[f"{last_weave}.{gathers_to_land_key}"]
             land = lair.Land(
-                key=key[:-5] + key[-2:].upper(),
+                key=key[:-5] + key[-2:].upper() + tipe[0].upper(),
                 explorers=to_int(explorers),
                 towns=to_int(towns),
                 cities=to_int(cities),
