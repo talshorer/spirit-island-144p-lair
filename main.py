@@ -3,9 +3,11 @@ from typing import List, TypeVar
 
 try:
     from . import parse
+    from . import lair
 except ImportError:
     # stupid vscode..
     import parse  # type: ignore
+    import lair  # type: ignore
 
 
 SHOW_BEST = 1
@@ -25,9 +27,21 @@ def perms(it: List[T]) -> List[List[T]]:
     return ret
 
 
+def newlair() -> lair.Lair:
+    return parse.parse("144Turn4WeaveShenans.csv")
+
+
+def cmplands(r: int, a: lair.Land, b: lair.Land):
+    assert a.key == b.key
+    if b.cities.cnt == b.towns.cnt == b.explorers.cnt == 0:
+        b = "CLEAR"
+    print(f"({r}) {a.key}: {a} => {b}")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--log", action="store_true")
+    parser.add_argument("--diff", action="store_true")
     parser.add_argument("--pull-r1-dahan")
     parser.add_argument("--actions", nargs="+")
     parser.add_argument("--best", type=int, default=1)
@@ -36,7 +50,7 @@ def main():
     action_seqs = set(tuple(s) for s in perms(args.actions))
     for action_seq in action_seqs:
         action_seq += ("ravage",)
-        thelair = parse.parse("144Turn4WeaveShenans.csv")
+        thelair = newlair()
         if args.pull_r1_dahan is not None:
             if args.pull_r1_dahan == "ALL":
                 pull = 1 << 32
@@ -66,6 +80,13 @@ def main():
         )
         if args.log:
             print("\n".join(thelair.log))
+        if args.diff:
+            orig_lair = newlair()
+            cmplands(0, orig_lair.r0, thelair.r0)
+            for a, b in zip(orig_lair.r1, thelair.r1):
+                cmplands(1, a, b)
+            for a, b in zip(orig_lair.r2, thelair.r2):
+                cmplands(2, a, b)
 
 
 if __name__ == "__main__":
