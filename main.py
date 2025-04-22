@@ -27,8 +27,8 @@ def perms(it: List[T]) -> List[List[T]]:
     return ret
 
 
-def newlair() -> lair.Lair:
-    return parse.parse("144Turn4WeaveShenans.csv")
+def newlair(land_priority: str) -> lair.Lair:
+    return parse.parse("144Turn4WeaveShenans.csv", land_priority)
 
 
 def cmplands(r: int, a: lair.Land, b: lair.Land):
@@ -45,12 +45,13 @@ def main():
     parser.add_argument("--pull-r1-dahan")
     parser.add_argument("--actions", nargs="+")
     parser.add_argument("--best", type=int, default=1)
+    parser.add_argument("--land-priority", default="")
     args = parser.parse_args()
     res = []
     action_seqs = set(tuple(s) for s in perms(args.actions))
     for action_seq in action_seqs:
         action_seq += ("ravage",)
-        thelair = newlair()
+        thelair = newlair(args.land_priority)
         if args.pull_r1_dahan is not None:
             if args.pull_r1_dahan == "ALL":
                 pull = 1 << 32
@@ -81,7 +82,7 @@ def main():
         if args.log:
             print("\n".join(thelair.log))
         if args.diff:
-            orig_lair = newlair()
+            orig_lair = newlair(args.land_priority)
             cmplands(0, orig_lair.r0, thelair.r0)
             for a, b in zip(orig_lair.r1, thelair.r1):
                 cmplands(1, a, b)

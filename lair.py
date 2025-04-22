@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Callable, List, Optional, Self
+from typing import Callable, List, Optional, Self, Tuple
 
 
 @dataclasses.dataclass
@@ -13,6 +13,7 @@ class Pieces:
 @dataclasses.dataclass
 class Land:
     key: str
+    land_type: str
     explorers: Pieces
     towns: Pieces
     cities: Pieces
@@ -22,6 +23,7 @@ class Land:
     def __init__(
         self,
         key: str,
+        land_type: str,
         explorers: int,
         towns: int,
         cities: int,
@@ -29,6 +31,7 @@ class Land:
         gathers_to: Optional[Self],
     ):
         self.key = key
+        self.land_type = land_type
         self.explorers = Pieces(explorers)
         self.towns = Pieces(towns)
         self.cities = Pieces(cities)
@@ -70,10 +73,17 @@ def xchg(src: Pieces, tgt: Pieces, cnt: int) -> int:
 
 
 class Lair:
-    def __init__(self, r0: Land, r1: List[Land], r2: List[Land]):
+    def __init__(
+        self,
+        r0: Land,
+        r1: List[Land],
+        r2: List[Land],
+        land_priority: str,
+    ):
         self.r0 = r0
         self.r1 = r1
         self.r2 = r2
+        self.land_priority = land_priority
         self.total_gathers = 0
         self.wasted_damage = 0
         self.wasted_downgrades = 0
@@ -124,12 +134,19 @@ class Lair:
             gathers = self._gather(Dahan, land, gathers)
         self.wasted_dahan_gathers += gathers
 
+    def _lair3_r2_gather_sort_key(self, land: Land) -> Tuple[int, int]:
+        try:
+            land_priority = self.land_priority.index(land.land_type)
+        except ValueError:
+            land_priority = len(self.land_priority)
+        assert land.gathers_to
+        return (land_priority, land.gathers_to.dahan.cnt)
+
     def _lair3(self):
         r0 = self.r0
         gathers = (r0.explorers.cnt + r0.dahan.cnt) // 6
 
-        # gather through lands with least dahan first
-        for land in sorted(self.r2, key=lambda land: land.gathers_to.dahan.cnt):
+        for land in sorted(self.r2, key=self._lair3_r2_gather_sort_key):
             gathers = self._gather(Town, land, gathers)
             gathers = self._gather(City, land, gathers)
             gathers = self._gather(Explorer, land, gathers)
