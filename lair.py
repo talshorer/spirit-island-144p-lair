@@ -1,19 +1,5 @@
 import dataclasses
-import abc
-from typing import Callable, List, Optional, Self, TypeVar
-
-T = TypeVar("T")
-
-
-def perms(it: List[T]) -> List[List[T]]:
-    if len(it) == 1:
-        return [it]
-    ret = []
-    for i, x in enumerate(it):
-        cp = it[:i] + it[i + 1 :]
-        for p in perms(cp):
-            ret.append([x] + p)
-    return ret
+from typing import Callable, List, Optional, Self
 
 
 @dataclasses.dataclass
@@ -26,6 +12,7 @@ class Pieces:
 
 @dataclasses.dataclass
 class Land:
+    key: str
     explorers: Pieces
     towns: Pieces
     cities: Pieces
@@ -34,12 +21,14 @@ class Land:
 
     def __init__(
         self,
+        key: str,
         explorers: int,
         towns: int,
         cities: int,
         dahan: int,
         gathers_to: Optional[Self],
     ):
+        self.key = key
         self.explorers = Pieces(explorers)
         self.towns = Pieces(towns)
         self.cities = Pieces(cities)
@@ -81,7 +70,9 @@ def xchg(src: Pieces, tgt: Pieces, cnt: int) -> int:
 
 class Lair:
     def __init__(self, r0: Land, r1: List[Land], r2: List[Land]):
-        self.r = (r0, r1, r2)
+        self.r0 = r0
+        self.r1 = r1
+        self.r2 = r2
         self.total_gathers = 0
         self.wasted_damage = 0
         self.wasted_downgrades = 0
@@ -96,17 +87,17 @@ class Lair:
         return left
 
     def _lair1(self):
-        r0, *_ = self.r
+        r0 = self.r0
         downgrades = (r0.explorers.cnt + r0.dahan.cnt) // 3
         downgrades = xchg(r0.towns, r0.explorers, downgrades)
         downgrades = xchg(r0.cities, r0.towns, downgrades)
         self.wasted_downgrades += downgrades
 
     def _r1_least_dahan(self) -> List[Land]:
-        return sorted(self.r[1], key=lambda land: land.dahan.cnt)
+        return sorted(self.r1, key=lambda land: land.dahan.cnt)
 
     def _r1_most_dahan(self) -> List[Land]:
-        return sorted(self.r[1], key=lambda land: -land.dahan.cnt)
+        return sorted(self.r1, key=lambda land: -land.dahan.cnt)
 
     def _lair2(self):
         gathers = 1
@@ -121,11 +112,11 @@ class Lair:
         self.wasted_dahan_gathers += gathers
 
     def _lair3(self):
-        r0, r1, r2 = self.r
+        r0 = self.r0
         gathers = (r0.explorers.cnt + r0.dahan.cnt) // 6
 
         # gather through lands with least dahan first
-        for land in sorted(r2, key=lambda land: land.gathers_to.dahan):
+        for land in sorted(self.r2, key=lambda land: land.gathers_to.dahan.cnt):
             gathers = self._gather(Town, land, gathers)
             gathers = self._gather(City, land, gathers)
             gathers = self._gather(Explorer, land, gathers)
@@ -175,7 +166,7 @@ class Lair:
         return dmg - kill * tipe.health
 
     def ravage(self):
-        r0, r1, r2 = self.r
+        r0 = self.r0
         dmg = max(0, r0.explorers.cnt - 6) + r0.towns.cnt * 2 + r0.cities.cnt * 3
 
         for land in self._r1_least_dahan():
@@ -192,51 +183,3 @@ class Lair:
     def blur2(self):
         self.blur()
         self.blur()
-
-
-def main(actions: List[str]):
-    res = []
-    action_seqs = set(tuple(s) for s in perms(actions))
-    for action_seq in action_seqs:
-        action_seq += ("ravage",)
-        r0 = Land(166, 26, 4, 0, None)
-        r1 = Land(
-            4 + 3 + 2 + 2 + 4 + 6,
-            8 + 26 + 17 + 22 + 6 + 7,
-            4 + 3 + 3 + 1 + 2 + 4,
-            0,
-            r0,
-        )
-        r2 = Land(
-            10 + 6 + 1 + 7 + 4 + 11,
-            10 + 44 + 8 + 48 + 13 + 14,
-            2 + 2 + 2 + 2 + 2 + 2,
-            0,
-            r1,
-        )
-        lair = Lair(r0, [r1], [r2])
-        for action in action_seq:
-            getattr(lair, action)()
-        res.append((action_seq, lair))
-
-    res.sort(key=lambda pair: pair[1].r[0].explorers.cnt)
-
-    action_seq, lair = res[-1]
-    print(
-        " ".join(
-            [
-                f"{str(action_seq):<{58}}",
-                str(lair.r[0]),
-                f"wasted_damage={lair.wasted_damage}",
-                f"total_gathers={lair.total_gathers}",
-                f"wasted_invader_gathers={lair.wasted_invader_gathers}",
-                f"wasted_dahan_gathers={lair.wasted_dahan_gathers}",
-                f"wasted_downgrades={lair.wasted_downgrades}",
-                f"fear={lair.fear}",
-            ]
-        )
-    )
-
-
-main(["lair", "lair", "blur", "blur", "call", "call"])
-main(["lair", "lair", "blur2", "call", "call"])
