@@ -28,6 +28,7 @@ def perms(it: List[T]) -> List[List[T]]:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--log", action="store_true")
+    parser.add_argument("--pull-r1-dahan")
     parser.add_argument("--actions", nargs="+")
     parser.add_argument("--best", type=int, default=1)
     args = parser.parse_args()
@@ -36,6 +37,12 @@ def main():
     for action_seq in action_seqs:
         action_seq += ("ravage",)
         thelair = parse.parse("144Turn4WeaveShenans.csv")
+        if args.pull_r1_dahan is not None:
+            if args.pull_r1_dahan == "ALL":
+                pull = 1 << 32
+            else:
+                pull = int(args.pull_r1_dahan)
+            thelair.pull_r1_dahan(pull)
         for action in action_seq:
             getattr(thelair, action)()
         res.append((action_seq, thelair))
