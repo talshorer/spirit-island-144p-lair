@@ -1,3 +1,4 @@
+import argparse
 from typing import List, TypeVar
 
 try:
@@ -24,9 +25,14 @@ def perms(it: List[T]) -> List[List[T]]:
     return ret
 
 
-def main(actions: List[str]):
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--log", action="store_true")
+    parser.add_argument("--actions", nargs="+")
+    parser.add_argument("--best", type=int, default=1)
+    args = parser.parse_args()
     res = []
-    action_seqs = set(tuple(s) for s in perms(actions))
+    action_seqs = set(tuple(s) for s in perms(args.actions))
     for action_seq in action_seqs:
         action_seq += ("ravage",)
         thelair = parse.parse("144Turn4WeaveShenans.csv")
@@ -36,7 +42,7 @@ def main(actions: List[str]):
 
     res.sort(key=lambda pair: pair[1].r0.explorers.cnt)
 
-    for action_seq, thelair in res[-SHOW_BEST:]:
+    for action_seq, thelair in res[-args.best :]:
         print(
             " ".join(
                 [
@@ -51,10 +57,9 @@ def main(actions: List[str]):
                 ]
             )
         )
-        print("\n".join(thelair.log))
+        if args.log:
+            print("\n".join(thelair.log))
 
 
-main(["lair", "lair", "blur", "blur", "call", "call"])
-if SHOW_BEST > 1:
-    print("=" * 100)
-main(["lair", "lair", "blur2", "call", "call"])
+if __name__ == "__main__":
+    main()
