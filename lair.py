@@ -246,6 +246,7 @@ class Lair:
         for land in self._r1_least_dahan():
             dmg = self._damage(land, Explorer, dmg)
 
+        self.log.append(f"  - unused damage left at end of ravage: {dmg}")
         self.wasted_damage += dmg
 
         for land in itertools.chain([self.r0], self.r1):
