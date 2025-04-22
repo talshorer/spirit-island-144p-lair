@@ -1,4 +1,5 @@
 import dataclasses
+import itertools
 from typing import Callable, List, Optional, Self, Tuple
 
 
@@ -10,16 +11,7 @@ class Pieces:
         return str(self.cnt)
 
 
-@dataclasses.dataclass
 class Land:
-    key: str
-    land_type: str
-    explorers: Pieces
-    towns: Pieces
-    cities: Pieces
-    dahan: Pieces
-    gathers_to: Optional[Self]
-
     def __init__(
         self,
         key: str,
@@ -37,6 +29,15 @@ class Land:
         self.cities = Pieces(cities)
         self.dahan = Pieces(dahan)
         self.gathers_to = gathers_to
+        self.mr_explorers = Pieces(0)
+        self.mr_towns = Pieces(0)
+        self.mr_cities = Pieces(0)
+
+    def mr(self):
+        for tipe in (Explorer, Town, City):
+            mr = tipe.select_mr(self)
+            tipe.select(self).cnt += mr.cnt
+            mr.cnt = 0
 
     def __str__(self) -> str:
         pieces = ", ".join(
@@ -53,16 +54,45 @@ class Land:
 @dataclasses.dataclass
 class PieceType:
     select: Callable[[Land], Pieces]
+    select_mr: Callable[[Land], Pieces]
     health: int
     fear: int
     response: Optional[Self]
     name: str
 
 
-Explorer = PieceType(lambda land: land.explorers, 1, 0, None, "explorer")
-Town = PieceType(lambda land: land.towns, 2, 1, Explorer, "town")
-City = PieceType(lambda land: land.cities, 3, 2, Town, "city")
-Dahan = PieceType(lambda land: land.dahan, 2, 0, None, "dahan")
+Explorer = PieceType(
+    select=lambda land: land.explorers,
+    select_mr=lambda land: land.mr_explorers,
+    health=1,
+    fear=0,
+    response=None,
+    name="explorer",
+)
+Town = PieceType(
+    select=lambda land: land.towns,
+    select_mr=lambda land: land.mr_towns,
+    health=2,
+    fear=1,
+    response=Explorer,
+    name="town",
+)
+City = PieceType(
+    select=lambda land: land.cities,
+    select_mr=lambda land: land.mr_cities,
+    health=3,
+    fear=2,
+    response=Town,
+    name="city",
+)
+Dahan = PieceType(
+    select=lambda land: land.dahan,
+    select_mr=lambda land: Pieces(0),
+    health=2,
+    fear=0,
+    response=None,
+    name="dahan",
+)
 
 
 def xchg(src: Pieces, tgt: Pieces, cnt: int) -> int:
@@ -191,7 +221,7 @@ class Lair:
                 respond_to = land
             else:
                 respond_to = land.gathers_to
-            response = tipe.response.select(respond_to)
+            response = tipe.response.select_mr(respond_to)
         else:
             response = Pieces(0)
         kill = min(dmg // tipe.health, pieces.cnt)
@@ -217,6 +247,9 @@ class Lair:
             dmg = self._damage(land, Explorer, dmg)
 
         self.wasted_damage += dmg
+
+        for land in itertools.chain([self.r0], self.r1):
+            land.mr()
 
     def ravage(self):
         self.top_log("ravage")
