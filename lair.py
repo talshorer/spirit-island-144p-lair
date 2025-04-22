@@ -53,12 +53,13 @@ class PieceType:
     health: int
     fear: int
     response: Optional[Self]
+    name: str
 
 
-Explorer = PieceType(lambda land: land.explorers, 1, 0, None)
-Town = PieceType(lambda land: land.towns, 2, 1, Explorer)
-City = PieceType(lambda land: land.cities, 3, 2, Town)
-Dahan = PieceType(lambda land: land.dahan, 2, 0, None)
+Explorer = PieceType(lambda land: land.explorers, 1, 0, None, "explorer")
+Town = PieceType(lambda land: land.towns, 2, 1, Explorer, "town")
+City = PieceType(lambda land: land.cities, 3, 2, Town, "city")
+Dahan = PieceType(lambda land: land.dahan, 2, 0, None, "dahan")
 
 
 def xchg(src: Pieces, tgt: Pieces, cnt: int) -> int:
@@ -79,18 +80,30 @@ class Lair:
         self.wasted_invader_gathers = 0
         self.wasted_dahan_gathers = 0
         self.fear = 0
+        self.log: List[str] = []
 
     def _gather(self, tipe: PieceType, land: Land, cnt: int) -> int:
         assert land.gathers_to
         left = xchg(tipe.select(land), tipe.select(land.gathers_to), cnt)
         self.total_gathers += cnt - left
+        if cnt - left:
+            self.log.append(
+                f"  - gather {cnt-left} {tipe.name} from {land.key} to {land.gathers_to.key}"
+            )
+        return left
+
+    def _downgrade(self, tipe: PieceType, land: Land, cnt: int) -> int:
+        assert tipe.response
+        left = xchg(tipe.select(land), tipe.response.select(land), cnt)
+        if cnt - left:
+            self.log.append(f"  - downgrade {cnt-left} {tipe.name} in {land.key}")
         return left
 
     def _lair1(self):
         r0 = self.r0
         downgrades = (r0.explorers.cnt + r0.dahan.cnt) // 3
-        downgrades = xchg(r0.towns, r0.explorers, downgrades)
-        downgrades = xchg(r0.cities, r0.towns, downgrades)
+        downgrades = self._downgrade(Town, r0, downgrades)
+        downgrades = self._downgrade(City, r0, downgrades)
         self.wasted_downgrades += downgrades
 
     def _r1_least_dahan(self) -> List[Land]:
@@ -127,7 +140,11 @@ class Lair:
 
         self.wasted_invader_gathers += gathers
 
+    def top_log(self, what: str):
+        self.log.append(f"- {what} in {self.r0.key}")
+
     def lair(self):
+        self.top_log("lair")
         self._lair1()
         self._lair2()
         self._lair3()
@@ -143,6 +160,7 @@ class Lair:
         return gathers
 
     def call(self):
+        self.top_log("call")
         self.wasted_invader_gathers += self._call_one(self._r1_most_dahan, Town, 5)
         self.wasted_invader_gathers += self._call_one(self._r1_most_dahan, Explorer, 15)
         self.wasted_dahan_gathers += self._call_one(self._r1_least_dahan, Dahan, 5)
@@ -162,10 +180,16 @@ class Lair:
         kill = min(dmg // tipe.health, pieces.cnt)
 
         xchg(pieces, response, kill)
+        if kill:
+            self.log.append(f"  - destroy {kill} {tipe.name} in {land.key}")
+            if tipe.response:
+                self.log.append(
+                    f"    - MR adds {kill} {tipe.response.name} in {respond_to.key}"
+                )
         self.fear += kill * tipe.fear
         return dmg - kill * tipe.health
 
-    def ravage(self):
+    def _ravage(self):
         r0 = self.r0
         dmg = max(0, r0.explorers.cnt - 6) + r0.towns.cnt * 2 + r0.cities.cnt * 3
 
@@ -177,8 +201,13 @@ class Lair:
 
         self.wasted_damage += dmg
 
+    def ravage(self):
+        self.top_log("ravage")
+        self._ravage()
+
     def blur(self):
-        self.ravage()
+        self.top_log("blur")
+        self._ravage()
 
     def blur2(self):
         self.blur()

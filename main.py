@@ -7,6 +7,9 @@ except ImportError:
     import parse  # type: ignore
 
 
+SHOW_BEST = 1
+
+
 T = TypeVar("T")
 
 
@@ -33,22 +36,25 @@ def main(actions: List[str]):
 
     res.sort(key=lambda pair: pair[1].r0.explorers.cnt)
 
-    action_seq, thelair = res[-1]
-    print(
-        " ".join(
-            [
-                f"{str(action_seq):<{58}}",
-                str(thelair.r0),
-                f"wasted_damage={thelair.wasted_damage}",
-                f"total_gathers={thelair.total_gathers}",
-                f"wasted_invader_gathers={thelair.wasted_invader_gathers}",
-                f"wasted_dahan_gathers={thelair.wasted_dahan_gathers}",
-                f"wasted_downgrades={thelair.wasted_downgrades}",
-                f"fear={thelair.fear}",
-            ]
+    for action_seq, thelair in res[-SHOW_BEST:]:
+        print(
+            " ".join(
+                [
+                    f"{str(action_seq):<{58}}",
+                    str(thelair.r0),
+                    f"wasted_damage={thelair.wasted_damage}",
+                    f"total_gathers={thelair.total_gathers}",
+                    f"wasted_invader_gathers={thelair.wasted_invader_gathers}",
+                    f"wasted_dahan_gathers={thelair.wasted_dahan_gathers}",
+                    f"wasted_downgrades={thelair.wasted_downgrades}",
+                    f"fear={thelair.fear}",
+                ]
+            )
         )
-    )
+        print("\n".join(thelair.log))
 
 
 main(["lair", "lair", "blur", "blur", "call", "call"])
+if SHOW_BEST > 1:
+    print("=" * 100)
 main(["lair", "lair", "blur2", "call", "call"])

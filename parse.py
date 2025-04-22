@@ -44,7 +44,7 @@ def parse(path: str) -> lair.Lair:
             if weaves == "Total":  # throw away all the stuff for humans
                 break
             if weaves:
-                last_weave = weaves
+                last_weave = weaves.replace(" ", "")
             key = f"{last_weave}.{land_key}"
             rng = int(srng)
             if rng == 1:
@@ -52,7 +52,7 @@ def parse(path: str) -> lair.Lair:
             else:
                 gathers_to = lands[f"{last_weave}.{gathers_to_land_key}"]
             land = lair.Land(
-                key=key,
+                key=key[:-5] + key[-2:].upper(),
                 explorers=to_int(explorers),
                 towns=to_int(towns),
                 cities=to_int(cities),
