@@ -1,4 +1,5 @@
 import csv
+import json
 
 try:
     from . import lair
@@ -13,19 +14,21 @@ def to_int(s: str) -> int:
     return int(s)
 
 
-def parse(path: str, conf: lair.LairConf) -> lair.Lair:
+def parse(csvpath: str, jsonpath: str, conf: lair.LairConf) -> lair.Lair:
     lands = {}
+    with open(jsonpath) as f:
+        initial = json.load(f)
     r0 = lair.Land(
         key="lair",
         land_type="L",
-        explorers=162,
-        towns=27,
-        cities=4,
-        dahan=29,
+        explorers=initial["explorers"],
+        towns=initial["towns"],
+        cities=initial["cities"],
+        dahan=initial["dahan"],
         gathers_to=None,
     )
     r = [[], [], []]
-    with open(path) as f:
+    with open(csvpath) as f:
         it = iter(csv.reader(f))
         next(it)  # throw away header row
         last_weave = ""

@@ -29,7 +29,11 @@ def perms(it: List[T]) -> List[List[T]]:
 
 
 def newlair(conf: lair.LairConf) -> lair.Lair:
-    return parse.parse("144Turn4WeaveShenans.csv", conf)
+    return parse.parse(
+        csvpath="144Turn4WeaveShenans.csv",
+        jsonpath="initial-lair.json",
+        conf=conf,
+    )
 
 
 def cmplands(r: int, a: lair.Land, b: lair.Land):
