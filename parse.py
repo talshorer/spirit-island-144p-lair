@@ -18,10 +18,10 @@ def parse(path: str, land_priority: str) -> lair.Lair:
     r0 = lair.Land(
         key="lair",
         land_type="L",
-        explorers=166,
-        towns=26,
+        explorers=162,
+        towns=27,
         cities=4,
-        dahan=26,
+        dahan=29,
         gathers_to=None,
     )
     r = [[], [], []]
