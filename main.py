@@ -45,7 +45,12 @@ class Comparable(Protocol):
 
 
 def score(thelair: lair.Lair) -> Comparable:
-    return thelair.r0.explorers.cnt
+    cleared_lands = sum(
+        int((land.explorers.cnt + land.towns.cnt + land.cities.cnt) == 0)
+        for land in thelair.r2
+        if land.land_type in thelair.land_priority
+    )
+    return (thelair.r0.explorers.cnt, cleared_lands)
 
 
 def main():
