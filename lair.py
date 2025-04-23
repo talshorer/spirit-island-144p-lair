@@ -164,20 +164,30 @@ class Lair:
             gathers = self._gather(Dahan, land, gathers)
         self.wasted_dahan_gathers += gathers
 
-    def _lair3_r2_gather_sort_key(self, land: Land) -> Tuple[int, int]:
-        try:
-            land_priority = self.land_priority.index(land.land_type)
-        except ValueError:
-            land_priority = len(self.land_priority)
-        assert land.gathers_to
-        return (land_priority, land.gathers_to.dahan.cnt)
+    def _least_dahan_land_priority_key(
+        self,
+        convert: Callable[[Land], Land],
+    ) -> Callable[[Land], Tuple[int, int]]:
+        def key(land: Land) -> Tuple[int, int]:
+            try:
+                land_priority = self.land_priority.index(land.land_type)
+            except ValueError:
+                land_priority = len(self.land_priority)
+            land = convert(land)
+            assert land
+            return (land_priority, land.dahan.cnt)
+
+        return key
 
     def _lair3(self):
         r0 = self.r0
         gathers = (r0.explorers.cnt + r0.dahan.cnt) // 6
         self.log.append(f"  - gathers: {gathers}")
 
-        for land in sorted(self.r2, key=self._lair3_r2_gather_sort_key):
+        for land in sorted(
+            self.r2,
+            key=self._least_dahan_land_priority_key(lambda land: land.gathers_to),
+        ):
             gathers = self._gather(Town, land, gathers)
             gathers = self._gather(City, land, gathers)
             gathers = self._gather(Explorer, land, gathers)
@@ -242,10 +252,13 @@ class Lair:
         r0 = self.r0
         dmg = max(0, r0.explorers.cnt - 6) + r0.towns.cnt * 2 + r0.cities.cnt * 3
 
-        for land in self._r1_least_dahan():
+        lands = sorted(
+            self.r1, key=self._least_dahan_land_priority_key(lambda land: land)
+        )
+        for land in lands:
             dmg = self._damage(land, Town, dmg)
             dmg = self._damage(land, City, dmg)
-        for land in self._r1_least_dahan():
+        for land in lands:
             dmg = self._damage(land, Explorer, dmg)
 
         self.log.append(f"  - unused damage left at end of ravage: {dmg}")
