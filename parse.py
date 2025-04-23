@@ -13,7 +13,7 @@ def to_int(s: str) -> int:
     return int(s)
 
 
-def parse(path: str, land_priority: str) -> lair.Lair:
+def parse(path: str, conf: lair.LairConf) -> lair.Lair:
     lands = {}
     r0 = lair.Land(
         key="lair",
@@ -64,4 +64,4 @@ def parse(path: str, land_priority: str) -> lair.Lair:
             )
             lands[key] = land
             r[rng].append(land)
-    return lair.Lair(r0=r0, r1=r[1], r2=r[2], land_priority=land_priority)
+    return lair.Lair(r0=r0, r1=r[1], r2=r[2], conf=conf)

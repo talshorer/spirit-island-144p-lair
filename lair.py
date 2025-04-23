@@ -96,6 +96,12 @@ Dahan = PieceType(
 )
 
 
+@dataclasses.dataclass
+class LairConf:
+    land_priority: str
+    reserve_gathers: int
+
+
 def xchg(src: Pieces, tgt: Pieces, cnt: int) -> int:
     actual = min(src.cnt, cnt)
     src.cnt -= actual
@@ -109,17 +115,18 @@ class Lair:
         r0: Land,
         r1: List[Land],
         r2: List[Land],
-        land_priority: str,
+        conf: LairConf,
     ):
         self.r0 = r0
         self.r1 = r1
         self.r2 = r2
-        self.land_priority = land_priority
+        self.conf = conf
         self.total_gathers = 0
         self.wasted_damage = 0
         self.wasted_downgrades = 0
         self.wasted_invader_gathers = 0
         self.wasted_dahan_gathers = 0
+        self.reserve_gathers = conf.reserve_gathers
         self.fear = 0
         self.log: List[str] = []
 
@@ -171,9 +178,9 @@ class Lair:
     ) -> Callable[[Land], Tuple[int, int]]:
         def key(land: Land) -> Tuple[int, int]:
             try:
-                land_priority = self.land_priority.index(land.land_type)
+                land_priority = self.conf.land_priority.index(land.land_type)
             except ValueError:
-                land_priority = len(self.land_priority)
+                land_priority = len(self.conf.land_priority)
             land = convert(land)
             assert land
             return (land_priority, land.dahan.cnt)
@@ -184,6 +191,11 @@ class Lair:
         r0 = self.r0
         gathers = (r0.explorers.cnt + r0.dahan.cnt) // 6
         self.log.append(f"  - gathers: {gathers}")
+        if self.reserve_gathers:
+            reserve = min(gathers, self.reserve_gathers)
+            self.log.append(f"    - reserved {reserve} gathers")
+            gathers -= reserve
+            self.reserve_gathers -= reserve
 
         for land in sorted(
             self.r2,

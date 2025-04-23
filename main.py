@@ -28,8 +28,8 @@ def perms(it: List[T]) -> List[List[T]]:
     return ret
 
 
-def newlair(land_priority: str) -> lair.Lair:
-    return parse.parse("144Turn4WeaveShenans.csv", land_priority)
+def newlair(conf: lair.LairConf) -> lair.Lair:
+    return parse.parse("144Turn4WeaveShenans.csv", conf)
 
 
 def cmplands(r: int, a: lair.Land, b: lair.Land):
@@ -48,7 +48,7 @@ def score(thelair: lair.Lair) -> Comparable:
     cleared_lands = sum(
         int((land.explorers.cnt + land.towns.cnt + land.cities.cnt) == 0)
         for land in thelair.r2
-        if land.land_type in thelair.land_priority
+        if land.land_type in thelair.conf.land_priority
     )
     return (thelair.r0.explorers.cnt, cleared_lands)
 
@@ -61,12 +61,17 @@ def main():
     parser.add_argument("--actions", nargs="+")
     parser.add_argument("--best", type=int, default=1)
     parser.add_argument("--land-priority", default="")
+    parser.add_argument("--reserve-gathers", type=int, default=0)
     args = parser.parse_args()
     res = []
     action_seqs = set(tuple(s) for s in perms(args.actions))
+    conf = lair.LairConf(
+        land_priority=args.land_priority,
+        reserve_gathers=args.reserve_gathers,
+    )
     for action_seq in action_seqs:
         action_seq += ("ravage",)
-        thelair = newlair(args.land_priority)
+        thelair = newlair(conf)
         if args.pull_r1_dahan is not None:
             if args.pull_r1_dahan == "ALL":
                 pull = 1 << 32
@@ -98,7 +103,7 @@ def main():
         if args.log:
             print("\n".join(thelair.log))
         if args.diff:
-            orig_lair = newlair(args.land_priority)
+            orig_lair = newlair(conf)
             cmplands(0, orig_lair.r0, thelair.r0)
             for a, b in zip(orig_lair.r1, thelair.r1):
                 cmplands(1, a, b)
