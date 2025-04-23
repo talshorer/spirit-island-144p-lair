@@ -1,6 +1,7 @@
+import contextlib
 import dataclasses
 import itertools
-from typing import Callable, List, Optional, Self, Tuple
+from typing import Callable, Iterator, List, Optional, Self, Tuple
 
 
 @dataclasses.dataclass
@@ -199,14 +200,21 @@ class Lair:
         self.log.append(f"  - unused gathers left at end of slurp: {gathers}")
         self.wasted_invader_gathers += gathers
 
-    def _top_log(self, what: str):
-        self.log.append(f"- {what} in {self.r0.key}")
+    @contextlib.contextmanager
+    def _top_log(self, what: str) -> Iterator[None]:
+        oldlog = self.log
+        self.log = []
+        before = str(self.r0)
+        yield
+        oldlog.append(f"- {what} in {self.r0.key}: {before} => {self.r0}")
+        oldlog.extend(self.log)
+        self.log = oldlog
 
     def lair(self):
-        self._top_log("lair")
-        self._lair1()
-        self._lair2()
-        self._lair3()
+        with self._top_log("lair"):
+            self._lair1()
+            self._lair2()
+            self._lair3()
 
     def _call_one(
         self,
@@ -219,10 +227,12 @@ class Lair:
         return gathers
 
     def call(self):
-        self._top_log("call")
-        self.wasted_invader_gathers += self._call_one(self._r1_most_dahan, Town, 5)
-        self.wasted_invader_gathers += self._call_one(self._r1_most_dahan, Explorer, 15)
-        self.wasted_dahan_gathers += self._call_one(self._r1_least_dahan, Dahan, 5)
+        with self._top_log("call"):
+            self.wasted_invader_gathers += self._call_one(self._r1_most_dahan, Town, 5)
+            self.wasted_invader_gathers += self._call_one(
+                self._r1_most_dahan, Explorer, 15
+            )
+            self.wasted_dahan_gathers += self._call_one(self._r1_least_dahan, Dahan, 5)
 
     def _damage(self, land: Land, tipe: PieceType, dmg: int) -> int:
         assert land.gathers_to
@@ -268,17 +278,17 @@ class Lair:
             land.mr()
 
     def ravage(self):
-        self._top_log("ravage")
-        self._ravage()
+        with self._top_log("ravage"):
+            self._ravage()
 
     def blur(self):
-        self._top_log("blur")
-        self._ravage()
+        with self._top_log("blur"):
+            self._ravage()
 
     def blur2(self):
         self.blur()
         self.blur()
 
     def pull_r1_dahan(self, gathers: int):
-        self._top_log(f"pull-r1-dahan({gathers})")
-        self._call_one(self._r1_least_dahan, Dahan, gathers)
+        with self._top_log(f"pull-r1-dahan({gathers})"):
+            self._call_one(self._r1_least_dahan, Dahan, gathers)
