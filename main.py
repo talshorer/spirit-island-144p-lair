@@ -36,10 +36,11 @@ def newlair(conf: lair.LairConf) -> lair.Lair:
     )
 
 
-def cmplands(r: int, a: lair.Land, b: lair.Land):
+def cmplands(r: int, a: lair.Land, b: lair.Land, args: argparse.Namespace):
     assert a.key == b.key
     if b.cities.cnt == b.towns.cnt == b.explorers.cnt == 0:
-        b = "CLEAR"
+        if b.dahan.cnt == 0 or not args.dahan_diff:
+            b = "CLEAR"
     print(f"({r}) {a.key}: {a} => {b}")
 
 
@@ -61,6 +62,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--log", action="store_true")
     parser.add_argument("--diff", action="store_true")
+    parser.add_argument("--dahan-diff", action="store_true")
     parser.add_argument("--pull-r1-dahan")
     parser.add_argument("--actions", nargs="+")
     parser.add_argument("--reckless-offensive", nargs="+", default=[])
@@ -110,11 +112,11 @@ def main():
             print("\n".join(thelair.log))
         if args.diff:
             orig_lair = newlair(conf)
-            cmplands(0, orig_lair.r0, thelair.r0)
+            cmplands(0, orig_lair.r0, thelair.r0, args)
             for a, b in zip(orig_lair.r1, thelair.r1):
-                cmplands(1, a, b)
+                cmplands(1, a, b, args)
             for a, b in zip(orig_lair.r2, thelair.r2):
-                cmplands(2, a, b)
+                cmplands(2, a, b, args)
 
 
 if __name__ == "__main__":
