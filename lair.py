@@ -175,6 +175,7 @@ class Lair:
     def _lair3(self):
         r0 = self.r0
         gathers = (r0.explorers.cnt + r0.dahan.cnt) // 6
+        self.log.append(f"  - gathers: {gathers}")
 
         for land in sorted(self.r2, key=self._lair3_r2_gather_sort_key):
             gathers = self._gather(Town, land, gathers)
@@ -185,6 +186,7 @@ class Lair:
             for land in self._r1_most_dahan():
                 gathers = self._gather(tipe, land, gathers)
 
+        self.log.append(f"  - unused gathers left at end of slurp: {gathers}")
         self.wasted_invader_gathers += gathers
 
     def top_log(self, what: str):
