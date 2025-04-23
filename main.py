@@ -1,5 +1,6 @@
+import abc
 import argparse
-from typing import List, TypeVar
+from typing import List, Self, TypeVar, Protocol
 
 try:
     from . import parse
@@ -38,6 +39,15 @@ def cmplands(r: int, a: lair.Land, b: lair.Land):
     print(f"({r}) {a.key}: {a} => {b}")
 
 
+class Comparable(Protocol):
+    def __lt__(self: Self, other: Self) -> bool:
+        pass
+
+
+def score(thelair: lair.Lair) -> Comparable:
+    return thelair.r0.explorers.cnt
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--log", action="store_true")
@@ -62,7 +72,7 @@ def main():
             getattr(thelair, action)()
         res.append((action_seq, thelair))
 
-    res.sort(key=lambda pair: pair[1].r0.explorers.cnt)
+    res.sort(key=lambda pair: score(pair[1]))
 
     for action_seq, thelair in res[-args.best :]:
         print(
@@ -76,6 +86,7 @@ def main():
                     f"wasted_dahan_gathers={thelair.wasted_dahan_gathers}",
                     f"wasted_downgrades={thelair.wasted_downgrades}",
                     f"fear={thelair.fear}",
+                    f"score={score(thelair)}",
                 ]
             )
         )
