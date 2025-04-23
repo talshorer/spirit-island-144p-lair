@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import contextlib
 import dataclasses
 import itertools
@@ -7,6 +9,7 @@ from typing import Callable, Iterator, List, Optional, Self, Tuple
 @dataclasses.dataclass
 class Pieces:
     cnt: int
+    tipe: PieceType
 
     def __str__(self) -> str:
         return str(self.cnt)
@@ -25,14 +28,13 @@ class Land:
     ):
         self.key = key
         self.land_type = land_type
-        self.explorers = Pieces(explorers)
-        self.towns = Pieces(towns)
-        self.cities = Pieces(cities)
-        self.dahan = Pieces(dahan)
+        self.explorers = Explorer.new(explorers)
+        self.towns = Town.new(towns)
+        self.cities = City.new(cities)
+        self.dahan = Dahan.new(dahan)
         self.gathers_to = gathers_to
-        self.mr_explorers = Pieces(0)
-        self.mr_towns = Pieces(0)
-        self.mr_cities = Pieces(0)
+        self.mr_explorers = Explorer.new()
+        self.mr_towns = Town.new()
 
     def mr(self):
         for tipe in (Explorer, Town, City):
@@ -61,7 +63,18 @@ class PieceType:
     response: Optional[Self]
     name: str
 
+    def new(self, cnt: int = 0) -> Pieces:
+        return Pieces(cnt=cnt, tipe=self)
 
+
+Void = PieceType(
+    select=lambda land: Void.new(),
+    select_mr=lambda land: Void.new(),
+    health=0,
+    fear=0,
+    response=None,
+    name="void",
+)
 Explorer = PieceType(
     select=lambda land: land.explorers,
     select_mr=lambda land: land.mr_explorers,
@@ -80,7 +93,7 @@ Town = PieceType(
 )
 City = PieceType(
     select=lambda land: land.cities,
-    select_mr=lambda land: land.mr_cities,
+    select_mr=lambda land: Void.new(),
     health=3,
     fear=2,
     response=Town,
@@ -88,7 +101,7 @@ City = PieceType(
 )
 Dahan = PieceType(
     select=lambda land: land.dahan,
-    select_mr=lambda land: Pieces(0),
+    select_mr=lambda land: Void.new(),
     health=2,
     fear=0,
     response=None,
@@ -100,13 +113,7 @@ Dahan = PieceType(
 class LairConf:
     land_priority: str
     reserve_gathers: int
-
-
-def xchg(src: Pieces, tgt: Pieces, cnt: int) -> int:
-    actual = min(src.cnt, cnt)
-    src.cnt -= actual
-    tgt.cnt += actual
-    return cnt - actual
+    reckless_offensive: List[str]
 
 
 class Lair:
@@ -130,9 +137,26 @@ class Lair:
         self.fear = 0
         self.log: List[str] = []
 
+    def _xchg(
+        self,
+        src_land: Land,
+        src_tipe: PieceType,
+        tgt: Pieces,
+        cnt: int,
+    ) -> int:
+        if any(land_key in src_land.key for land_key in self.conf.reckless_offensive):
+            leave = 2
+        else:
+            leave = 0
+        src = src_tipe.select(src_land)
+        actual = min(max(src.cnt - leave, 0), cnt)
+        src.cnt -= actual
+        tgt.cnt += actual
+        return cnt - actual
+
     def _gather(self, tipe: PieceType, land: Land, cnt: int) -> int:
         assert land.gathers_to
-        left = xchg(tipe.select(land), tipe.select(land.gathers_to), cnt)
+        left = self._xchg(land, tipe, tipe.select(land.gathers_to), cnt)
         self.total_gathers += cnt - left
         if cnt - left:
             self.log.append(
@@ -142,7 +166,7 @@ class Lair:
 
     def _downgrade(self, tipe: PieceType, land: Land, cnt: int) -> int:
         assert tipe.response
-        left = xchg(tipe.select(land), tipe.response.select(land), cnt)
+        left = self._xchg(land, tipe, tipe.response.select(land), cnt)
         if cnt - left:
             self.log.append(f"  - downgrade {cnt-left} {tipe.name} in {land.key}")
         return left
@@ -248,7 +272,6 @@ class Lair:
 
     def _damage(self, land: Land, tipe: PieceType, dmg: int) -> int:
         assert land.gathers_to
-        pieces = tipe.select(land)
 
         if tipe.response:
             if land.dahan.cnt:
@@ -257,10 +280,10 @@ class Lair:
                 respond_to = land.gathers_to
             response = tipe.response.select_mr(respond_to)
         else:
-            response = Pieces(0)
-        kill = min(dmg // tipe.health, pieces.cnt)
+            response = Void.new()
+        kill = min(dmg // tipe.health, tipe.select(land).cnt)
 
-        xchg(pieces, response, kill)
+        self._xchg(land, tipe, response, kill)
         if kill:
             self.log.append(f"  - destroy {kill} {tipe.name} in {land.key}")
             if tipe.response:

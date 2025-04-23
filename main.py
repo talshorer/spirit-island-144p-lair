@@ -63,6 +63,7 @@ def main():
     parser.add_argument("--diff", action="store_true")
     parser.add_argument("--pull-r1-dahan")
     parser.add_argument("--actions", nargs="+")
+    parser.add_argument("--reckless-offensive", nargs="+", default=[])
     parser.add_argument("--best", type=int, default=1)
     parser.add_argument("--land-priority", default="")
     parser.add_argument("--reserve-gathers", type=int, default=0)
@@ -72,6 +73,7 @@ def main():
     conf = lair.LairConf(
         land_priority=args.land_priority,
         reserve_gathers=args.reserve_gathers,
+        reckless_offensive=args.reckless_offensive,
     )
     for action_seq in action_seqs:
         action_seq += ("ravage",)
