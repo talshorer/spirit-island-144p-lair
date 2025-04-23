@@ -199,11 +199,11 @@ class Lair:
         self.log.append(f"  - unused gathers left at end of slurp: {gathers}")
         self.wasted_invader_gathers += gathers
 
-    def top_log(self, what: str):
+    def _top_log(self, what: str):
         self.log.append(f"- {what} in {self.r0.key}")
 
     def lair(self):
-        self.top_log("lair")
+        self._top_log("lair")
         self._lair1()
         self._lair2()
         self._lair3()
@@ -219,7 +219,7 @@ class Lair:
         return gathers
 
     def call(self):
-        self.top_log("call")
+        self._top_log("call")
         self.wasted_invader_gathers += self._call_one(self._r1_most_dahan, Town, 5)
         self.wasted_invader_gathers += self._call_one(self._r1_most_dahan, Explorer, 15)
         self.wasted_dahan_gathers += self._call_one(self._r1_least_dahan, Dahan, 5)
@@ -268,11 +268,11 @@ class Lair:
             land.mr()
 
     def ravage(self):
-        self.top_log("ravage")
+        self._top_log("ravage")
         self._ravage()
 
     def blur(self):
-        self.top_log("blur")
+        self._top_log("blur")
         self._ravage()
 
     def blur2(self):
@@ -280,5 +280,5 @@ class Lair:
         self.blur()
 
     def pull_r1_dahan(self, gathers: int):
-        self.top_log(f"pull-r1-dahan({gathers})")
+        self._top_log(f"pull-r1-dahan({gathers})")
         self._call_one(self._r1_least_dahan, Dahan, gathers)
