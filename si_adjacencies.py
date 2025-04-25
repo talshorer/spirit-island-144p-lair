@@ -18,10 +18,6 @@ class Edge:
         self.parent = parent
         self.neighbor = None
 
-    def __contains__(self, landno):
-        """Is this land number on this edge?"""
-        return landno in self.lands
-
     def __matmul__(self, neighbor):
         # sorry for abusing dunders
         if neighbor is None:
@@ -58,6 +54,14 @@ class EdgePosition(enum.Enum):
     CLOCK9 = enum.auto()
 
 
+class Corner(enum.Enum):
+    # the ocean is 12 o'clock
+    CLOCK1 = enum.auto()
+    CLOCK5 = enum.auto()
+    CLOCK7 = enum.auto()
+    CLOCK11 = enum.auto()
+
+
 class Layout(enum.Enum):
 
     A = ([1, 6, 8, 7, 5, 4, 3], [5, 3, None, 4, None, 6, 5, 3], "2456,34,4,5,678,8,8")
@@ -92,15 +96,16 @@ class Layout(enum.Enum):
                 self.internal_adjacencies[i + 1].add(int(n))
                 self.internal_adjacencies[int(n)].add(i + 1)
 
-    def get_corner(self, corner):
-        """corner: str '1', '3', '6', '8'"""
+    def get_corner(self, corner: Corner) -> int:
         match corner:
-            case "1" | "3":
-                return int(corner)
-            case "6":
-                return self.edges[EdgePosition.CLOCK9].lands[-1]
-            case "8":
+            case Corner.CLOCK1:
+                return 1
+            case Corner.CLOCK11:
+                return 3
+            case Corner.CLOCK5:
                 return self.edges[EdgePosition.CLOCK3].lands[-1]
+            case Corner.CLOCK7:
+                return self.edges[EdgePosition.CLOCK9].lands[-1]
 
 
 class Board:
@@ -124,7 +129,7 @@ class Board:
             if i == land
         )
 
-        # yield the corner adjacencies
+        # TODO corner adjacencies
 
 
 if __name__ == "__main__":
