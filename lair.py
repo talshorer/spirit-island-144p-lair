@@ -5,6 +5,8 @@ import dataclasses
 import itertools
 from typing import Callable, Iterator, List, Optional, Self, Tuple, cast
 
+import action_log
+
 
 @dataclasses.dataclass
 class Pieces:
@@ -142,7 +144,7 @@ class Lair:
         self.wasted_dahan_gathers = 0
         self.reserve_gathers = conf.reserve_gathers
         self.fear = 0
-        self.log: List[str] = []
+        self.log = action_log.Actionlog()
 
     def _xchg(
         self,
@@ -166,8 +168,8 @@ class Lair:
         left = self._xchg(land, tipe, tipe.select(land.gathers_to), cnt)
         self.total_gathers += cnt - left
         if cnt - left:
-            self.log.append(
-                f"  - gather {cnt-left} {tipe.name} from {land.key} to {land.gathers_to.key}"
+            self.log.entry(
+                f"gather {cnt-left} {tipe.name} from {land.key} to {land.gathers_to.key}"
             )
         return left
 
@@ -175,7 +177,7 @@ class Lair:
         assert tipe.response
         left = self._xchg(land, tipe, tipe.response.select(land), cnt)
         if cnt - left:
-            self.log.append(f"  - downgrade {cnt-left} {tipe.name} in {land.key}")
+            self.log.entry(f"downgrade {cnt-left} {tipe.name} in {land.key}")
         return left
 
     def _lair1(self) -> None:
@@ -221,10 +223,11 @@ class Lair:
     def _lair3(self) -> None:
         r0 = self.r0
         gathers = (r0.explorers.cnt + r0.dahan.cnt) // 6
-        self.log.append(f"  - gathers: {gathers}")
+        self.log.entry(f"gathers: {gathers}")
         if self.reserve_gathers:
             reserve = min(gathers, self.reserve_gathers)
-            self.log.append(f"    - reserved {reserve} gathers")
+            with self.log.indent():
+                self.log.entry(f"reserved {reserve} gathers")
             gathers -= reserve
             self.reserve_gathers -= reserve
 
@@ -242,17 +245,17 @@ class Lair:
             for land in self._r1_most_dahan():
                 gathers = self._gather(tipe, land, gathers)
 
-        self.log.append(f"  - unused gathers left at end of slurp: {gathers}")
+        self.log.entry(f"unused gathers left at end of slurp: {gathers}")
         self.wasted_invader_gathers += gathers
 
     @contextlib.contextmanager
     def _top_log(self, what: str) -> Iterator[None]:
         oldlog = self.log
-        self.log = []
-        before = str(self.r0)
-        yield
-        oldlog.append(f"- {what} in {self.r0.key}: {before} => {self.r0}")
-        oldlog.extend(self.log)
+        with self.log.fork() as newlog:
+            self.log = newlog
+            before = str(self.r0)
+            yield
+            oldlog.entry(f"{what} in {self.r0.key}: {before} => {self.r0}")
         self.log = oldlog
 
     def lair(self) -> None:
@@ -294,11 +297,12 @@ class Lair:
 
         self._xchg(land, tipe, response, kill)
         if kill:
-            self.log.append(f"  - destroy {kill} {tipe.name} in {land.key}")
+            self.log.entry(f"destroy {kill} {tipe.name} in {land.key}")
             if tipe.response:
-                self.log.append(
-                    f"    - MR adds {kill} {tipe.response.name} in {respond_to.key}"
-                )
+                with self.log.indent():
+                    self.log.entry(
+                        f"MR adds {kill} {tipe.response.name} in {respond_to.key}"
+                    )
         self.fear += kill * tipe.fear
         return dmg - kill * tipe.health
 
@@ -318,7 +322,7 @@ class Lair:
         for land in lands:
             dmg = self._damage(land, Explorer, dmg)
 
-        self.log.append(f"  - unused damage left at end of ravage: {dmg}")
+        self.log.entry(f"unused damage left at end of ravage: {dmg}")
         self.wasted_damage += dmg
 
         for land in itertools.chain([self.r0], self.r1):

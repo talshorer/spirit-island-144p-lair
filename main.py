@@ -1,6 +1,6 @@
 import abc
 import argparse
-from typing import List, Self, TypeVar, Protocol
+from typing import List, Self, Tuple, TypeVar, Protocol
 
 import parse
 import lair
@@ -66,7 +66,7 @@ def main() -> None:
     parser.add_argument("--land-priority", default="")
     parser.add_argument("--reserve-gathers", type=int, default=0)
     args = parser.parse_args()
-    res = []
+    res: List[Tuple[Tuple, lair.Lair]] = []
     action_seqs = set(tuple(s) for s in perms(args.actions))
     conf = lair.LairConf(
         land_priority=args.land_priority,
@@ -105,7 +105,7 @@ def main() -> None:
             )
         )
         if args.log:
-            print("\n".join(thelair.log))
+            print(thelair.log.collapse())
         if args.diff:
             orig_lair = newlair(conf)
             cmplands(0, orig_lair.r0, thelair.r0, args)
