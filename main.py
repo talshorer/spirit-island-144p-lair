@@ -25,7 +25,7 @@ def perms(it: List[T]) -> List[List[T]]:
 
 def newlair(conf: lair.LairConf) -> lair.Lair:
     return parse.parse(
-        csvpath="144Turn4WeaveShenans.csv",
+        csvpath="Turn4Start.csv",
         jsonpath="initial-lair.json",
         conf=conf,
     )
