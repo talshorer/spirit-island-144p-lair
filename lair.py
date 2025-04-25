@@ -116,9 +116,15 @@ Dahan = PieceType(
 
 
 @dataclasses.dataclass
+class Reserve:
+    cnt: int
+
+
+@dataclasses.dataclass
 class LairConf:
     land_priority: str
     reserve_gathers: int
+    reserve_damage: int
     reckless_offensive: List[str]
 
 
@@ -142,7 +148,8 @@ class Lair:
         self.wasted_downgrades = 0
         self.wasted_invader_gathers = 0
         self.wasted_dahan_gathers = 0
-        self.reserve_gathers = conf.reserve_gathers
+        self.reserve_gathers = Reserve(conf.reserve_gathers)
+        self.reserve_damage = Reserve(conf.reserve_damage)
         self.fear = 0
         self.log = action_log.Actionlog()
 
@@ -205,6 +212,16 @@ class Lair:
             gathers = self._gather(Dahan, land, gathers)
         self.wasted_dahan_gathers += gathers
 
+    def _reserve(self, reserve: Reserve, prefix: str, what: str, cnt: int) -> int:
+        self.log.entry(f"{prefix} {what}: {cnt}")
+        if reserve.cnt:
+            to_reserve = min(cnt, reserve.cnt)
+            with self.log.indent():
+                self.log.entry(f"reserved {to_reserve} {what}")
+            cnt -= to_reserve
+            reserve.cnt -= to_reserve
+        return cnt
+
     def _least_dahan_land_priority_key(
         self,
         convert: ConvertLand,
@@ -223,13 +240,7 @@ class Lair:
     def _lair3(self) -> None:
         r0 = self.r0
         gathers = (r0.explorers.cnt + r0.dahan.cnt) // 6
-        self.log.entry(f"gathers: {gathers}")
-        if self.reserve_gathers:
-            reserve = min(gathers, self.reserve_gathers)
-            with self.log.indent():
-                self.log.entry(f"reserved {reserve} gathers")
-            gathers -= reserve
-            self.reserve_gathers -= reserve
+        gathers = self._reserve(self.reserve_gathers, "slurp", "gathers", gathers)
 
         for land in sorted(
             self.r2,
@@ -309,6 +320,7 @@ class Lair:
     def _ravage(self) -> None:
         r0 = self.r0
         dmg = max(0, r0.explorers.cnt - 6) + r0.towns.cnt * 2 + r0.cities.cnt * 3
+        dmg = self._reserve(self.reserve_damage, "available", "damage", dmg)
 
         lands = sorted(
             self.r1,

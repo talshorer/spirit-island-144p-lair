@@ -65,12 +65,14 @@ def main() -> None:
     parser.add_argument("--best", type=int, default=1)
     parser.add_argument("--land-priority", default="")
     parser.add_argument("--reserve-gathers", type=int, default=0)
+    parser.add_argument("--reserve-damage", type=int, default=0)
     args = parser.parse_args()
     res: List[Tuple[Tuple, lair.Lair]] = []
     action_seqs = set(tuple(s) for s in perms(args.actions))
     conf = lair.LairConf(
         land_priority=args.land_priority,
         reserve_gathers=args.reserve_gathers,
+        reserve_damage=args.reserve_damage,
         reckless_offensive=args.reckless_offensive,
     )
     for action_seq in action_seqs:
