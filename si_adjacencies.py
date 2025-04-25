@@ -247,19 +247,30 @@ def link_hub(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board):
     q.edges[EdgePosition.CLOCK3].link(s.edges[EdgePosition.CLOCK3])
 
 
+def link_spoke(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board):
+    # the left coastline
+    p.edges[EdgePosition.CLOCK9].link(q.edges[EdgePosition.CLOCK3])
+    q.edges[EdgePosition.CLOCK9].link(r.edges[EdgePosition.CLOCK3])
+    # the right coastline
+    s.edges[EdgePosition.CLOCK9].link(t.edges[EdgePosition.CLOCK3])
+    t.edges[EdgePosition.CLOCK9].link(u.edges[EdgePosition.CLOCK3])
+    # and link them
+    r.edges[EdgePosition.CLOCK9].link(s.edges[EdgePosition.CLOCK6])
+
+
 if __name__ == "__main__":
 
     def debug_edges(edge1, edge2):
         for i, j in edge1 @ edge2:
             print(f"{i} {j}")
 
-    p = Board("🐑P", Layout.H)
-    q = Board("🐑Q", Layout.A)
-    r = Board("🐑R", Layout.D)
-    s = Board("🐑S", Layout.B)
-    t = Board("🐑T", Layout.D)
-    u = Board("🐑U", Layout.A)
-    link_hub(p, q, r, s, t, u)
+    p = Board("🌱P", Layout.B)
+    q = Board("🌱Q", Layout.E)
+    r = Board("🌱R", Layout.G)
+    s = Board("🌱S", Layout.G)
+    t = Board("🌱T", Layout.H)
+    u = Board("🌱U", Layout.G)
+    link_spoke(p, q, r, s, t, u)
 
     for board in [p, q, r, s, t, u]:
         for i in range(1, 9):
