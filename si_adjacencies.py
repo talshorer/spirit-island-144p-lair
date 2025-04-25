@@ -1,7 +1,40 @@
+from __future__ import annotations
+
 # from dataclasses import dataclass
 # @dataclass
 # class Land:
 #     pass
+
+
+class Edge:
+    def __init__(self, lands: list[int], boundaries: list[int], parent: Board):
+        self.lands = tuple(lands[::-1])
+        self.boundaries = (0,) + tuple(sorted(boundaries)) + (7,)
+        self.parent = parent
+        self.neighbor = None
+
+    def __contains__(self, landno):
+        """Is this land number on this edge?"""
+        return landno in self.lands
+
+    def __matmul__(self, neighbor):
+        # sorry for abusing dunders
+        if neighbor is None:
+            return
+
+        self_pos = 1
+        neighbor_pos = -2
+        while True:
+            try:
+                self_next = self.boundaries[self_pos]
+                neighbor_next = neighbor.boundaries[neighbor_pos]
+            except IndexError:
+                break
+            yield (self.lands[self_pos - 1], neighbor.lands[neighbor_pos + 1])
+            if self_next + neighbor_next > 6:
+                neighbor_pos -= 1
+            else:
+                self_pos += 1
 
 
 class Board:
@@ -50,37 +83,6 @@ class Board:
         )
 
         # yield the corner adjacencies
-
-
-class Edge:
-    def __init__(self, lands: list[int], boundaries: list[int], parent: Board):
-        self.lands = tuple(lands[::-1])
-        self.boundaries = (0,) + tuple(sorted(boundaries)) + (7,)
-        self.parent = parent
-        self.neighbor = None
-
-    def __contains__(self, landno):
-        """Is this land number on this edge?"""
-        return landno in self.lands
-
-    def __matmul__(self, neighbor):
-        # sorry for abusing dunders
-        if neighbor is None:
-            return
-
-        self_pos = 1
-        neighbor_pos = -2
-        while True:
-            try:
-                self_next = self.boundaries[self_pos]
-                neighbor_next = neighbor.boundaries[neighbor_pos]
-            except IndexError:
-                break
-            yield (self.lands[self_pos - 1], neighbor.lands[neighbor_pos + 1])
-            if self_next + neighbor_next > 6:
-                neighbor_pos -= 1
-            else:
-                self_pos += 1
 
     def __iand__(self, neighbor):
         # sorry for really abusing dunders
