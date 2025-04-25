@@ -267,11 +267,6 @@ def link_rim(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board):
 
 
 if __name__ == "__main__":
-
-    def debug_edges(edge1, edge2):
-        for i, j in edge1 @ edge2:
-            print(f"{i} {j}")
-
     p = Board("🌵P", Layout.E)
     q = Board("🌵Q", Layout.H)
     r = Board("🌵R", Layout.G)
