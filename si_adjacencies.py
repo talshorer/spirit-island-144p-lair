@@ -18,33 +18,29 @@ class Edge:
         self.parent = parent
         self.neighbor = None
 
-    def __matmul__(self, neighbor):
-        # sorry for abusing dunders
-        if neighbor is None:
-            return
+    def cross_adjacencies(self):
+        assert self.neighbor
 
         self_pos = 1
         neighbor_pos = -2
         while True:
             try:
                 self_next = self.boundaries[self_pos]
-                neighbor_next = neighbor.boundaries[neighbor_pos]
+                neighbor_next = self.neighbor.boundaries[neighbor_pos]
             except IndexError:
                 break
-            yield (self.lands[self_pos - 1], neighbor.lands[neighbor_pos + 1])
+            yield (self.lands[self_pos - 1], self.neighbor.lands[neighbor_pos + 1])
             if self_next + neighbor_next > 6:
                 neighbor_pos -= 1
             else:
                 self_pos += 1
 
-    def __iand__(self, neighbor):
+    def link(self, neighbor):
         # sorry for really abusing dunders
         assert self.neighbor is None
         assert neighbor.neighbor is None
         self.neighbor = neighbor
         neighbor.neighbor = self
-
-        return self
 
 
 class EdgePosition(enum.Enum):
@@ -125,7 +121,8 @@ class Board:
         yield from (
             (edge.neighbor.parent, j)
             for edge in self.edges.values()
-            for i, j in edge @ edge.neighbor
+            if edge.neighbor
+            for i, j in edge.cross_adjacencies()
             if i == land
         )
 
@@ -142,9 +139,9 @@ if __name__ == "__main__":
     q = Board("🐑Q", Layout.A)
     r = Board("🐑R", Layout.D)
 
-    p.edges[EdgePosition.CLOCK6] &= q.edges[EdgePosition.CLOCK9]
-    q.edges[EdgePosition.CLOCK6] &= r.edges[EdgePosition.CLOCK9]
-    r.edges[EdgePosition.CLOCK6] &= p.edges[EdgePosition.CLOCK9]
+    p.edges[EdgePosition.CLOCK6].link(q.edges[EdgePosition.CLOCK9])
+    q.edges[EdgePosition.CLOCK6].link(r.edges[EdgePosition.CLOCK9])
+    r.edges[EdgePosition.CLOCK6].link(p.edges[EdgePosition.CLOCK9])
 
     for i in range(1, 9):
         print(
