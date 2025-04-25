@@ -1,6 +1,6 @@
 class Edge:
     def __init__(self, lands: list[int], boundaries: list[int]):
-        self.lands = tuple(sorted(lands))
+        self.lands = tuple(lands[::-1])
         self.boundaries = (0,)+tuple(sorted(boundaries))+(7,)
 
     def __matmul__(self, neighbor):
