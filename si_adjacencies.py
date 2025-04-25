@@ -51,6 +51,13 @@ class Edge:
         return self
 
 
+class EdgePosition(enum.Enum):
+    # the ocean is 12 o'clock
+    CLOCK3 = enum.auto()
+    CLOCK6 = enum.auto()
+    CLOCK9 = enum.auto()
+
+
 class Layout(enum.Enum):
 
     A = ([1, 6, 8, 7, 5, 4, 3], [5, 3, None, 4, None, 6, 5, 3], "2456,34,4,5,678,8,8")
@@ -74,11 +81,11 @@ class Layout(enum.Enum):
         """
 
         c1, c2 = [i for i, x in enumerate(boundaries) if x is None]
-        self.edges = [
-            LayoutEdge(lands[: c1 + 1], boundaries[:c1]),
-            LayoutEdge(lands[c1:c2], boundaries[c1 + 1 : c2]),
-            LayoutEdge(lands[c2 - 1 :], boundaries[c2 + 1 :]),
-        ]
+        self.edges = {
+            EdgePosition.CLOCK3: LayoutEdge(lands[: c1 + 1], boundaries[:c1]),
+            EdgePosition.CLOCK6: LayoutEdge(lands[c1:c2], boundaries[c1 + 1 : c2]),
+            EdgePosition.CLOCK9: LayoutEdge(lands[c2 - 1 :], boundaries[c2 + 1 :]),
+        }
         self.internal_adjacencies = {i + 1: set() for i in range(8)}
         for i, val in enumerate(internal_adjacencies.split(",")):
             for n in val:
@@ -91,9 +98,9 @@ class Layout(enum.Enum):
             case "1" | "3":
                 return int(corner)
             case "6":
-                return self.edges[2].lands[-1]
+                return self.edges[EdgePosition.CLOCK9].lands[-1]
             case "8":
-                return self.edges[0].lands[-1]
+                return self.edges[EdgePosition.CLOCK3].lands[-1]
 
 
 class Board:
@@ -104,7 +111,7 @@ class Board:
     ):
         self.name = name
         self.layout = layout
-        self.edges = [Edge(edge, self) for edge in layout.edges]
+        self.edges = {pos: Edge(edge, self) for pos, edge in layout.edges.items()}
 
     def adjacent(self, land):
         for i in self.layout.internal_adjacencies[land]:
@@ -112,7 +119,7 @@ class Board:
 
         yield from (
             (edge.neighbor.parent, j)
-            for edge in self.edges
+            for edge in self.edges.values()
             for i, j in edge @ edge.neighbor
             if i == land
         )
@@ -130,9 +137,9 @@ if __name__ == "__main__":
     q = Board("🐑Q", Layout.A)
     r = Board("🐑R", Layout.D)
 
-    p.edges[1] &= q.edges[2]
-    q.edges[1] &= r.edges[2]
-    r.edges[1] &= p.edges[2]
+    p.edges[EdgePosition.CLOCK6] &= q.edges[EdgePosition.CLOCK9]
+    q.edges[EdgePosition.CLOCK6] &= r.edges[EdgePosition.CLOCK9]
+    r.edges[EdgePosition.CLOCK6] &= p.edges[EdgePosition.CLOCK9]
 
     for i in range(1, 9):
         print(
