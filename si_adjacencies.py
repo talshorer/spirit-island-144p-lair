@@ -258,19 +258,27 @@ def link_spoke(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board):
     r.edges[EdgePosition.CLOCK9].link(s.edges[EdgePosition.CLOCK6])
 
 
+def link_rim(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board):
+    p.edges[EdgePosition.CLOCK9].link(q.edges[EdgePosition.CLOCK9])
+    q.edges[EdgePosition.CLOCK6].link(r.edges[EdgePosition.CLOCK6])
+    r.edges[EdgePosition.CLOCK9].link(s.edges[EdgePosition.CLOCK3])
+    s.edges[EdgePosition.CLOCK9].link(t.edges[EdgePosition.CLOCK3])
+    t.edges[EdgePosition.CLOCK9].link(u.edges[EdgePosition.CLOCK3])
+
+
 if __name__ == "__main__":
 
     def debug_edges(edge1, edge2):
         for i, j in edge1 @ edge2:
             print(f"{i} {j}")
 
-    p = Board("🌱P", Layout.B)
-    q = Board("🌱Q", Layout.E)
-    r = Board("🌱R", Layout.G)
-    s = Board("🌱S", Layout.G)
-    t = Board("🌱T", Layout.H)
-    u = Board("🌱U", Layout.G)
-    link_spoke(p, q, r, s, t, u)
+    p = Board("🌵P", Layout.E)
+    q = Board("🌵Q", Layout.H)
+    r = Board("🌵R", Layout.G)
+    s = Board("🌵S", Layout.H)
+    t = Board("🌵T", Layout.D)
+    u = Board("🌵U", Layout.F)
+    link_rim(p, q, r, s, t, u)
 
     for board in [p, q, r, s, t, u]:
         for i in range(1, 9):
