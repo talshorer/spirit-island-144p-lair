@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import enum
-from typing import List
+from typing import Dict, Iterator, List, Optional, Self, Set, Tuple
 
 
 @dataclasses.dataclass
@@ -16,9 +16,9 @@ class Edge:
         self.lands = tuple(layout.lands[::-1])
         self.boundaries = (0,) + tuple(sorted(layout.boundaries)) + (7,)
         self.parent = parent
-        self.neighbor = None
+        self.neighbor: Optional[Self] = None
 
-    def cross_adjacencies(self):
+    def cross_adjacencies(self) -> Iterator[Tuple[int, int]]:
         assert self.neighbor
 
         self_pos = 1
@@ -35,7 +35,7 @@ class Edge:
             else:
                 self_pos += 1
 
-    def link(self, neighbor):
+    def link(self, neighbor: Self) -> None:
         # sorry for really abusing dunders
         assert self.neighbor is None
         assert neighbor.neighbor is None
@@ -86,7 +86,9 @@ class Layout(enum.Enum):
             EdgePosition.CLOCK6: LayoutEdge(lands[c1:c2], boundaries[c1 + 1 : c2]),
             EdgePosition.CLOCK9: LayoutEdge(lands[c2 - 1 :], boundaries[c2 + 1 :]),
         }
-        self.internal_adjacencies = {i + 1: set() for i in range(8)}
+        self.internal_adjacencies: Dict[int, Set[int]] = {
+            i + 1: set() for i in range(8)
+        }
         for i, val in enumerate(internal_adjacencies.split(",")):
             for n in val:
                 self.internal_adjacencies[i + 1].add(int(n))
@@ -114,7 +116,7 @@ class Board:
         self.layout = layout
         self.edges = {pos: Edge(edge, self) for pos, edge in layout.edges.items()}
 
-    def adjacent(self, land):
+    def adjacent(self, land: int) -> Iterator[Tuple[Board, int]]:
         for i in self.layout.internal_adjacencies[land]:
             yield (self, i)
 
@@ -130,10 +132,6 @@ class Board:
 
 
 if __name__ == "__main__":
-
-    def debug_edges(edge1, edge2):
-        for i, j in edge1 @ edge2:
-            print(f"{i} {j}")
 
     p = Board("🐑P", Layout.H)
     q = Board("🐑Q", Layout.A)
