@@ -2,13 +2,8 @@ import abc
 import argparse
 from typing import List, Self, TypeVar, Protocol
 
-try:
-    from . import parse
-    from . import lair
-except ImportError:
-    # stupid vscode..
-    import parse  # type: ignore
-    import lair  # type: ignore
+import parse
+import lair
 
 
 SHOW_BEST = 1
@@ -38,10 +33,11 @@ def newlair(conf: lair.LairConf) -> lair.Lair:
 
 def cmplands(r: int, a: lair.Land, b: lair.Land, args: argparse.Namespace):
     assert a.key == b.key
+    bstr = str(b)
     if b.cities.cnt == b.towns.cnt == b.explorers.cnt == 0:
         if b.dahan.cnt == 0 or not args.dahan_diff:
-            b = "CLEAR"
-    print(f"({r}) {a.key}: {a} => {b}")
+            bstr = "CLEAR"
+    print(f"({r}) {a.key}: {a} => {bstr}")
 
 
 class Comparable(Protocol):

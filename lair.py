@@ -3,7 +3,7 @@ from __future__ import annotations
 import contextlib
 import dataclasses
 import itertools
-from typing import Callable, Iterator, List, Optional, Self, Tuple
+from typing import Callable, Iterator, List, Optional, Self, Tuple, cast
 
 
 @dataclasses.dataclass
@@ -54,10 +54,13 @@ class Land:
         return f"({pieces})"
 
 
+PieceSelect = Callable[[Land], Pieces]
+
+
 @dataclasses.dataclass
 class PieceType:
-    select: Callable[[Land], Pieces]
-    select_mr: Callable[[Land], Pieces]
+    select: PieceSelect
+    select_mr: PieceSelect
     health: int
     fear: int
     response: Optional[Self]
@@ -67,41 +70,42 @@ class PieceType:
         return Pieces(cnt=cnt, tipe=self)
 
 
+Void: PieceType
 Void = PieceType(
-    select=lambda land: Void.new(),
-    select_mr=lambda land: Void.new(),
+    select=cast(PieceSelect, lambda land: Void.new()),
+    select_mr=cast(PieceSelect, lambda land: Void.new()),
     health=0,
     fear=0,
     response=None,
     name="void",
 )
 Explorer = PieceType(
-    select=lambda land: land.explorers,
-    select_mr=lambda land: land.mr_explorers,
+    select=cast(PieceSelect, lambda land: land.explorers),
+    select_mr=cast(PieceSelect, lambda land: land.mr_explorers),
     health=1,
     fear=0,
     response=None,
     name="explorer",
 )
 Town = PieceType(
-    select=lambda land: land.towns,
-    select_mr=lambda land: land.mr_towns,
+    select=cast(PieceSelect, lambda land: land.towns),
+    select_mr=cast(PieceSelect, lambda land: land.mr_towns),
     health=2,
     fear=1,
     response=Explorer,
     name="town",
 )
 City = PieceType(
-    select=lambda land: land.cities,
-    select_mr=lambda land: Void.new(),
+    select=cast(PieceSelect, lambda land: land.cities),
+    select_mr=cast(PieceSelect, lambda land: Void.new()),
     health=3,
     fear=2,
     response=Town,
     name="city",
 )
 Dahan = PieceType(
-    select=lambda land: land.dahan,
-    select_mr=lambda land: Void.new(),
+    select=cast(PieceSelect, lambda land: land.dahan),
+    select_mr=cast(PieceSelect, lambda land: Void.new()),
     health=2,
     fear=0,
     response=None,

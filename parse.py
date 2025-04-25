@@ -1,11 +1,9 @@
 import csv
 import json
+from typing import Dict, List
 
-try:
-    from . import lair
-except ImportError:
-    # stupid vscode..
-    import lair  # type: ignore
+
+import lair
 
 
 def to_int(s: str) -> int:
@@ -15,7 +13,7 @@ def to_int(s: str) -> int:
 
 
 def parse(csvpath: str, jsonpath: str, conf: lair.LairConf) -> lair.Lair:
-    lands = {}
+    lands: Dict[str, lair.Land] = {}
     with open(jsonpath) as f:
         initial = json.load(f)
     r0 = lair.Land(
@@ -27,7 +25,7 @@ def parse(csvpath: str, jsonpath: str, conf: lair.LairConf) -> lair.Lair:
         dahan=initial["dahan"],
         gathers_to=None,
     )
-    r = [[], [], []]
+    r: List[List[lair.Land]] = [[], [], []]
     with open(csvpath) as f:
         it = iter(csv.reader(f))
         next(it)  # throw away header row
@@ -67,4 +65,5 @@ def parse(csvpath: str, jsonpath: str, conf: lair.LairConf) -> lair.Lair:
             )
             lands[key] = land
             r[rng].append(land)
+    assert not r[0]
     return lair.Lair(r0=r0, r1=r[1], r2=r[2], conf=conf)
