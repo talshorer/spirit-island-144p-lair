@@ -121,22 +121,64 @@ counterclockwise = Rotate(
 )
 
 
-class Layout(enum.Enum):
+class Terrain(enum.Enum):
+    Jungle = "J"
+    Mountain = "M"
+    Sands = "S"
+    Wetlands = "W"
 
-    A = ([1, 6, 8, 7, 5, 4, 3], [5, 3, None, 4, None, 6, 5, 3], "2456,34,4,5,678,8,8")
-    B = ([1, 6, 8, 7, 4, 3], [6, 3, None, 4, None, 6, 4], "2456,34,4,57,67,78,8")
-    C = ([1, 6, 8, 7, 4, 3], [5, 3, None, 3, 1, None, 3], "256,345,4,57,67,78,8")
-    D = ([1, 8, 7, 6, 4, 3], [1, None, 4, 1, None, 5, 2], "2578,345,4,56,67,7,8")
-    E = ([1, 7, 8, 6, 4, 3], [4, 2, None, 2, None, 6, 3], "257,35,45,567,7,78,8")
-    F = ([1, 6, 8, 7, 4, 3], [4, 1, None, 3, None, 5, 2], "256,345,4,578,68,8,8")
-    G = ([1, 6, 8, 7, 4, 3], [4, 2, None, 3, None, 6, 4], "26,3456,4,57,678,8,8")
-    H = ([1, 8, 7, 4, 3], [3, None, 5, 1, None, 3], "268,356,45,57,67,78,8")
+
+class Layout(enum.Enum):
+    A = (
+        [1, 6, 8, 7, 5, 4, 3],
+        [5, 3, None, 4, None, 6, 5, 3],
+        "2456,34,4,5,678,8,8",
+        "MWJSWMSJ",
+    )
+    B = (
+        [1, 6, 8, 7, 4, 3],
+        [6, 3, None, 4, None, 6, 4],
+        "2456,34,4,57,67,78,8",
+        "WMSJSWMJ",
+    )
+    C = (
+        [1, 6, 8, 7, 4, 3],
+        [5, 3, None, 3, 1, None, 3],
+        "256,345,4,57,67,78,8",
+        "JSMJWSMW",
+    )
+    D = (
+        [1, 8, 7, 6, 4, 3],
+        [1, None, 4, 1, None, 5, 2],
+        "2578,345,4,56,67,7,8",
+        "WJWSMJSM",
+    )
+    E = (
+        [1, 7, 8, 6, 4, 3],
+        [4, 2, None, 2, None, 6, 3],
+        "257,35,45,567,7,78,8",
+        "SMJWMSJW",
+    )
+    F = (
+        [1, 6, 8, 7, 4, 3],
+        [4, 1, None, 3, None, 5, 2],
+        "256,345,4,578,68,8,8",
+        "SJWMJMWS",
+    )
+    G = (
+        [1, 6, 8, 7, 4, 3],
+        [4, 2, None, 3, None, 6, 4],
+        "26,3456,4,57,678,8,8",
+        "MWSWSJJM",
+    )
+    H = ([1, 8, 7, 4, 3], [3, None, 5, 1, None, 3], "268,356,45,57,67,78,8", "JSMMJWWS")
 
     def __init__(
         self,
         lands: List[int],
         boundaries: List[int],
         internal_adjacencies: str,
+        terrains: str,
     ):
         """
         Lands around the edge in clockwise order starting from 1.
@@ -156,6 +198,7 @@ class Layout(enum.Enum):
             for n in val:
                 self.internal_adjacencies[i + 1].add(int(n))
                 self.internal_adjacencies[int(n)].add(i + 1)
+        self.terrains = {i + 1: Terrain(ch) for i, ch in enumerate(terrains)}
 
     def get_corner(self, corner: Corner) -> int:
         match corner:
@@ -278,6 +321,9 @@ if __name__ == "__main__":
     for board in [p, q, r, s, t, u]:
         for i in range(1, 9):
             adjacencies = ", ".join(
-                f"{parent.name}{number}" for parent, number in board.adjacent(i)
+                f"{parent.name}{number}{parent.layout.terrains[number].value}"
+                for parent, number in board.adjacent(i)
             )
-            print(f"Neighbors of {board.name}{i}: {adjacencies}")
+            print(
+                f"Neighbors of {board.name}{i}{board.layout.terrains[i].value}: {adjacencies}"
+            )
