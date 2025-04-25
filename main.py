@@ -31,7 +31,7 @@ def newlair(conf: lair.LairConf) -> lair.Lair:
     )
 
 
-def cmplands(r: int, a: lair.Land, b: lair.Land, args: argparse.Namespace):
+def cmplands(r: int, a: lair.Land, b: lair.Land, args: argparse.Namespace) -> None:
     assert a.key == b.key
     bstr = str(b)
     if b.cities.cnt == b.towns.cnt == b.explorers.cnt == 0:
@@ -54,7 +54,7 @@ def score(thelair: lair.Lair) -> Comparable:
     return (thelair.r0.explorers.cnt, cleared_lands)
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--log", action="store_true")
     parser.add_argument("--diff", action="store_true")

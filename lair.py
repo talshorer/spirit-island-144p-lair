@@ -36,7 +36,7 @@ class Land:
         self.mr_explorers = Explorer.new()
         self.mr_towns = Town.new()
 
-    def mr(self):
+    def mr(self) -> None:
         for tipe in (Explorer, Town, City):
             mr = tipe.select_mr(self)
             tipe.select(self).cnt += mr.cnt
@@ -120,6 +120,9 @@ class LairConf:
     reckless_offensive: List[str]
 
 
+ConvertLand = Callable[[Land], Land]
+
+
 class Lair:
     def __init__(
         self,
@@ -175,7 +178,7 @@ class Lair:
             self.log.append(f"  - downgrade {cnt-left} {tipe.name} in {land.key}")
         return left
 
-    def _lair1(self):
+    def _lair1(self) -> None:
         r0 = self.r0
         downgrades = (r0.explorers.cnt + r0.dahan.cnt) // 3
         downgrades = self._downgrade(Town, r0, downgrades)
@@ -188,7 +191,7 @@ class Lair:
     def _r1_most_dahan(self) -> List[Land]:
         return sorted(self.r1, key=lambda land: -land.dahan.cnt)
 
-    def _lair2(self):
+    def _lair2(self) -> None:
         gathers = 1
         for tipe in [Explorer, Town]:
             for land in self._r1_most_dahan():
@@ -202,7 +205,7 @@ class Lair:
 
     def _least_dahan_land_priority_key(
         self,
-        convert: Callable[[Land], Land],
+        convert: ConvertLand,
     ) -> Callable[[Land], Tuple[int, int]]:
         def key(land: Land) -> Tuple[int, int]:
             try:
@@ -215,7 +218,7 @@ class Lair:
 
         return key
 
-    def _lair3(self):
+    def _lair3(self) -> None:
         r0 = self.r0
         gathers = (r0.explorers.cnt + r0.dahan.cnt) // 6
         self.log.append(f"  - gathers: {gathers}")
@@ -227,7 +230,9 @@ class Lair:
 
         for land in sorted(
             self.r2,
-            key=self._least_dahan_land_priority_key(lambda land: land.gathers_to),
+            key=self._least_dahan_land_priority_key(
+                cast(ConvertLand, lambda land: land.gathers_to)
+            ),
         ):
             gathers = self._gather(Town, land, gathers)
             gathers = self._gather(City, land, gathers)
@@ -250,7 +255,7 @@ class Lair:
         oldlog.extend(self.log)
         self.log = oldlog
 
-    def lair(self):
+    def lair(self) -> None:
         with self._top_log("lair"):
             self._lair1()
             self._lair2()
@@ -261,12 +266,12 @@ class Lair:
         it: Callable[[], List[Land]],
         tipe: PieceType,
         gathers: int,
-    ):
+    ) -> int:
         for land in it():
             gathers = self._gather(tipe, land, gathers)
         return gathers
 
-    def call(self):
+    def call(self) -> None:
         with self._top_log("call"):
             self.wasted_invader_gathers += self._call_one(self._r1_most_dahan, Town, 5)
             self.wasted_invader_gathers += self._call_one(
@@ -297,12 +302,15 @@ class Lair:
         self.fear += kill * tipe.fear
         return dmg - kill * tipe.health
 
-    def _ravage(self):
+    def _ravage(self) -> None:
         r0 = self.r0
         dmg = max(0, r0.explorers.cnt - 6) + r0.towns.cnt * 2 + r0.cities.cnt * 3
 
         lands = sorted(
-            self.r1, key=self._least_dahan_land_priority_key(lambda land: land)
+            self.r1,
+            key=self._least_dahan_land_priority_key(
+                cast(ConvertLand, lambda land: land)
+            ),
         )
         for land in lands:
             dmg = self._damage(land, Town, dmg)
@@ -316,18 +324,18 @@ class Lair:
         for land in itertools.chain([self.r0], self.r1):
             land.mr()
 
-    def ravage(self):
+    def ravage(self) -> None:
         with self._top_log("ravage"):
             self._ravage()
 
-    def blur(self):
+    def blur(self) -> None:
         with self._top_log("blur"):
             self._ravage()
 
-    def blur2(self):
+    def blur2(self) -> None:
         self.blur()
         self.blur()
 
-    def pull_r1_dahan(self, gathers: int):
+    def pull_r1_dahan(self, gathers: int) -> None:
         with self._top_log(f"pull-r1-dahan({gathers})"):
             self._call_one(self._r1_least_dahan, Dahan, gathers)

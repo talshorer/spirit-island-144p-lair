@@ -222,7 +222,7 @@ class Board:
         self.layout = layout
         self.edges = {pos: Edge(edge, pos, self) for pos, edge in layout.edges.items()}
 
-    def _edge_opt(self, pos: Optional[EdgePosition]):
+    def _edge_opt(self, pos: Optional[EdgePosition]) -> Optional[Edge]:
         if pos is None:
             return None
         return self.edges[pos]
@@ -277,7 +277,7 @@ class Board:
         )
 
 
-def link_hub(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board):
+def link_hub(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None:
     # the left standard-3
     p.edges[EdgePosition.CLOCK6].link(q.edges[EdgePosition.CLOCK9])
     q.edges[EdgePosition.CLOCK6].link(r.edges[EdgePosition.CLOCK9])
@@ -290,7 +290,7 @@ def link_hub(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board):
     q.edges[EdgePosition.CLOCK3].link(s.edges[EdgePosition.CLOCK3])
 
 
-def link_spoke(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board):
+def link_spoke(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None:
     # the left coastline
     p.edges[EdgePosition.CLOCK9].link(q.edges[EdgePosition.CLOCK3])
     q.edges[EdgePosition.CLOCK9].link(r.edges[EdgePosition.CLOCK3])
@@ -301,7 +301,7 @@ def link_spoke(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board):
     r.edges[EdgePosition.CLOCK9].link(s.edges[EdgePosition.CLOCK6])
 
 
-def link_rim(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board):
+def link_rim(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None:
     p.edges[EdgePosition.CLOCK9].link(q.edges[EdgePosition.CLOCK9])
     q.edges[EdgePosition.CLOCK6].link(r.edges[EdgePosition.CLOCK6])
     r.edges[EdgePosition.CLOCK9].link(s.edges[EdgePosition.CLOCK3])
