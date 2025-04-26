@@ -27,6 +27,7 @@ class Land:
         cities: int,
         dahan: int,
         gathers_to: Optional[Self],
+        conf: LairConf,
     ):
         self.key = key
         self.land_type = land_type
@@ -37,6 +38,7 @@ class Land:
         self.gathers_to = gathers_to
         self.mr_explorers = Explorer.new()
         self.mr_towns = Town.new()
+        self.conf = conf
 
     def mr(self) -> None:
         for tipe in (Explorer, Town, City):
@@ -47,10 +49,13 @@ class Land:
     def __str__(self) -> str:
         pieces = ", ".join(
             [
-                f"explorers={self.explorers}",
-                f"towns={self.towns}",
-                f"cities={self.cities}",
-                f"dahan={self.dahan}",
+                f"{tipe.name(self.conf.piece_names)}={tipe.select(self).cnt}"
+                for tipe in (
+                    Explorer,
+                    Town,
+                    City,
+                    Dahan,
+                )
             ]
         )
         return f"({pieces})"

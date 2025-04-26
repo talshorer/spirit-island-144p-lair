@@ -40,6 +40,7 @@ def parse(
         cities=initial["cities"],
         dahan=initial["dahan"],
         gathers_to=None,
+        conf=lair_conf,
     )
     r: List[List[lair.Land]] = [[], [], []]
     with open(csvpath) as f:
@@ -82,6 +83,7 @@ def parse(
                 cities=to_int(cities),
                 dahan=to_int(dahan),
                 gathers_to=gathers_to,
+                conf=lair_conf,
             )
             lands[key] = land
             r[rng].append(land)
