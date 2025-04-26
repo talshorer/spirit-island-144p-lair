@@ -28,6 +28,7 @@ def newlair(lair_conf: lair.LairConf, parse_conf: parse.ParseConf) -> lair.Lair:
     return parse.parse(
         csvpath="Turn4Start.csv",
         jsonpath="initial-lair.json",
+        actionspath="Turn4Actions.csv",
         lair_conf=lair_conf,
         parse_conf=parse_conf,
     )

@@ -23,6 +23,7 @@ class ParseConf:
 def parse(
     csvpath: str,
     jsonpath: str,
+    actionspath: str,
     lair_conf: lair.LairConf,
     parse_conf: ParseConf,
 ) -> lair.Lair:
@@ -94,5 +95,32 @@ def parse(
             )
             lands[key] = land
             r[rng].append(land)
+
+    distant_lands: Dict[str, lair.Land] = {} # lands not in TurnNStart.csv
+    with open(actionspath, encoding="utf-8") as f:
+        it = iter(csv.reader(f))
+        next(it)  # throw away header row
+        for row in it:
+            (
+                source,
+                destination,
+                cities,
+                towns,
+                explorers,
+                dahan,
+                action_name,
+                action_id,
+                parent_action,
+                notes,
+            ) = row
+        if source in lands:
+            pass # remove some Invaders, and throw an error if there's a negative number
+        elif source:
+            pass # remove some Invaders, and make a new land in distant_lands if it's not already there
+
+        if destination in lands:
+            pass # add some Invaders
+        elif destination:
+            pass # add some Invaders, and make a new land in distant_lands if it's not already there
     assert not r[0]
     return lair.Lair(r0=r0, r1=r[1], r2=r[2], conf=lair_conf)
