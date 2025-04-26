@@ -48,7 +48,11 @@ def cmplands(r: int, a: lair.Land, b: lair.Land, args: argparse.Namespace) -> No
         if args.strict_diff:
             return
         bstr = "UNCHANGED"
-    print(f"({r}) {a.key}: {a} => {bstr}")
+    if args.diff_range:
+        range_ = f"({r}) "
+    else:
+        range_ = ""
+    print(f"{range_}{a.key}: {a} => {bstr}")
 
 
 class Comparable(Protocol):
@@ -156,6 +160,11 @@ def parse_args() -> argparse.Namespace:
         "--diff",
         action="store_true",
         help="Show each land's initial and final state",
+    )
+    parser.add_argument(
+        "--diff-range",
+        action="store_true",
+        help="Show range from lair in diff view",
     )
     parser.add_argument(
         "--dahan-diff",
