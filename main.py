@@ -39,6 +39,15 @@ def cmplands(r: int, a: lair.Land, b: lair.Land, args: argparse.Namespace) -> No
     if b.cities.cnt == b.towns.cnt == b.explorers.cnt == 0:
         if b.dahan.cnt == 0 or not args.dahan_diff:
             bstr = "CLEAR"
+    if (
+        a.explorers.cnt == b.explorers.cnt
+        and a.towns.cnt == b.towns.cnt
+        and a.cities.cnt == b.cities.cnt
+        and a.dahan.cnt == b.dahan.cnt
+    ):
+        if args.strict_diff:
+            return
+        bstr = "UNCHANGED"
     print(f"({r}) {a.key}: {a} => {bstr}")
 
 
@@ -152,6 +161,11 @@ def parse_args() -> argparse.Namespace:
         "--dahan-diff",
         action="store_true",
         help="Don't show a land as clear if it has dahan",
+    )
+    parser.add_argument(
+        "--strict-diff",
+        action="store_true",
+        help="Skip lands in diff view if they didn't change",
     )
     parser.add_argument(
         "--pull-r1-dahan",
