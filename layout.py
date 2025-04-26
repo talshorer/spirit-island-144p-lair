@@ -11,6 +11,28 @@ class LayoutEdge:
     boundaries: list[int]
 
 
+@dataclasses.dataclass
+class LandLink:
+    distance: int
+    land: Land
+
+
+class Land:
+    def __init__(self, board: Board, num: int) -> None:
+        self.board = board
+        self.num = num
+        self.key = f"{board.name}{num}"
+        self.links: List[LandLink] = []
+
+    def _link_one_way(self, other: Self, distance: int) -> None:
+        assert not any(other.key == link.land.key for link in self.links)
+        self.links.append(LandLink(distance=distance, land=other))
+
+    def link(self, other: Self, distance: int = 1) -> None:
+        self._link_one_way(other, distance)
+        other._link_one_way(self, distance)
+
+
 class BoardEdge:
     def __init__(
         self,
@@ -24,7 +46,11 @@ class BoardEdge:
         self.parent = parent
         self.neighbor: Optional[Self] = None
 
-    def cross_adjacencies(self) -> Iterator[Tuple[int, int]]:
+    def link(self, neighbor: Self) -> None:
+        assert self.neighbor is None
+        assert neighbor.neighbor is None
+        self.neighbor = neighbor
+        neighbor.neighbor = self
         assert self.neighbor
 
         self_pos = 1
@@ -32,21 +58,16 @@ class BoardEdge:
         while True:
             try:
                 self_next = self.boundaries[self_pos]
-                neighbor_next = self.neighbor.boundaries[neighbor_pos]
+                neighbor_next = neighbor.boundaries[neighbor_pos]
             except IndexError:
                 break
-            yield (self.lands[self_pos - 1], self.neighbor.lands[neighbor_pos + 1])
+            self.parent.lands[self.lands[self_pos - 1]].link(
+                neighbor.parent.lands[neighbor.lands[neighbor_pos + 1]]
+            )
             if self_next + neighbor_next > 6:
                 neighbor_pos -= 1
             else:
                 self_pos += 1
-
-    def link(self, neighbor: Self) -> None:
-        # sorry for really abusing dunders
-        assert self.neighbor is None
-        assert neighbor.neighbor is None
-        self.neighbor = neighbor
-        neighbor.neighbor = self
 
 
 class Edge(enum.Enum):
@@ -223,6 +244,10 @@ class Board:
         self.edges = {
             pos: BoardEdge(edge, pos, self) for pos, edge in layout.edges.items()
         }
+        self.lands = {i: Land(board=self, num=i) for i in range(1, 9)}
+        for n, adj_set in self.layout.internal_adjacencies.items():
+            for neigh in adj_set:
+                self.lands[n]._link_one_way(self.lands[neigh], 1)
 
     def _edge_opt(self, pos: Optional[Edge]) -> Optional[BoardEdge]:
         if pos is None:
@@ -258,16 +283,8 @@ class Board:
         return edge.parent, land
 
     def adjacent(self, land: int) -> Iterator[Tuple[Board, int]]:
-        for i in self.layout.internal_adjacencies[land]:
-            yield (self, i)
-
-        yield from (
-            (edge.neighbor.parent, j)
-            for edge in self.edges.values()
-            if edge.neighbor
-            for i, j in edge.cross_adjacencies()
-            if i == land
-        )
+        for link in self.lands[land].links:
+            yield link.land.board, link.land.num
 
         yield from (
             adjacency
