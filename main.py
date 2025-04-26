@@ -120,6 +120,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--log", action="store_true")
     parser.add_argument("--log-split")
+    parser.add_argument("--log-split-header")
     parser.add_argument("--diff", action="store_true")
     parser.add_argument("--no-summary", action="store_true")
     parser.add_argument("--server-emojis", action="store_true")
@@ -180,12 +181,18 @@ def main() -> None:
         if args.log:
             print(log)
         if args.log_split:
+            if args.log_split_header:
+                log_split_header = f" {args.log_split_header}"
+            else:
+                log_split_header = ""
             ls = LogSplit()
             ls.run(log)
             for i, content in enumerate(ls.files):
                 os.makedirs(args.log_split, exist_ok=True)
                 with open(os.path.join(args.log_split, f"msg{i:02}.md"), "wb") as f:
-                    f.write(f"{thelair.r0.key} [{i+1}/{len(ls.files)}]\n".encode())
+                    f.write(
+                        f"{thelair.r0.key} [{i+1}/{len(ls.files)}]{log_split_header}\n".encode()
+                    )
                     f.write(content)
         if args.diff:
             orig_lair = newlair(lair_conf, parse_conf)
