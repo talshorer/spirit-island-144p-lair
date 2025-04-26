@@ -23,11 +23,12 @@ def perms(it: List[T]) -> List[List[T]]:
     return ret
 
 
-def newlair(conf: lair.LairConf) -> lair.Lair:
+def newlair(lair_conf: lair.LairConf, parse_conf: parse.ParseConf) -> lair.Lair:
     return parse.parse(
         csvpath="144Turn4WeaveShenans.csv",
         jsonpath="initial-lair.json",
-        conf=conf,
+        lair_conf=lair_conf,
+        parse_conf=parse_conf,
     )
 
 
@@ -54,11 +55,27 @@ def score(thelair: lair.Lair) -> Comparable:
     return (thelair.r0.explorers.cnt, cleared_lands)
 
 
+piece_names_text = lair.PieceNames(
+    explorer="explorer",
+    town="town",
+    city="city",
+    dahan="dahan",
+)
+
+piece_names_emoji = lair.PieceNames(
+    explorer=":InvaderExplorer:",
+    town=":InvaderTown:",
+    city=":InvaderCity:",
+    dahan=":Dahan:",
+)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--log", action="store_true")
     parser.add_argument("--diff", action="store_true")
     parser.add_argument("--no-summary", action="store_true")
+    parser.add_argument("--server-emojis", action="store_true")
     parser.add_argument("--dahan-diff", action="store_true")
     parser.add_argument("--pull-r1-dahan")
     parser.add_argument("--actions", nargs="+")
@@ -70,15 +87,19 @@ def main() -> None:
     args = parser.parse_args()
     res: List[Tuple[Tuple, lair.Lair]] = []
     action_seqs = set(tuple(s) for s in perms(args.actions))
-    conf = lair.LairConf(
+    lair_conf = lair.LairConf(
         land_priority=args.land_priority,
         reserve_gathers=args.reserve_gathers,
         reserve_damage=args.reserve_damage,
         reckless_offensive=args.reckless_offensive,
+        piece_names=piece_names_emoji if args.server_emojis else piece_names_text,
+    )
+    parse_conf = parse.ParseConf(
+        server_emojis=args.server_emojis,
     )
     for action_seq in action_seqs:
         action_seq += ("ravage",)
-        thelair = newlair(conf)
+        thelair = newlair(lair_conf, parse_conf)
         if args.pull_r1_dahan is not None:
             if args.pull_r1_dahan == "ALL":
                 pull = 1 << 32
@@ -111,7 +132,7 @@ def main() -> None:
         if args.log:
             print(thelair.log.collapse())
         if args.diff:
-            orig_lair = newlair(conf)
+            orig_lair = newlair(lair_conf, parse_conf)
             cmplands(0, orig_lair.r0, thelair.r0, args)
             for a, b in zip(orig_lair.r1, thelair.r1):
                 cmplands(1, a, b, args)
