@@ -11,11 +11,11 @@ class LayoutEdge:
     boundaries: list[int]
 
 
-class Edge:
+class BoardEdge:
     def __init__(
         self,
         layout: LayoutEdge,
-        position: EdgePosition,
+        position: Edge,
         parent: Board,
     ):
         self.lands = tuple(layout.lands[::-1])
@@ -49,7 +49,7 @@ class Edge:
         neighbor.neighbor = self
 
 
-class EdgePosition(enum.Enum):
+class Edge(enum.Enum):
     # for naming, the ocean is 12 o'clock
     # for values, we pretend the clock is split in 8 to ease corner calc
     CLOCK3 = 2
@@ -77,7 +77,7 @@ class EdgePosition(enum.Enum):
 
 
 class Corner(enum.Enum):
-    # see EdgePosition
+    # see Edge
     CLOCK1 = 1
     CLOCK5 = 3
     CLOCK7 = 5
@@ -88,11 +88,11 @@ class Corner(enum.Enum):
         clock = (clock + 8) % 8
         return cls(clock)
 
-    def clockwise_edge(self) -> Optional[EdgePosition]:
-        return EdgePosition.from_clock(self.value + 1)
+    def clockwise_edge(self) -> Optional[Edge]:
+        return Edge.from_clock(self.value + 1)
 
-    def counterclockwise_edge(self) -> Optional[EdgePosition]:
-        return EdgePosition.from_clock(self.value - 1)
+    def counterclockwise_edge(self) -> Optional[Edge]:
+        return Edge.from_clock(self.value - 1)
 
     def clockwise_corner(self) -> Self:
         return self.from_clock(self.value + 2)
@@ -101,8 +101,8 @@ class Corner(enum.Enum):
         return self.from_clock(self.value - 2)
 
 
-RotateToEdge = Callable[[EdgePosition | Corner], Optional[EdgePosition]]
-RotateToCorner = Callable[[EdgePosition | Corner], Corner]
+RotateToEdge = Callable[[Edge | Corner], Optional[Edge]]
+RotateToCorner = Callable[[Edge | Corner], Corner]
 
 
 @dataclasses.dataclass
@@ -187,9 +187,9 @@ class Layout(enum.Enum):
 
         c1, c2 = [i for i, x in enumerate(boundaries) if x is None]
         self.edges = {
-            EdgePosition.CLOCK3: LayoutEdge(lands[: c1 + 1], boundaries[:c1]),
-            EdgePosition.CLOCK6: LayoutEdge(lands[c1:c2], boundaries[c1 + 1 : c2]),
-            EdgePosition.CLOCK9: LayoutEdge(lands[c2 - 1 :], boundaries[c2 + 1 :]),
+            Edge.CLOCK3: LayoutEdge(lands[: c1 + 1], boundaries[:c1]),
+            Edge.CLOCK6: LayoutEdge(lands[c1:c2], boundaries[c1 + 1 : c2]),
+            Edge.CLOCK9: LayoutEdge(lands[c2 - 1 :], boundaries[c2 + 1 :]),
         }
         self.internal_adjacencies: Dict[int, Set[int]] = {
             i + 1: set() for i in range(8)
@@ -207,9 +207,9 @@ class Layout(enum.Enum):
             case Corner.CLOCK11:
                 return 3
             case Corner.CLOCK5:
-                return self.edges[EdgePosition.CLOCK3].lands[-1]
+                return self.edges[Edge.CLOCK3].lands[-1]
             case Corner.CLOCK7:
-                return self.edges[EdgePosition.CLOCK6].lands[-1]
+                return self.edges[Edge.CLOCK6].lands[-1]
 
 
 class Board:
@@ -220,9 +220,11 @@ class Board:
     ):
         self.name = name
         self.layout = layout
-        self.edges = {pos: Edge(edge, pos, self) for pos, edge in layout.edges.items()}
+        self.edges = {
+            pos: BoardEdge(edge, pos, self) for pos, edge in layout.edges.items()
+        }
 
-    def _edge_opt(self, pos: Optional[EdgePosition]) -> Optional[Edge]:
+    def _edge_opt(self, pos: Optional[Edge]) -> Optional[BoardEdge]:
         if pos is None:
             return None
         return self.edges[pos]
@@ -232,7 +234,9 @@ class Board:
         corner: Corner,
         rotate: Rotate,
     ) -> Optional[Tuple[Board, int]]:
-        edge: Optional[Edge] = self._edge_opt(rotate.to_edge(corner))  # own board edge
+        edge: Optional[BoardEdge] = self._edge_opt(
+            rotate.to_edge(corner)
+        )  # own board edge
         if edge is None or edge.neighbor is None:
             return None
         edge = edge.neighbor  # neighbor's touching edge
