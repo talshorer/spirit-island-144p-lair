@@ -44,7 +44,7 @@ def parse(
         conf=lair_conf,
     )
     r: List[List[lair.Land]] = [[], [], []]
-    with open(csvpath) as f:
+    with open(csvpath, encoding="utf-8") as f:
         it = iter(csv.reader(f))
         next(it)  # throw away header row
         last_weave = ""
