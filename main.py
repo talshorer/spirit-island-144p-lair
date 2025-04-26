@@ -195,6 +195,13 @@ def parse_args() -> argparse.Namespace:
         metavar="LAND",
     )
     parser.add_argument(
+        "--ignore-lands",
+        nargs="+",
+        default=[],
+        help="Lands to ignore",
+        metavar="LAND",
+    )
+    parser.add_argument(
         "--best",
         type=int,
         default=1,
@@ -237,6 +244,7 @@ def main() -> None:
     )
     parse_conf = parse.ParseConf(
         server_emojis=args.server_emojis,
+        ignore_lands=args.ignore_lands,
     )
     for action_seq in action_seqs:
         action_seq += ("ravage",)

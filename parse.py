@@ -17,6 +17,7 @@ def to_int(s: str) -> int:
 @dataclasses.dataclass
 class ParseConf:
     server_emojis: bool
+    ignore_lands: List[str]
 
 
 def parse(
@@ -75,8 +76,14 @@ def parse(
                 land_type_key = f":Land{layout.Terrain(land_type).name}:"
             else:
                 land_type_key = land_type
+            land_key = key[:-5] + key[-2:].upper() + land_type_key
+            if any(
+                ignored_land_key in land_key
+                for ignored_land_key in parse_conf.ignore_lands
+            ):
+                continue
             land = lair.Land(
-                key=key[:-5] + key[-2:].upper() + land_type_key,
+                key=land_key,
                 land_type=land_type,
                 explorers=to_int(explorers),
                 towns=to_int(towns),
