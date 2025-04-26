@@ -1,10 +1,14 @@
 import abc
 import argparse
+import os
 from typing import List, Self, Tuple, TypeVar, Protocol
 
 import parse
 import lair
 
+
+DISCORD_MESSAGE_LIMIT = 1900  # actually 2000, but we leave some space for a header
+DISCORD_EMOJI_COST = 21
 
 T = TypeVar("T")
 
@@ -67,9 +71,55 @@ piece_names_emoji = lair.PieceNames(
 )
 
 
+class LogSplit:
+    def __init__(self) -> None:
+        self.entries: List[bytes] = []
+        self.toplevel = ""
+        self.cur_length = 0
+        self.count = 0
+        self.files: List[bytes] = []
+
+    def commit(self, needs_cont: bool) -> None:
+        if not self.entries:
+            return
+
+        # don't break a second-level bullet in the middle
+        for i in range(len(self.entries) - 1, 0, -1):
+            if self.entries[i].startswith(b"  -"):
+                break
+        else:
+            i = len(self.entries)
+        self.files.append(b"\n".join(self.entries[:i]))
+        leftover = self.entries[i:]
+
+        self.count += 1
+        self.cur_length = 0
+        self.entries = []
+
+        if needs_cont:
+            self.append(f"{self.toplevel} - cont.".encode())
+        for entry in leftover:
+            self.append(entry)
+
+    def append(self, line: bytes) -> None:
+        real_length = len(line) + 1 + (line.count(b":") // 2 * DISCORD_EMOJI_COST)
+        if self.cur_length + real_length > DISCORD_MESSAGE_LIMIT:
+            self.commit(True)
+        self.cur_length += real_length
+        self.entries.append(line)
+
+    def run(self, log: str) -> None:
+        for line in log.splitlines():
+            if line.startswith("-"):
+                self.toplevel = line.split(": ")[0]
+            self.append(line.encode())
+        self.commit(False)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--log", action="store_true")
+    parser.add_argument("--log-split")
     parser.add_argument("--diff", action="store_true")
     parser.add_argument("--no-summary", action="store_true")
     parser.add_argument("--server-emojis", action="store_true")
@@ -126,8 +176,17 @@ def main() -> None:
                     ]
                 )
             )
+        log = thelair.log.collapse()
         if args.log:
-            print(thelair.log.collapse())
+            print(log)
+        if args.log_split:
+            ls = LogSplit()
+            ls.run(log)
+            for i, content in enumerate(ls.files):
+                os.makedirs(args.log_split, exist_ok=True)
+                with open(os.path.join(args.log_split, f"msg{i:02}.md"), "wb") as f:
+                    f.write(f"{thelair.r0.key} [{i+1}/{len(ls.files)}]\n".encode())
+                    f.write(content)
         if args.diff:
             orig_lair = newlair(lair_conf, parse_conf)
             cmplands(0, orig_lair.r0, thelair.r0, args)
