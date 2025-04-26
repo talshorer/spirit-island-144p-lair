@@ -6,9 +6,6 @@ import parse
 import lair
 
 
-SHOW_BEST = 1
-
-
 T = TypeVar("T")
 
 
