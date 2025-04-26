@@ -27,6 +27,7 @@ class Land:
         cities: int,
         dahan: int,
         gathers_to: Optional[Self],
+        conf: LairConf,
     ):
         self.key = key
         self.land_type = land_type
@@ -37,6 +38,7 @@ class Land:
         self.gathers_to = gathers_to
         self.mr_explorers = Explorer.new()
         self.mr_towns = Town.new()
+        self.conf = conf
 
     def mr(self) -> None:
         for tipe in (Explorer, Town, City):
@@ -47,16 +49,28 @@ class Land:
     def __str__(self) -> str:
         pieces = ", ".join(
             [
-                f"explorers={self.explorers}",
-                f"towns={self.towns}",
-                f"cities={self.cities}",
-                f"dahan={self.dahan}",
+                f"{tipe.name(self.conf.piece_names)}={tipe.select(self).cnt}"
+                for tipe in (
+                    Explorer,
+                    Town,
+                    City,
+                    Dahan,
+                )
             ]
         )
         return f"({pieces})"
 
 
+@dataclasses.dataclass
+class PieceNames:
+    explorer: str
+    town: str
+    city: str
+    dahan: str
+
+
 PieceSelect = Callable[[Land], Pieces]
+PieceNameSelect = Callable[[PieceNames], str]
 
 
 @dataclasses.dataclass
@@ -66,7 +80,7 @@ class PieceType:
     health: int
     fear: int
     response: Optional[Self]
-    name: str
+    name: PieceNameSelect
 
     def new(self, cnt: int = 0) -> Pieces:
         return Pieces(cnt=cnt, tipe=self)
@@ -79,7 +93,7 @@ Void = PieceType(
     health=0,
     fear=0,
     response=None,
-    name="void",
+    name=cast(PieceNameSelect, lambda pn: "void"),
 )
 Explorer = PieceType(
     select=cast(PieceSelect, lambda land: land.explorers),
@@ -87,7 +101,7 @@ Explorer = PieceType(
     health=1,
     fear=0,
     response=None,
-    name="explorer",
+    name=cast(PieceNameSelect, lambda pn: pn.explorer),
 )
 Town = PieceType(
     select=cast(PieceSelect, lambda land: land.towns),
@@ -95,7 +109,7 @@ Town = PieceType(
     health=2,
     fear=1,
     response=Explorer,
-    name="town",
+    name=cast(PieceNameSelect, lambda pn: pn.town),
 )
 City = PieceType(
     select=cast(PieceSelect, lambda land: land.cities),
@@ -103,7 +117,7 @@ City = PieceType(
     health=3,
     fear=2,
     response=Town,
-    name="city",
+    name=cast(PieceNameSelect, lambda pn: pn.city),
 )
 Dahan = PieceType(
     select=cast(PieceSelect, lambda land: land.dahan),
@@ -111,7 +125,7 @@ Dahan = PieceType(
     health=2,
     fear=0,
     response=None,
-    name="dahan",
+    name=cast(PieceNameSelect, lambda pn: pn.dahan),
 )
 
 
@@ -126,6 +140,7 @@ class LairConf:
     reserve_gathers: int
     reserve_damage: int
     reckless_offensive: List[str]
+    piece_names: PieceNames
 
 
 ConvertLand = Callable[[Land], Land]
@@ -176,7 +191,7 @@ class Lair:
         self.total_gathers += cnt - left
         if cnt - left:
             self.log.entry(
-                f"gather {cnt-left} {tipe.name} from {land.key} to {land.gathers_to.key}"
+                f"gather {cnt-left} {tipe.name(self.conf.piece_names)} from {land.key} to {land.gathers_to.key}"
             )
         return left
 
@@ -184,7 +199,9 @@ class Lair:
         assert tipe.response
         left = self._xchg(land, tipe, tipe.response.select(land), cnt)
         if cnt - left:
-            self.log.entry(f"downgrade {cnt-left} {tipe.name} in {land.key}")
+            self.log.entry(
+                f"downgrade {cnt-left} {tipe.name(self.conf.piece_names)} in {land.key}"
+            )
         return left
 
     def _lair1(self) -> None:
@@ -308,11 +325,13 @@ class Lair:
 
         self._xchg(land, tipe, response, kill)
         if kill:
-            self.log.entry(f"destroy {kill} {tipe.name} in {land.key}")
+            self.log.entry(
+                f"destroy {kill} {tipe.name(self.conf.piece_names)} in {land.key}"
+            )
             if tipe.response:
                 with self.log.indent():
                     self.log.entry(
-                        f"MR adds {kill} {tipe.response.name} in {respond_to.key}"
+                        f"MR adds {kill} {tipe.response.name(self.conf.piece_names)} in {respond_to.key}"
                     )
         self.fear += kill * tipe.fear
         return dmg - kill * tipe.health
