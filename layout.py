@@ -11,11 +11,33 @@ class LayoutEdge:
     boundaries: list[int]
 
 
-class Edge:
+@dataclasses.dataclass
+class LandLink:
+    distance: int
+    land: Land
+
+
+class Land:
+    def __init__(self, board: Board, num: int) -> None:
+        self.board = board
+        self.num = num
+        self.key = f"{board.name}{num}"
+        self.links: List[LandLink] = []
+
+    def _link_one_way(self, other: Self, distance: int) -> None:
+        assert not any(other.key == link.land.key for link in self.links)
+        self.links.append(LandLink(distance=distance, land=other))
+
+    def link(self, other: Self, distance: int = 1) -> None:
+        self._link_one_way(other, distance)
+        other._link_one_way(self, distance)
+
+
+class BoardEdge:
     def __init__(
         self,
         layout: LayoutEdge,
-        position: EdgePosition,
+        position: Edge,
         parent: Board,
     ):
         self.lands = tuple(layout.lands[::-1])
@@ -24,7 +46,11 @@ class Edge:
         self.parent = parent
         self.neighbor: Optional[Self] = None
 
-    def cross_adjacencies(self) -> Iterator[Tuple[int, int]]:
+    def link(self, neighbor: Self) -> None:
+        assert self.neighbor is None
+        assert neighbor.neighbor is None
+        self.neighbor = neighbor
+        neighbor.neighbor = self
         assert self.neighbor
 
         self_pos = 1
@@ -32,24 +58,19 @@ class Edge:
         while True:
             try:
                 self_next = self.boundaries[self_pos]
-                neighbor_next = self.neighbor.boundaries[neighbor_pos]
+                neighbor_next = neighbor.boundaries[neighbor_pos]
             except IndexError:
                 break
-            yield (self.lands[self_pos - 1], self.neighbor.lands[neighbor_pos + 1])
+            self.parent.lands[self.lands[self_pos - 1]].link(
+                neighbor.parent.lands[neighbor.lands[neighbor_pos + 1]]
+            )
             if self_next + neighbor_next > 6:
                 neighbor_pos -= 1
             else:
                 self_pos += 1
 
-    def link(self, neighbor: Self) -> None:
-        # sorry for really abusing dunders
-        assert self.neighbor is None
-        assert neighbor.neighbor is None
-        self.neighbor = neighbor
-        neighbor.neighbor = self
 
-
-class EdgePosition(enum.Enum):
+class Edge(enum.Enum):
     # for naming, the ocean is 12 o'clock
     # for values, we pretend the clock is split in 8 to ease corner calc
     CLOCK3 = 2
@@ -77,7 +98,7 @@ class EdgePosition(enum.Enum):
 
 
 class Corner(enum.Enum):
-    # see EdgePosition
+    # see Edge
     CLOCK1 = 1
     CLOCK5 = 3
     CLOCK7 = 5
@@ -88,11 +109,11 @@ class Corner(enum.Enum):
         clock = (clock + 8) % 8
         return cls(clock)
 
-    def clockwise_edge(self) -> Optional[EdgePosition]:
-        return EdgePosition.from_clock(self.value + 1)
+    def clockwise_edge(self) -> Optional[Edge]:
+        return Edge.from_clock(self.value + 1)
 
-    def counterclockwise_edge(self) -> Optional[EdgePosition]:
-        return EdgePosition.from_clock(self.value - 1)
+    def counterclockwise_edge(self) -> Optional[Edge]:
+        return Edge.from_clock(self.value - 1)
 
     def clockwise_corner(self) -> Self:
         return self.from_clock(self.value + 2)
@@ -101,8 +122,8 @@ class Corner(enum.Enum):
         return self.from_clock(self.value - 2)
 
 
-RotateToEdge = Callable[[EdgePosition | Corner], Optional[EdgePosition]]
-RotateToCorner = Callable[[EdgePosition | Corner], Corner]
+RotateToEdge = Callable[[Edge | Corner], Optional[Edge]]
+RotateToCorner = Callable[[Edge | Corner], Corner]
 
 
 @dataclasses.dataclass
@@ -187,9 +208,9 @@ class Layout(enum.Enum):
 
         c1, c2 = [i for i, x in enumerate(boundaries) if x is None]
         self.edges = {
-            EdgePosition.CLOCK3: LayoutEdge(lands[: c1 + 1], boundaries[:c1]),
-            EdgePosition.CLOCK6: LayoutEdge(lands[c1:c2], boundaries[c1 + 1 : c2]),
-            EdgePosition.CLOCK9: LayoutEdge(lands[c2 - 1 :], boundaries[c2 + 1 :]),
+            Edge.CLOCK3: LayoutEdge(lands[: c1 + 1], boundaries[:c1]),
+            Edge.CLOCK6: LayoutEdge(lands[c1:c2], boundaries[c1 + 1 : c2]),
+            Edge.CLOCK9: LayoutEdge(lands[c2 - 1 :], boundaries[c2 + 1 :]),
         }
         self.internal_adjacencies: Dict[int, Set[int]] = {
             i + 1: set() for i in range(8)
@@ -207,9 +228,9 @@ class Layout(enum.Enum):
             case Corner.CLOCK11:
                 return 3
             case Corner.CLOCK5:
-                return self.edges[EdgePosition.CLOCK3].lands[-1]
+                return self.edges[Edge.CLOCK3].lands[-1]
             case Corner.CLOCK7:
-                return self.edges[EdgePosition.CLOCK6].lands[-1]
+                return self.edges[Edge.CLOCK6].lands[-1]
 
 
 class Board:
@@ -220,9 +241,15 @@ class Board:
     ):
         self.name = name
         self.layout = layout
-        self.edges = {pos: Edge(edge, pos, self) for pos, edge in layout.edges.items()}
+        self.edges = {
+            pos: BoardEdge(edge, pos, self) for pos, edge in layout.edges.items()
+        }
+        self.lands = {i: Land(board=self, num=i) for i in range(1, 9)}
+        for n, adj_set in self.layout.internal_adjacencies.items():
+            for neigh in adj_set:
+                self.lands[n]._link_one_way(self.lands[neigh], 1)
 
-    def _edge_opt(self, pos: Optional[EdgePosition]) -> Optional[Edge]:
+    def _edge_opt(self, pos: Optional[Edge]) -> Optional[BoardEdge]:
         if pos is None:
             return None
         return self.edges[pos]
@@ -232,7 +259,9 @@ class Board:
         corner: Corner,
         rotate: Rotate,
     ) -> Optional[Tuple[Board, int]]:
-        edge: Optional[Edge] = self._edge_opt(rotate.to_edge(corner))  # own board edge
+        edge: Optional[BoardEdge] = self._edge_opt(
+            rotate.to_edge(corner)
+        )  # own board edge
         if edge is None or edge.neighbor is None:
             return None
         edge = edge.neighbor  # neighbor's touching edge
@@ -254,16 +283,8 @@ class Board:
         return edge.parent, land
 
     def adjacent(self, land: int) -> Iterator[Tuple[Board, int]]:
-        for i in self.layout.internal_adjacencies[land]:
-            yield (self, i)
-
-        yield from (
-            (edge.neighbor.parent, j)
-            for edge in self.edges.values()
-            if edge.neighbor
-            for i, j in edge.cross_adjacencies()
-            if i == land
-        )
+        for link in self.lands[land].links:
+            yield link.land.board, link.land.num
 
         yield from (
             adjacency

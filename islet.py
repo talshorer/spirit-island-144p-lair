@@ -1,40 +1,40 @@
 import itertools
 import json
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict
 
-from layout import Board, EdgePosition, Layout
+from layout import Board, Edge, Layout
 
 
 def link_hub(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None:
     # the left standard-3
-    p.edges[EdgePosition.CLOCK6].link(q.edges[EdgePosition.CLOCK9])
-    q.edges[EdgePosition.CLOCK6].link(r.edges[EdgePosition.CLOCK9])
-    r.edges[EdgePosition.CLOCK6].link(p.edges[EdgePosition.CLOCK9])
+    p.edges[Edge.CLOCK6].link(q.edges[Edge.CLOCK9])
+    q.edges[Edge.CLOCK6].link(r.edges[Edge.CLOCK9])
+    r.edges[Edge.CLOCK6].link(p.edges[Edge.CLOCK9])
     # the right standard-3
-    s.edges[EdgePosition.CLOCK6].link(t.edges[EdgePosition.CLOCK9])
-    t.edges[EdgePosition.CLOCK6].link(u.edges[EdgePosition.CLOCK9])
-    u.edges[EdgePosition.CLOCK6].link(s.edges[EdgePosition.CLOCK9])
+    s.edges[Edge.CLOCK6].link(t.edges[Edge.CLOCK9])
+    t.edges[Edge.CLOCK6].link(u.edges[Edge.CLOCK9])
+    u.edges[Edge.CLOCK6].link(s.edges[Edge.CLOCK9])
     # and link them
-    q.edges[EdgePosition.CLOCK3].link(s.edges[EdgePosition.CLOCK3])
+    q.edges[Edge.CLOCK3].link(s.edges[Edge.CLOCK3])
 
 
 def link_spoke(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None:
     # the left coastline
-    p.edges[EdgePosition.CLOCK9].link(q.edges[EdgePosition.CLOCK3])
-    q.edges[EdgePosition.CLOCK9].link(r.edges[EdgePosition.CLOCK3])
+    p.edges[Edge.CLOCK9].link(q.edges[Edge.CLOCK3])
+    q.edges[Edge.CLOCK9].link(r.edges[Edge.CLOCK3])
     # the right coastline
-    s.edges[EdgePosition.CLOCK9].link(t.edges[EdgePosition.CLOCK3])
-    t.edges[EdgePosition.CLOCK9].link(u.edges[EdgePosition.CLOCK3])
+    s.edges[Edge.CLOCK9].link(t.edges[Edge.CLOCK3])
+    t.edges[Edge.CLOCK9].link(u.edges[Edge.CLOCK3])
     # and link them
-    r.edges[EdgePosition.CLOCK9].link(s.edges[EdgePosition.CLOCK6])
+    r.edges[Edge.CLOCK9].link(s.edges[Edge.CLOCK6])
 
 
 def link_rim(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None:
-    p.edges[EdgePosition.CLOCK9].link(q.edges[EdgePosition.CLOCK9])
-    q.edges[EdgePosition.CLOCK6].link(r.edges[EdgePosition.CLOCK6])
-    r.edges[EdgePosition.CLOCK9].link(s.edges[EdgePosition.CLOCK3])
-    s.edges[EdgePosition.CLOCK9].link(t.edges[EdgePosition.CLOCK3])
-    t.edges[EdgePosition.CLOCK9].link(u.edges[EdgePosition.CLOCK3])
+    p.edges[Edge.CLOCK9].link(q.edges[Edge.CLOCK9])
+    q.edges[Edge.CLOCK6].link(r.edges[Edge.CLOCK6])
+    r.edges[Edge.CLOCK9].link(s.edges[Edge.CLOCK3])
+    s.edges[Edge.CLOCK9].link(t.edges[Edge.CLOCK3])
+    t.edges[Edge.CLOCK9].link(u.edges[Edge.CLOCK3])
 
 
 class Loader:
@@ -65,12 +65,12 @@ class Loader:
             rim1p = self.boards[f"{rim1}P"]
             spokep = self.boards[f"{spoke}P"]
             rim2u = self.boards[f"{rim2}U"]
-            rim1p.edges[EdgePosition.CLOCK6].link(spokep.edges[EdgePosition.CLOCK3])
-            spokep.edges[EdgePosition.CLOCK6].link(rim2u.edges[EdgePosition.CLOCK9])
+            rim1p.edges[Edge.CLOCK6].link(spokep.edges[Edge.CLOCK3])
+            spokep.edges[Edge.CLOCK6].link(rim2u.edges[Edge.CLOCK9])
 
             rim2s = self.boards[f"{rim2}S"]
             spokeu = self.boards[f"{spoke}U"]
-            spokeu.edges[EdgePosition.CLOCK9].link(rim2s.edges[EdgePosition.CLOCK6])
+            spokeu.edges[Edge.CLOCK9].link(rim2s.edges[Edge.CLOCK6])
 
         for spoke1, spoke2, hub in zip(
             self._data[name]["spokes"][0::2],  # 🐍
@@ -79,11 +79,11 @@ class Loader:
         ):
             spoke1s = self.boards[f"{spoke1}S"]
             hubp = self.boards[f"{hub}P"]
-            spoke1s.edges[EdgePosition.CLOCK3].link(hubp.edges[EdgePosition.CLOCK3])
+            spoke1s.edges[Edge.CLOCK3].link(hubp.edges[Edge.CLOCK3])
 
             spoke2s = self.boards[f"{spoke2}S"]
             hubt = self.boards[f"{hub}T"]
-            spoke2s.edges[EdgePosition.CLOCK3].link(hubt.edges[EdgePosition.CLOCK3])
+            spoke2s.edges[Edge.CLOCK3].link(hubt.edges[Edge.CLOCK3])
 
     def _load_islet(
         self,
