@@ -58,6 +58,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--log", action="store_true")
     parser.add_argument("--diff", action="store_true")
+    parser.add_argument("--no-summary", action="store_true")
     parser.add_argument("--dahan-diff", action="store_true")
     parser.add_argument("--pull-r1-dahan")
     parser.add_argument("--actions", nargs="+")
@@ -91,21 +92,22 @@ def main() -> None:
     res.sort(key=lambda pair: score(pair[1]))
 
     for action_seq, thelair in res[-args.best :]:
-        print(
-            " ".join(
-                [
-                    f"{str(action_seq):<{58}}",
-                    str(thelair.r0),
-                    f"wasted_damage={thelair.wasted_damage}",
-                    f"total_gathers={thelair.total_gathers}",
-                    f"wasted_invader_gathers={thelair.wasted_invader_gathers}",
-                    f"wasted_dahan_gathers={thelair.wasted_dahan_gathers}",
-                    f"wasted_downgrades={thelair.wasted_downgrades}",
-                    f"fear={thelair.fear}",
-                    f"score={score(thelair)}",
-                ]
+        if not args.no_summary:
+            print(
+                " ".join(
+                    [
+                        f"{str(action_seq):<{58}}",
+                        str(thelair.r0),
+                        f"wasted_damage={thelair.wasted_damage}",
+                        f"total_gathers={thelair.total_gathers}",
+                        f"wasted_invader_gathers={thelair.wasted_invader_gathers}",
+                        f"wasted_dahan_gathers={thelair.wasted_dahan_gathers}",
+                        f"wasted_downgrades={thelair.wasted_downgrades}",
+                        f"fear={thelair.fear}",
+                        f"score={score(thelair)}",
+                    ]
+                )
             )
-        )
         if args.log:
             print(thelair.log.collapse())
         if args.diff:
