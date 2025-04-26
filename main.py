@@ -116,23 +116,93 @@ class LogSplit:
         self.commit(False)
 
 
-def main() -> None:
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--log", action="store_true")
-    parser.add_argument("--log-split")
-    parser.add_argument("--log-split-header")
-    parser.add_argument("--no-summary", action="store_true")
-    parser.add_argument("--server-emojis", action="store_true")
-    parser.add_argument("--diff", action="store_true")
-    parser.add_argument("--dahan-diff", action="store_true")
-    parser.add_argument("--pull-r1-dahan")
-    parser.add_argument("--actions", nargs="+")
-    parser.add_argument("--reckless-offensive", nargs="+", default=[])
-    parser.add_argument("--best", type=int, default=1)
-    parser.add_argument("--land-priority", default="")
-    parser.add_argument("--reserve-gathers", type=int, default=0)
-    parser.add_argument("--reserve-damage", type=int, default=0)
-    args = parser.parse_args()
+    parser.add_argument(
+        "--log",
+        action="store_true",
+        help="Output action log in markdown format to stdout",
+    )
+    parser.add_argument(
+        "--log-split",
+        help="Output action log to multiple files, split into discord message length",
+        metavar="DIRECTORY",
+    )
+    parser.add_argument(
+        "--log-split-header",
+        help="Append a marker to each split log header",
+        metavar="HEADER",
+    )
+    parser.add_argument(
+        "--no-summary",
+        action="store_true",
+        help="Don't display final lair state summary",
+    )
+    parser.add_argument(
+        "--server-emojis",
+        action="store_true",
+        help="Use Spirit Island Discord server emojis where applicable",
+    )
+    parser.add_argument(
+        "--diff",
+        action="store_true",
+        help="Show each land's initial and final state",
+    )
+    parser.add_argument(
+        "--dahan-diff",
+        action="store_true",
+        help="Don't show a land as clear if it has dahan",
+    )
+    parser.add_argument(
+        "--pull-r1-dahan",
+        help='Pull N (or "ALL") range-1 Dahan before any lair action',
+        metavar="COUNT",
+    )
+    parser.add_argument(
+        "--actions",
+        nargs="+",
+        help="Available actions for the lair. Specify an action multiple times if it's available multiple times",
+        metavar="ACTION",
+    )
+    parser.add_argument(
+        "--reckless-offensive",
+        nargs="+",
+        default=[],
+        help="Reserve a list of lands to be qualified for Reckless Offensive event",
+        metavar="LAND",
+    )
+    parser.add_argument(
+        "--best",
+        type=int,
+        default=1,
+        help="Show best N results instead of just one",
+        metavar="COUNT",
+    )
+    parser.add_argument(
+        "--land-priority",
+        default="",
+        help="Priority list of land types to clear",
+        metavar="LAND-TYPES",
+    )
+    parser.add_argument(
+        "--reserve-gathers",
+        type=int,
+        default=0,
+        help="Reserve first N lair gathers for other actions",
+        metavar="COUNT",
+    )
+    parser.add_argument(
+        "--reserve-damage",
+        type=int,
+        default=0,
+        help="Reserve first N lair damage for other actions",
+        metavar="COUNT",
+    )
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
     res: List[Tuple[Tuple, lair.Lair]] = []
     action_seqs = set(tuple(s) for s in perms(args.actions))
     lair_conf = lair.LairConf(
