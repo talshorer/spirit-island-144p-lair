@@ -44,6 +44,8 @@ def parse(
         gathers_to=None,
         conf=lair_conf,
     )
+    lands["LAIR"] = r0
+    
     r: List[List[lair.Land]] = [[], [], []]
     with open(csvpath, encoding="utf-8") as f:
         it = iter(csv.reader(f))
