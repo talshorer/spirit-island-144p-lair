@@ -10,8 +10,8 @@ Source,Destination,City,Town,Explorer,Dahan,Action Name,Action ID,Parent,Notes
 🇲🇺T6S,🇲🇺T8W,,,,1,Skies Herald the Season of Return (🇲🇺Roots),6,,
 🇲🇺S3M,,,,1,,Blazing Presence (📚Transforming),7,,
 🇲🇺S3M,,1,5,,,Firestorm (📚Transforming),8,,"Execute after all other S3 actions, but I think before Lair stuff?"
+,LAIRL,,1,11,,,8,,
 🇲🇺S3M,LAIRL,,,,1,,8,,
-,LAIRL,,1,5,,Military Response,9,8,
 🍪S3M,🧀P2S,,,,1,Strong and Constant Currents (🍕Fractured),10,,"Fractured wrote 🍪S3W, but I'm pretty sure the W is the typo"
 🧀P2S,📚U6M,,,,1,Bargain of Coursing Paths,20,10,
 🍪P3J,?,,,,3,Wrap in Wings of Sunlight (🍪Mentor),15,,Pay attention to how this finalizes
