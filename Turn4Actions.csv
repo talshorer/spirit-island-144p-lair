@@ -6,7 +6,7 @@ Source,Destination,City,Town,Explorer,Dahan,Action Name,Action ID,Parent,Notes
 ,🇲🇺Q1J,,,1,,Military Response,4,3,
 🇲🇺Q1J,LAIRL,,,1,,Bargain of Coursing Paths,5,4,
 🐀R2M,🧀P2S,2,1,,,Lay Paths They Cannot Help but Walk repeat (🇲🇺Finder),27,1,
-🧀P2S,LAIRL,2,1,,,Bargain of Coursing Paths,28,27
+🧀P2S,LAIRL,2,1,,,Bargain of Coursing Paths,28,27,
 🇲🇺T6S,🇲🇺T8W,,,,1,Skies Herald the Season of Return (🇲🇺Roots),6,,
 🇲🇺S3M,,,,1,,Blazing Presence (📚Transforming),7,,
 🇲🇺S3M,,1,5,,,Firestorm (📚Transforming),8,,"Execute after all other S3 actions, but I think before Lair stuff?"
