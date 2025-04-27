@@ -28,7 +28,6 @@ class Land:
         dahan: int,
         gathers_to: Optional[Self],
         conf: LairConf,
-        allow_negative: bool = False,
     ):
         self.key = key
         self.land_type = land_type
