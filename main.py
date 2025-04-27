@@ -33,7 +33,7 @@ def newlair(lair_conf: lair.LairConf, parse_conf: parse.ParseConf) -> lair.Lair:
     )
 
 
-def cmplands(r: int, a: lair.Land, b: lair.Land, args: argparse.Namespace) -> None:
+def landdiff(r: int, a: lair.Land, b: lair.Land, args: argparse.Namespace) -> str:
     assert a.key == b.key
     bstr = str(b)
     if b.cities.cnt == b.towns.cnt == b.explorers.cnt == 0:
@@ -52,7 +52,7 @@ def cmplands(r: int, a: lair.Land, b: lair.Land, args: argparse.Namespace) -> No
         range_ = f"({r}) "
     else:
         range_ = ""
-    print(f"{range_}{a.key}: {a} => {bstr}")
+    return f"{range_}{a.key}: {a} => {bstr}"
 
 
 class Comparable(Protocol):
@@ -296,12 +296,16 @@ def main() -> None:
                     )
                     f.write(content)
         if args.diff:
+            all_diff = []
             orig_lair = newlair(lair_conf, parse_conf)
-            cmplands(0, orig_lair.r0, thelair.r0, args)
+            all_diff.append(landdiff(0, orig_lair.r0, thelair.r0, args))
             for a, b in zip(orig_lair.r1, thelair.r1):
-                cmplands(1, a, b, args)
+                all_diff.append(landdiff(1, a, b, args))
             for a, b in zip(orig_lair.r2, thelair.r2):
-                cmplands(2, a, b, args)
+                all_diff.append(landdiff(2, a, b, args))
+            all_diff.sort()
+            for line in all_diff:
+                print(line)
 
 
 if __name__ == "__main__":
