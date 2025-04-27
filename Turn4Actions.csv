@@ -10,8 +10,8 @@ Source,Destination,City,Town,Explorer,Dahan,Action Name,Action ID,Parent,Notes
 🇲🇺S3M,,1,5,,,Firestorm (📚Transforming),8,,"Execute after all other S3 actions, but I think before Lair stuff?"
 🇲🇺S3M,LAIRL,,,,1,,8,,
 ,LAIRL,,1,5,,Military Response,9,8,
-🍪Q1S,🍪P3J,,1,,,Strong and Constant Currents (🍕Fractured),10,,"Not that this push matters, since the lands are getting Woven together..."
-🍪Q1S,🍪Q3,,,,1,,10,,
+🍪S3W,🧀P2S,,,,1,Strong and Constant Currents (🍕Fractured),10,,"🍪S3W [sic]; I'm pretty sure it's a mountain actually"
+🧀P2S,📚U6M,,,,1,,20,10,
 🍪P3J,?,,,,3,Wrap in Wings of Sunlight (🍪Mentor),15,,Pay attention to how this finalizes
 🍪Q6M,,1,,,,Constant Raiding,16,15,
 ,🍪Q6M,,1,,,Military Response,17,16,
