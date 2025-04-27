@@ -1,7 +1,7 @@
 import csv
 import dataclasses
 import json
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 
 import lair
@@ -25,7 +25,7 @@ def parse(
     actionspath: str,
     lair_conf: lair.LairConf,
     parse_conf: ParseConf,
-) -> lair.Lair:
+) -> Tuple[lair.Lair, Dict[str, lair.Land]]:
     lands: Dict[str, lair.Land] = {}
     with open(jsonpath) as f:
         initial = json.load(f)
@@ -80,9 +80,6 @@ def parse(
             lands[key] = land
             r[rng].append(land)
 
-    # lands not in TurnNStart.csv
-    # I'm keeping track of them so that we can potentially update the code to produce
-    #    a log with the sources of invaders to doublecheck things
     distant_lands: Dict[str, lair.Land] = {}
     with open(actionspath, encoding="utf-8") as f:
         it = iter(csv.reader(f))
@@ -133,4 +130,4 @@ def parse(
                     allow_negative,
                 )
     assert not r[0]
-    return lair.Lair(r0=r0, r1=r[1], r2=r[2], conf=lair_conf)
+    return lair.Lair(r0=r0, r1=r[1], r2=r[2], conf=lair_conf), distant_lands

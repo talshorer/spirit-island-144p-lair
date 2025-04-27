@@ -1,7 +1,7 @@
 import abc
 import argparse
 import os
-from typing import List, Self, Tuple, TypeVar, Protocol
+from typing import Dict, List, Self, Tuple, TypeVar, Protocol
 
 import parse
 import lair
@@ -24,7 +24,10 @@ def perms(it: List[T]) -> List[List[T]]:
     return ret
 
 
-def newlair(lair_conf: lair.LairConf, parse_conf: parse.ParseConf) -> lair.Lair:
+def newlair(
+    lair_conf: lair.LairConf,
+    parse_conf: parse.ParseConf,
+) -> Tuple[lair.Lair, Dict[str, lair.Land]]:
     return parse.parse(
         csvpath="Turn4Start.csv",
         jsonpath="initial-lair.json",
@@ -34,7 +37,7 @@ def newlair(lair_conf: lair.LairConf, parse_conf: parse.ParseConf) -> lair.Lair:
     )
 
 
-def landdiff(r: int, a: lair.Land, b: lair.Land, args: argparse.Namespace) -> str:
+def landdiff(r: int | str, a: lair.Land, b: lair.Land, args: argparse.Namespace) -> str:
     assert a.key == b.key
     bstr = str(b)
     if b.cities.cnt == b.towns.cnt == b.explorers.cnt == 0:
@@ -249,7 +252,7 @@ def main() -> None:
     )
     for action_seq in action_seqs:
         action_seq += ("ravage",)
-        thelair = newlair(lair_conf, parse_conf)
+        thelair, _ = newlair(lair_conf, parse_conf)
         if args.pull_r1_dahan is not None:
             if args.pull_r1_dahan == "ALL":
                 pull = 1 << 32
@@ -298,12 +301,26 @@ def main() -> None:
                     f.write(content)
         if args.diff:
             all_diff = []
-            orig_lair = newlair(lair_conf, parse_conf)
+            orig_lair, distant_lands = newlair(lair_conf, parse_conf)
             all_diff.append(landdiff(0, orig_lair.r0, thelair.r0, args))
             for a, b in zip(orig_lair.r1, thelair.r1):
                 all_diff.append(landdiff(1, a, b, args))
             for a, b in zip(orig_lair.r2, thelair.r2):
                 all_diff.append(landdiff(2, a, b, args))
+            for b in distant_lands.values():
+                if not b.key:
+                    b.key = "dead"
+                a = lair.Land(
+                    key=b.key,
+                    land_type=b.land_type,
+                    explorers=lair.Explorer.new(),
+                    towns=lair.Town.new(),
+                    cities=lair.City.new(),
+                    dahan=lair.Dahan.new(),
+                    gathers_to=thelair.r0,  # whatever...
+                    conf=lair_conf,
+                )
+                all_diff.append(landdiff("far", a, b, args))
             all_diff.sort()
             for line in all_diff:
                 if line:
