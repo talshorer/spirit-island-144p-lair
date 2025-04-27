@@ -25,19 +25,6 @@ def perms(it: List[T]) -> List[List[T]]:
     return ret
 
 
-def newlair(
-    lair_conf: lair.LairConf,
-    parse_conf: parse.ParseConf,
-) -> Tuple[lair.Lair, Dict[str, lair.Land]]:
-    return parse.parse(
-        csvpath="Turn4Start.csv",
-        jsonpath="initial-lair.json",
-        actionspath="Turn4Actions.csv",
-        lair_conf=lair_conf,
-        parse_conf=parse_conf,
-    )
-
-
 def landdiff(
     r: int | str,
     a: lair.Land,
@@ -277,9 +264,16 @@ def main() -> None:
         server_emojis=args.server_emojis,
         ignore_lands=args.ignore_lands,
     )
+    parser = parse.Parser(
+        csvpath="Turn4Start.csv",
+        jsonpath="initial-lair.json",
+        actionspath="Turn4Actions.csv",
+        lair_conf=lair_conf,
+        parse_conf=parse_conf,
+    )
     for action_seq in action_seqs:
         action_seq += ("ravage",)
-        thelair, _ = newlair(lair_conf, parse_conf)
+        thelair, _ = parser.parse_all()
         if args.pull_r1_dahan is not None:
             if args.pull_r1_dahan == "ALL":
                 pull = 1 << 32
@@ -332,7 +326,7 @@ def main() -> None:
                     f.write(content)
         if args.diff:
             all_diff = []
-            orig_lair, distant_lands = newlair(lair_conf, parse_conf)
+            orig_lair, distant_lands = parser.parse_all()
             all_diff.append(landdiff(0, orig_lair.r0, thelair.r0, args))
             for a, b in zip(orig_lair.r1, thelair.r1):
                 all_diff.append(landdiff(1, a, b, args))
@@ -358,6 +352,8 @@ def main() -> None:
             for line in all_diff:
                 if line:
                     print(line)
+        if args.cat_cafe:
+            cat_cafe(thelair)
 
 
 if __name__ == "__main__":
