@@ -20,8 +20,8 @@ class Pieces:
 class Land:
     def __init__(
         self,
-        key: str,           # example: 🌙R4
-        land_type: str,     # example: M
+        key: str,  # example: 🌙R4
+        land_type: str,  # example: M
         explorers: int,
         towns: int,
         cities: int,
@@ -46,21 +46,21 @@ class Land:
             mr = tipe.select_mr(self)
             tipe.select(self).cnt += mr.cnt
             mr.cnt = 0
-    
+
     def add_pieces(
         self,
         explorers: int,
         towns: int,
         cities: int,
         dahan: int,
-        allow_negative: bool =False,
+        allow_negative: bool = False,
     ) -> None:
         for piece, added in zip(
             (self.explorers, self.towns, self.cities, self.dahan),
-            (explorers, towns, cities, dahan)
+            (explorers, towns, cities, dahan),
         ):
             piece.cnt += added
-            assert allow_negative or piece.cnt >= 0, f'land {self.key}'
+            assert allow_negative or piece.cnt >= 0, f"land {self.key}"
 
     def __str__(self) -> str:
         pieces = ", ".join(

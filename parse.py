@@ -5,7 +5,6 @@ from typing import Dict, List
 
 
 import lair
-import layout
 
 
 def to_int(s: str) -> int:
@@ -66,10 +65,9 @@ def parse(
                 gathers_to = r0
             else:
                 gathers_to = lands[gathers_to_land_key]
-            #land_key = key[:-5] + key[-2:].upper() + land_type_key
+            # land_key = key[:-5] + key[-2:].upper() + land_type_key
             if any(
-                ignored_land_key == key
-                for ignored_land_key in parse_conf.ignore_lands
+                ignored_land_key == key for ignored_land_key in parse_conf.ignore_lands
             ):
                 continue
             land = lair.Land(
@@ -105,7 +103,7 @@ def parse(
                 _parent_action,
                 _notes,
             ) = row
-        
+
             for key, mult in ((source_key, -1), (destination_key, 1)):
                 if key:
                     land_type = key[-1]
@@ -113,7 +111,9 @@ def parse(
                     try:
                         land = lands[key]
                         assert land_type == land.land_type
-                        allow_negative = False # perhaps this should be an attribute of Land?
+                        allow_negative = (
+                            False  # perhaps this should be an attribute of Land?
+                        )
                     except KeyError:
                         allow_negative = True
                         try:
@@ -132,10 +132,10 @@ def parse(
                             )
                             distant_lands[key] = land
                     land.add_pieces(
-                        mult*to_int(explorers),
-                        mult*to_int(towns),
-                        mult*to_int(cities),
-                        mult*to_int(dahan),
+                        mult * to_int(explorers),
+                        mult * to_int(towns),
+                        mult * to_int(cities),
+                        mult * to_int(dahan),
                         allow_negative,
                     )
     assert not r[0]
