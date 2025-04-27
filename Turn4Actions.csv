@@ -21,8 +21,8 @@ Source,Destination,City,Town,Explorer,Dahan,Action Name,Action ID,Parent,Notes
 🍪R6W,,,2,,,,16,15,
 ,🍪Q6M,,,1,,Military Response,17,16,
 ,🍪R6W,,,2,,,17,16
-🍪P7S,🍪P3J/Q1S,,2,2,,Weave Together the Fabric of Place (🍪Mentor),12,,Verify that this actually happens (there might be some range issues?)
-🍪Q8S,🍪P3J/Q1S,,3,,,,12,,
+🍪P7S,🍪P7S/Q8S,,4,,,Weave Together the Fabric of Place (🍪Mentor),12,,
+🍪Q8S,🍪P7S/Q8S,,4,,,,12,,
 🍪T6M,LAIRL,,,,2,Guide the Way on Feathered Wings (🍪Minds),15,,
 💖T6M,💖T5J,,,,3,Terrifying Rampage (🐺Behemoth),16,,
 💖T5J,,,1,1,,Constant Raiding,17,16,
@@ -41,7 +41,7 @@ Source,Destination,City,Town,Explorer,Dahan,Action Name,Action ID,Parent,Notes
 🍪P4S,,,4,,,,11,,
 🍪P5W,,,4,1,,,11,,
 🍪P6M,,1,5,3,1,,11,,
-🍪P7S,,,4,,,,11,,
+🍪P7S/Q8S,,,8,,,,11,,
 🍪P8J,,,6,2,,,11,,
 ,🍕P8S,,4,39,,Military Response,13,11,
 🍕P8S,LAIRL,,4,39,,Bargain of Coursing Paths,14,13,
