@@ -14,11 +14,15 @@ Source,Destination,City,Town,Explorer,Dahan,Action Name,Action ID,Parent,Notes
 🇲🇺S3M,LAIRL,,,,1,,8,,
 🍪S3M,🧀P2S,,,,1,Strong and Constant Currents (🍕Fractured),10,,"Fractured wrote 🍪S3W, but I'm pretty sure the W is the typo"
 🧀P2S,📚U6M,,,,1,Bargain of Coursing Paths,20,10,
-🍪P3J,?,,,,3,Wrap in Wings of Sunlight (🍪Mentor),15,,Pay attention to how this finalizes
-🍪Q6M,,1,,,,Constant Raiding,16,15,
-,🍪Q6M,,1,,,Military Response,17,16,
-🍪P3J,🍪P3J/Q1S,,3,2,,Weave Together the Fabric of Place (🍪Mentor),12,,Verify that this actually happens (there might be some range issues?)
-🍪Q1S,🍪P3J/Q1S,,3,,,,12,,
+🍪P3J,🍪Q6M,,,,2,Wrap in Wings of Sunlight (🍪Mentor),15,,Pay attention to how this 
+🍪Q6M,🍪R6W,,,,3,,15,,
+🍪P3J,🍪R6W,,,,1,,15,,
+🍪Q6M,,,1,,,Constant Raiding,16,15,
+🍪R6W,,,2,,,,16,15,
+,🍪Q6M,,,1,,Military Response,17,16,
+,🍪R6W,,,2,,,17,16
+🍪P7S,🍪P3J/Q1S,,2,2,,Weave Together the Fabric of Place (🍪Mentor),12,,Verify that this actually happens (there might be some range issues?)
+🍪Q8S,🍪P3J/Q1S,,3,,,,12,,
 🍪T6M,LAIRL,,,,2,Guide the Way on Feathered Wings (🍪Minds),15,,
 💖T6M,💖T5J,,,,3,Terrifying Rampage (🐺Behemoth),16,,
 💖T5J,,,1,1,,Constant Raiding,17,16,
@@ -33,7 +37,7 @@ Source,Destination,City,Town,Explorer,Dahan,Action Name,Action ID,Parent,Notes
 ,LAIRL,,,2,,Currents placeholder,99,,This is here because I expect a total of 3 explorers to come to Lair from Currents once it's fixed
 🍪P1M,,1,5,,,Cast Down Into the Briny Deep (🍕Fractured),11,,Make sure to recheck the numbers in case things get pushed onto the board
 🍪P2W,,2,5,,,,11,,
-🍪P3J/Q1S,,,6,2,2,,11,,
+🍪P3J,,,2,2,2,,11,,
 🍪P4S,,,4,,,,11,,
 🍪P5W,,,4,1,,,11,,
 🍪P6M,,1,5,3,1,,11,,
