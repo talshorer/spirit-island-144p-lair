@@ -325,6 +325,11 @@ def parse_args() -> argparse.Namespace:
         help="Don't show a land as clear if it has dahan",
     )
     parser.add_argument(
+        "--distant-diff",
+        action="store_true",
+        help="Show distant lands in diff view",
+    )
+    parser.add_argument(
         "--strict-diff",
         action="store_true",
         help="Skip lands in diff view if they didn't change",
@@ -472,22 +477,23 @@ def main() -> None:
                 all_diff.append(landdiff(1, a, b, args))
             for a, b in zip(orig_lair.r2, thelair.r2):
                 all_diff.append(landdiff(2, a, b, args))
-            for b in distant_lands.values():
-                if not b.key:
-                    b.key = "dead"
-                elif not b.key.endswith("X"):
-                    b.key += "X"
-                a = lair.Land(
-                    key=b.key,
-                    land_type=b.land_type,
-                    explorers=0,
-                    towns=0,
-                    cities=0,
-                    dahan=0,
-                    gathers_to=thelair.r0,  # whatever...
-                    conf=lair_conf,
-                )
-                all_diff.append(landdiff("far", a, b, args, allow_clear=False))
+            if args.distant_diff:
+                for b in distant_lands.values():
+                    if not b.key:
+                        b.key = "dead"
+                    elif not b.key.endswith("X"):
+                        b.key += "X"
+                    a = lair.Land(
+                        key=b.key,
+                        land_type=b.land_type,
+                        explorers=0,
+                        towns=0,
+                        cities=0,
+                        dahan=0,
+                        gathers_to=thelair.r0,  # whatever...
+                        conf=lair_conf,
+                    )
+                    all_diff.append(landdiff("far", a, b, args, allow_clear=False))
             all_diff.sort()
             for line in all_diff:
                 if line:
