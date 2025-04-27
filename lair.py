@@ -175,7 +175,9 @@ class Lair:
         tgt: Pieces,
         cnt: int,
     ) -> int:
-        if any(land_key in src_land.key for land_key in self.conf.reckless_offensive):
+        if any(
+            land_key in src_land.key for land_key in self.conf.reckless_offensive
+        ) and src_tipe in (Town, Dahan):
             leave = 2
         else:
             leave = 0
