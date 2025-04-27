@@ -47,7 +47,7 @@ def landdiff(r: int, a: lair.Land, b: lair.Land, args: argparse.Namespace) -> st
         and a.dahan.cnt == b.dahan.cnt
     ):
         if args.strict_diff:
-            return
+            return ""
         bstr = "UNCHANGED"
     if args.diff_range:
         range_ = f"({r}) "
@@ -306,7 +306,8 @@ def main() -> None:
                 all_diff.append(landdiff(2, a, b, args))
             all_diff.sort()
             for line in all_diff:
-                print(line)
+                if line:
+                    print(line)
 
 
 if __name__ == "__main__":
