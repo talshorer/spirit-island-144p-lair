@@ -109,8 +109,10 @@ def parse(
                     allow_negative = False
                 else:
                     allow_negative = True
-                    land = distant_lands.get(key)
-                    if land is None:
+                    dland = distant_lands.get(key)
+                    if dland is not None:
+                        land = dland
+                    else:
                         land = lair.Land(
                             key=key,
                             land_type=land_type,
