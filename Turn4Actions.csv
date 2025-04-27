@@ -1,15 +1,15 @@
 Source,Destination,City,Town,Explorer,Dahan,Action Name,Action ID,Parent,Notes
-🦋Dark,LAIR,,,1,,Escape (🦋Darkness),19,,
+🦋DarkX,LAIRX,,,1,,Escape (🦋Darkness),19,,
 🇲🇺P3J,🧀P2S,,2,,,Lay Paths They Cannot Help But Walk (🇲🇺Finder),1,,
-🧀P2S,LAIR,,2,,,Bargain of Coursing Paths,2,1,
+🧀P2S,LAIRX,,2,,,Bargain of Coursing Paths,2,1,
 🇲🇺Q1J,,,1,,,Constant Raiding,3,1,
 ,🇲🇺Q1J,,,1,,Military Response,4,3,
-🇲🇺Q1J,LAIR,,,1,,Bargain of Coursing Paths,5,4,
+🇲🇺Q1J,LAIRX,,,1,,Bargain of Coursing Paths,5,4,
 🇲🇺T6S,🇲🇺T8W,,,,1,Skies Herald the Season of Return (🇲🇺Roots),6,,
 🇲🇺S3M,,,,1,,Blazing Presence (📚Transforming),7,,
-🇲🇺S3M,,1,5,1,,Firestorm (📚Transforming),8,,"Execute after all other S3 actions, but I think before Lair stuff?"
-🇲🇺S3M,LAIR,,,,1,,8,,
-,LAIR,,1,5,,Military Response,9,8,
+🇲🇺S3M,,1,5,,,Firestorm (📚Transforming),8,,"Execute after all other S3 actions, but I think before Lair stuff?"
+🇲🇺S3M,LAIRX,,,,1,,8,,
+,LAIRX,,1,5,,Military Response,9,8,
 🍪Q1S,🍪P3J,,1,,,Strong and Constant Currents (🍕Fractured),10,,"Not that this push matters, since the lands are getting Woven together..."
 🍪Q1S,🍪Q3,,,,1,,10,,
 🍪P3J,?,,,,3,Wrap in Wings of Sunlight (🍪Mentor),15,,Pay attention to how this finalizes
@@ -26,8 +26,8 @@ Source,Destination,City,Town,Explorer,Dahan,Action Name,Action ID,Parent,Notes
 🍪P7S,,,4,,,,11,,
 🍪P8J,,,6,2,,,11,,
 ,🍕P8S,,4,39,,Military Response,13,11,
-🍕P8S,LAIR,,4,39,,Bargain of Coursing Paths,14,13,
-🍪T6M,LAIR,,,,2,Guide the Way on Feathered Wings (🍪Minds),15,,
+🍕P8S,LAIRX,,4,39,,Bargain of Coursing Paths,14,13,
+🍪T6M,LAIRX,,,,2,Guide the Way on Feathered Wings (🍪Minds),15,,
 💖T6M,💖T5J,,,,3,Terrifying Rampage (🐺Behemoth),16,,
 💖T5J,,,1,1,,Constant Raiding,17,16,
 ,💖T5J,,,1,,Military Response,18,17,
