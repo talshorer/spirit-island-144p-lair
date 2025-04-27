@@ -37,10 +37,16 @@ def newlair(
     )
 
 
-def landdiff(r: int | str, a: lair.Land, b: lair.Land, args: argparse.Namespace) -> str:
+def landdiff(
+    r: int | str,
+    a: lair.Land,
+    b: lair.Land,
+    args: argparse.Namespace,
+    allow_clear: bool = True,
+) -> str:
     assert a.key == b.key
     bstr = str(b)
-    if b.cities.cnt == b.towns.cnt == b.explorers.cnt == 0:
+    if allow_clear and b.cities.cnt == b.towns.cnt == b.explorers.cnt == 0:
         if b.dahan.cnt == 0 or not args.dahan_diff:
             bstr = "CLEAR"
     if (
@@ -320,7 +326,7 @@ def main() -> None:
                     gathers_to=thelair.r0,  # whatever...
                     conf=lair_conf,
                 )
-                all_diff.append(landdiff("far", a, b, args))
+                all_diff.append(landdiff("far", a, b, args, allow_clear=False))
             all_diff.sort()
             for line in all_diff:
                 if line:
