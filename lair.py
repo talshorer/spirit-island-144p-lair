@@ -183,32 +183,32 @@ class Lair:
         actual = min(max(src.cnt - leave, 0), cnt)
         src.cnt -= actual
         tgt.cnt += actual
-        return cnt - actual
+        return actual
 
     def _gather(self, tipe: PieceType, land: Land, cnt: int) -> int:
         assert land.gathers_to
-        left = self._xchg(land, tipe, tipe.select(land.gathers_to), cnt)
-        self.total_gathers += cnt - left
-        if cnt - left:
+        actual = self._xchg(land, tipe, tipe.select(land.gathers_to), cnt)
+        self.total_gathers += actual
+        if actual:
             self.log.entry(
-                f"gather {cnt-left} {tipe.name(self.conf.piece_names)} from {land.key} to {land.gathers_to.key}"
+                f"gather {actual} {tipe.name(self.conf.piece_names)} from {land.key} to {land.gathers_to.key}"
             )
-        return left
+        return actual
 
-    def _downgrade(self, tipe: PieceType, land: Land, cnt: int) -> int:
+    def _downgrade2(self, tipe: PieceType, land: Land, cnt: int) -> int:
         assert tipe.response
-        left = self._xchg(land, tipe, tipe.response.select(land), cnt)
-        if cnt - left:
+        actual = self._xchg(land, tipe, tipe.response.select(land), cnt)
+        if actual:
             self.log.entry(
-                f"downgrade {cnt-left} {tipe.name(self.conf.piece_names)} in {land.key}"
+                f"downgrade {actual} {tipe.name(self.conf.piece_names)} in {land.key}"
             )
-        return left
+        return actual
 
     def _lair1(self) -> None:
         r0 = self.r0
         downgrades = (r0.explorers.cnt + r0.dahan.cnt) // 3
-        downgrades = self._downgrade(Town, r0, downgrades)
-        downgrades = self._downgrade(City, r0, downgrades)
+        downgrades -= self._downgrade2(Town, r0, downgrades)
+        downgrades -= self._downgrade2(City, r0, downgrades)
         self.wasted_downgrades += downgrades
 
     def _r1_least_dahan(self) -> List[Land]:
@@ -221,12 +221,12 @@ class Lair:
         gathers = 1
         for tipe in [Explorer, Town]:
             for land in self._r1_most_dahan():
-                gathers = self._gather(tipe, land, gathers)
+                gathers -= self._gather(tipe, land, gathers)
         self.wasted_invader_gathers += gathers
 
         gathers = 1
         for land in self._r1_most_dahan():
-            gathers = self._gather(Dahan, land, gathers)
+            gathers -= self._gather(Dahan, land, gathers)
         self.wasted_dahan_gathers += gathers
 
     def _reserve(self, reserve: Reserve, prefix: str, what: str, cnt: int) -> int:
@@ -265,13 +265,13 @@ class Lair:
                 cast(ConvertLand, lambda land: land.gathers_to)
             ),
         ):
-            gathers = self._gather(Town, land, gathers)
-            gathers = self._gather(City, land, gathers)
-            gathers = self._gather(Explorer, land, gathers)
+            gathers -= self._gather(Town, land, gathers)
+            gathers -= self._gather(City, land, gathers)
+            gathers -= self._gather(Explorer, land, gathers)
 
         for tipe in [Explorer, Town, City]:
             for land in self._r1_most_dahan():
-                gathers = self._gather(tipe, land, gathers)
+                gathers -= self._gather(tipe, land, gathers)
 
         self.log.entry(f"unused gathers left at end of slurp: {gathers}")
         self.wasted_invader_gathers += gathers
@@ -299,7 +299,7 @@ class Lair:
         gathers: int,
     ) -> int:
         for land in it():
-            gathers = self._gather(tipe, land, gathers)
+            gathers -= self._gather(tipe, land, gathers)
         return gathers
 
     def call(self) -> None:
@@ -321,9 +321,8 @@ class Lair:
             response = tipe.response.select_mr(respond_to)
         else:
             response = Void.new()
-        kill = min(dmg // tipe.health, tipe.select(land).cnt)
 
-        self._xchg(land, tipe, response, kill)
+        kill = self._xchg(land, tipe, response, dmg // tipe.health)
         if kill:
             self.log.entry(
                 f"destroy {kill} {tipe.name(self.conf.piece_names)} in {land.key}"
@@ -334,7 +333,7 @@ class Lair:
                         f"MR adds {kill} {tipe.response.name(self.conf.piece_names)} in {respond_to.key}"
                     )
         self.fear += kill * tipe.fear
-        return dmg - kill * tipe.health
+        return kill * tipe.health
 
     def _ravage(self) -> None:
         r0 = self.r0
@@ -348,10 +347,10 @@ class Lair:
             ),
         )
         for land in lands:
-            dmg = self._damage(land, Town, dmg)
-            dmg = self._damage(land, City, dmg)
+            dmg -= self._damage(land, Town, dmg)
+            dmg -= self._damage(land, City, dmg)
         for land in lands:
-            dmg = self._damage(land, Explorer, dmg)
+            dmg -= self._damage(land, Explorer, dmg)
 
         self.log.entry(f"unused damage left at end of ravage: {dmg}")
         self.wasted_damage += dmg
