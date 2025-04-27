@@ -23,6 +23,7 @@ class ParseConf:
 def parse(
     csvpath: str,
     jsonpath: str,
+    actionspath: str,
     lair_conf: lair.LairConf,
     parse_conf: ParseConf,
 ) -> lair.Lair:
@@ -43,47 +44,36 @@ def parse(
         gathers_to=None,
         conf=lair_conf,
     )
+    lands["LAIR"] = r0
+
     r: List[List[lair.Land]] = [[], [], []]
-    with open(csvpath) as f:
+    with open(csvpath, encoding="utf-8") as f:
         it = iter(csv.reader(f))
         next(it)  # throw away header row
-        last_weave = ""
         for row in it:
             (
-                weaves,
-                land_key,
+                key,
                 srng,
                 cities,
                 towns,
                 explorers,
                 dahan,
-                tipe,
+                land_type,
                 gathers_to_land_key,
-                _island_idx,
             ) = row
-            if weaves == "Total":  # throw away all the stuff for humans
-                break
-            if weaves:
-                last_weave = weaves.replace(" ", "")
-            key = f"{last_weave}.{land_key}"
             rng = int(srng)
             if rng == 1:
                 gathers_to = r0
             else:
-                gathers_to = lands[f"{last_weave}.{gathers_to_land_key}"]
-            land_type = tipe[0].upper()
-            if parse_conf.server_emojis:
-                land_type_key = f":Land{layout.Terrain(land_type).name}:"
-            else:
-                land_type_key = land_type
-            land_key = key[:-5] + key[-2:].upper() + land_type_key
+                gathers_to = lands[gathers_to_land_key]
+            #land_key = key[:-5] + key[-2:].upper() + land_type_key
             if any(
-                ignored_land_key in land_key
+                ignored_land_key == key
                 for ignored_land_key in parse_conf.ignore_lands
             ):
                 continue
             land = lair.Land(
-                key=land_key,
+                key=key,
                 land_type=land_type,
                 explorers=to_int(explorers),
                 towns=to_int(towns),
@@ -94,5 +84,59 @@ def parse(
             )
             lands[key] = land
             r[rng].append(land)
+
+    # lands not in TurnNStart.csv
+    # I'm keeping track of them so that we can potentially update the code to produce
+    #    a log with the sources of invaders to doublecheck things
+    distant_lands: Dict[str, lair.Land] = {}
+    with open(actionspath, encoding="utf-8") as f:
+        it = iter(csv.reader(f))
+        next(it)  # throw away header row
+        for row in it:
+            (
+                source_key,
+                destination_key,
+                cities,
+                towns,
+                explorers,
+                dahan,
+                _action_name,
+                _action_id,
+                _parent_action,
+                _notes,
+            ) = row
+        
+            for key, mult in ((source_key, -1), (destination_key, 1)):
+                if key:
+                    land_type = key[-1]
+                    key = key[:-1]
+                    try:
+                        land = lands[key]
+                        assert land_type == land.land_type
+                        allow_negative = False # perhaps this should be an attribute of Land?
+                    except KeyError:
+                        allow_negative = True
+                        try:
+                            land = distant_lands[key]
+                            assert land_type == land.land_type
+                        except KeyError:
+                            land = lair.Land(
+                                key=key,
+                                land_type=land_type,
+                                explorers=0,
+                                towns=0,
+                                cities=0,
+                                dahan=0,
+                                gathers_to=None,
+                                conf=lair_conf,
+                            )
+                            distant_lands[key] = land
+                    land.add_pieces(
+                        mult*to_int(explorers),
+                        mult*to_int(towns),
+                        mult*to_int(cities),
+                        mult*to_int(dahan),
+                        allow_negative,
+                    )
     assert not r[0]
     return lair.Lair(r0=r0, r1=r[1], r2=r[2], conf=lair_conf)
