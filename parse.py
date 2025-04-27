@@ -65,10 +65,7 @@ def parse(
                 gathers_to = r0
             else:
                 gathers_to = lands[gathers_to_land_key]
-            # land_key = key[:-5] + key[-2:].upper() + land_type_key
-            if any(
-                ignored_land_key == key for ignored_land_key in parse_conf.ignore_lands
-            ):
+            if key in parse_conf.ignore_lands:
                 continue
             land = lair.Land(
                 key=key,
@@ -105,38 +102,35 @@ def parse(
             ) = row
 
             for key, mult in ((source_key, -1), (destination_key, 1)):
-                if key:
-                    land_type = key[-1]
-                    key = key[:-1]
-                    try:
-                        land = lands[key]
-                        assert land_type == land.land_type
-                        allow_negative = (
-                            False  # perhaps this should be an attribute of Land?
+                if not key:
+                    continue
+                land_type = key[-1]
+                key = key[:-1]
+                if key in lands:
+                    land = lands[key]
+                    assert land_type == land.land_type
+                    allow_negative = False
+                else:
+                    allow_negative = True
+                    land = distant_lands.get(key)
+                    if land is None:
+                        land = lair.Land(
+                            key=key,
+                            land_type=land_type,
+                            explorers=0,
+                            towns=0,
+                            cities=0,
+                            dahan=0,
+                            gathers_to=None,
+                            conf=lair_conf,
                         )
-                    except KeyError:
-                        allow_negative = True
-                        try:
-                            land = distant_lands[key]
-                            assert land_type == land.land_type
-                        except KeyError:
-                            land = lair.Land(
-                                key=key,
-                                land_type=land_type,
-                                explorers=0,
-                                towns=0,
-                                cities=0,
-                                dahan=0,
-                                gathers_to=None,
-                                conf=lair_conf,
-                            )
-                            distant_lands[key] = land
-                    land.add_pieces(
-                        mult * to_int(explorers),
-                        mult * to_int(towns),
-                        mult * to_int(cities),
-                        mult * to_int(dahan),
-                        allow_negative,
-                    )
+                        distant_lands[key] = land
+                land.add_pieces(
+                    mult * to_int(explorers),
+                    mult * to_int(towns),
+                    mult * to_int(cities),
+                    mult * to_int(dahan),
+                    allow_negative,
+                )
     assert not r[0]
     return lair.Lair(r0=r0, r1=r[1], r2=r[2], conf=lair_conf)
