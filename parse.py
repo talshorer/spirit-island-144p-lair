@@ -48,7 +48,10 @@ class Parser:
         self.lair_conf = lair_conf
         self.parse_conf = parse_conf
 
-    def parse_initial_lair(self) -> lair.Lair:
+    def match_piece(self, piece: lair.PieceType, name: str) -> bool:
+        return piece.name(self.lair_conf.piece_names) == name
+
+    def parse_initial_lair(self) -> lair.Land:
         with open(self.jsonpath) as f:
             initial = json.load(f)
         if self.parse_conf.server_emojis:

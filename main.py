@@ -1,7 +1,9 @@
-import abc
 import argparse
+import csv
+import dataclasses
 import os
-from typing import Dict, List, Self, Tuple, TypeVar, Protocol
+import sys
+from typing import Any, List, Optional, Self, Tuple, TypeVar, Protocol
 
 import action_log
 import parse
@@ -102,6 +104,10 @@ def log_entry_to_text(entry: action_log.LogEntry) -> str:
     raise LookupError(entry.action)
 
 
+def cut_toplevel_log(line: str) -> str:
+    return line.split(": ")[0]
+
+
 class LogSplit:
     def __init__(self) -> None:
         self.entries: List[bytes] = []
@@ -142,9 +148,138 @@ class LogSplit:
     def run(self, log: str) -> None:
         for line in log.splitlines():
             if line.startswith("-"):
-                self.toplevel = line.split(": ")[0]
+                self.toplevel = cut_toplevel_log(line)
             self.append(line.encode())
         self.commit(False)
+
+
+@dataclasses.dataclass
+class CatCafeRow:
+    explorers_diff: int
+    towns_diff: int
+    cities_diff: int
+    dahan_diff: int
+    explorers_total: int
+    towns_total: int
+    cities_total: int
+    dahan_total: int
+    source: str
+    action: str
+
+    def to_csv(self) -> List[Any]:
+        return [
+            self.explorers_diff or None,
+            self.towns_diff or None,
+            self.cities_diff or None,
+            self.dahan_diff or None,
+            self.explorers_total,
+            self.towns_total,
+            self.cities_total,
+            self.dahan_total,
+            self.source or None,
+            self.action or None,
+        ]
+
+
+def cat_cafe(finallair: lair.Lair, parser: parse.Parser) -> None:
+    w = csv.writer(sys.stdout)
+
+    r0 = parser.parse_initial_lair()
+    w.writerow(
+        CatCafeRow(
+            explorers_diff=r0.explorers.cnt,
+            towns_diff=r0.towns.cnt,
+            cities_diff=r0.cities.cnt,
+            dahan_diff=r0.dahan.cnt,
+            explorers_total=r0.explorers.cnt,
+            towns_total=r0.towns.cnt,
+            cities_total=r0.cities.cnt,
+            dahan_total=r0.dahan.cnt,
+            source="LAIR",
+            action="From last phase",
+        ).to_csv()
+    )
+
+    for action in parser.read_actions_csv():
+        if "LAIR" not in action.destination_key:
+            continue
+        explorers_diff = parse.to_int(action.explorers)
+        r0.explorers.cnt += explorers_diff
+        towns_diff = parse.to_int(action.towns)
+        r0.towns.cnt += towns_diff
+        cities_diff = parse.to_int(action.cities)
+        r0.cities.cnt += towns_diff
+        dahan_diff = parse.to_int(action.dahan)
+        r0.dahan.cnt += towns_diff
+        w.writerow(
+            CatCafeRow(
+                explorers_diff=explorers_diff,
+                towns_diff=towns_diff,
+                cities_diff=cities_diff,
+                dahan_diff=dahan_diff,
+                explorers_total=r0.explorers.cnt,
+                towns_total=r0.towns.cnt,
+                cities_total=r0.cities.cnt,
+                dahan_total=r0.dahan.cnt,
+                source=action.source_key,
+                action=action.action_name,
+            ).to_csv()
+        )
+
+    toplevel: Optional[str] = ""
+    for nest, entry in finallair.log.entries:
+        if nest == 0:
+            assert entry.action == action_log.Action.COMMENT
+            toplevel = cut_toplevel_log(entry.text or "")
+
+        row = CatCafeRow(
+            explorers_diff=0,
+            towns_diff=0,
+            cities_diff=0,
+            dahan_diff=0,
+            explorers_total=0,
+            towns_total=0,
+            cities_total=0,
+            dahan_total=0,
+            source=entry.src_land or "",
+            action="",
+        )
+
+        if entry.action is action_log.Action.DOWNGRADE:
+            row.action = f"{toplevel} - downgrade"
+        elif entry.action is action_log.Action.GATHER:
+            row.action = f"{toplevel} - gather"
+        elif entry.action is action_log.Action.DESTROY:
+            row.action = f"{toplevel} - military response"
+        else:
+            continue
+
+        def piece_diff(piece: lair.PieceType, name: Optional[str]) -> int:
+            if parser.match_piece(piece, name or ""):
+                return entry.count
+            return 0
+
+        row.explorers_diff -= piece_diff(lair.Explorer, entry.src_piece)
+        row.towns_diff -= piece_diff(lair.Town, entry.src_piece)
+        row.cities_diff -= piece_diff(lair.City, entry.src_piece)
+        row.dahan_diff -= piece_diff(lair.Dahan, entry.src_piece)
+
+        row.explorers_diff += piece_diff(lair.Explorer, entry.tgt_piece)
+        row.towns_diff += piece_diff(lair.Town, entry.tgt_piece)
+        row.cities_diff += piece_diff(lair.City, entry.tgt_piece)
+        row.dahan_diff += piece_diff(lair.Dahan, entry.tgt_piece)
+
+        r0.explorers.cnt += row.explorers_diff
+        r0.towns.cnt += row.towns_diff
+        r0.cities.cnt += row.cities_diff
+        r0.dahan.cnt += row.dahan_diff
+
+        row.explorers_total = r0.explorers.cnt
+        row.towns_total = r0.towns.cnt
+        row.cities_total = r0.cities.cnt
+        row.dahan_total = r0.dahan.cnt
+
+        w.writerow(row.to_csv())
 
 
 def parse_args() -> argparse.Namespace:
@@ -245,6 +380,11 @@ def parse_args() -> argparse.Namespace:
         default=0,
         help="Reserve first N lair damage for other actions",
         metavar="COUNT",
+    )
+    parser.add_argument(
+        "--cat-cafe",
+        action="store_true",
+        help="Output cat-cafe-friendly csv",
     )
     return parser.parse_args()
 
@@ -353,7 +493,7 @@ def main() -> None:
                 if line:
                     print(line)
         if args.cat_cafe:
-            cat_cafe(thelair)
+            cat_cafe(thelair, parser)
 
 
 if __name__ == "__main__":
