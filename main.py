@@ -3,6 +3,7 @@ import argparse
 import os
 from typing import Dict, List, Self, Tuple, TypeVar, Protocol
 
+import action_log
 import parse
 import lair
 
@@ -92,6 +93,26 @@ piece_names_emoji = lair.PieceNames(
     city=":InvaderCity:",
     dahan=":Dahan:",
 )
+
+
+def log_entry_to_text(entry: action_log.LogEntry) -> str:
+    match entry.action:
+        case action_log.Action.COMMENT:
+            assert entry.text
+            return entry.text
+        case action_log.Action.GATHER:
+            return f"gather {entry.count} {entry.src_piece} from {entry.src_land} to {entry.tgt_land}"
+        case action_log.Action.DESTROY:
+            if entry.tgt_piece:
+                response_log = (
+                    f", MR adds {entry.count} {entry.tgt_piece} in {entry.tgt_land}"
+                )
+            else:
+                response_log = ""
+            return f"destroy {entry.count} {entry.src_piece} in {entry.src_land}{response_log}"
+        case action_log.Action.DOWNGRADE:
+            return f"downgrade {entry.count} {entry.src_piece} in {entry.src_land}"
+    raise LookupError(entry.action)
 
 
 class LogSplit:
@@ -288,7 +309,11 @@ def main() -> None:
                     ]
                 )
             )
-        log = thelair.log.collapse()
+
+        log = "\n".join(
+            " " * (nest * 2) + "- " + log_entry_to_text(entry)
+            for nest, entry in thelair.log.entries
+        )
         if args.log:
             print(log)
         if args.log_split:
@@ -319,10 +344,10 @@ def main() -> None:
                 a = lair.Land(
                     key=b.key,
                     land_type=b.land_type,
-                    explorers=lair.Explorer.new(),
-                    towns=lair.Town.new(),
-                    cities=lair.City.new(),
-                    dahan=lair.Dahan.new(),
+                    explorers=0,
+                    towns=0,
+                    cities=0,
+                    dahan=0,
                     gathers_to=thelair.r0,  # whatever...
                     conf=lair_conf,
                 )

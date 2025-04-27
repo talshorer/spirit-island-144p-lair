@@ -5,7 +5,7 @@ import dataclasses
 import itertools
 from typing import Callable, Iterator, List, Optional, Self, Tuple, cast
 
-import action_log
+from action_log import Action, Actionlog, LogEntry
 
 
 @dataclasses.dataclass
@@ -182,17 +182,17 @@ class Lair:
         self.reserve_gathers = Reserve(conf.reserve_gathers)
         self.reserve_damage = Reserve(conf.reserve_damage)
         self.fear = 0
-        self.log = action_log.Actionlog()
-        self.uncommitted: List[Tuple[Land, str]] = []
+        self.log = Actionlog()
+        self.uncommitted: List[LogEntry] = []
 
     def _commit_log(self) -> None:
-        self.uncommitted.sort(key=lambda pair: pair[0].key)
-        for _, entry in self.uncommitted:
+        self.uncommitted.sort(key=lambda entry: entry.src_land or "")
+        for entry in self.uncommitted:
             self.log.entry(entry)
         self.uncommitted = []
 
-    def _noncommit_log(self, land: Land, entry: str) -> None:
-        self.uncommitted.append((land, entry))
+    def _noncommit_entry(self, entry: LogEntry) -> None:
+        self.uncommitted.append(entry)
 
     def _xchg(
         self,
@@ -218,27 +218,37 @@ class Lair:
         actual = self._xchg(land, tipe, tipe.select(land.gathers_to), cnt)
         self.total_gathers += actual
         if actual:
-            self._noncommit_log(
-                land,
-                f"gather {actual} {tipe.name(self.conf.piece_names)} from {land.key} to {land.gathers_to.key}",
+            self._noncommit_entry(
+                LogEntry(
+                    action=Action.GATHER,
+                    src_land=land.key,
+                    src_piece=tipe.name(self.conf.piece_names),
+                    tgt_land=land.gathers_to.key,
+                    count=actual,
+                )
             )
         return actual
 
-    def _downgrade2(self, tipe: PieceType, land: Land, cnt: int) -> int:
+    def _downgrade(self, tipe: PieceType, land: Land, cnt: int) -> int:
         assert tipe.response
         actual = self._xchg(land, tipe, tipe.response.select(land), cnt)
         if actual:
-            self._noncommit_log(
-                land,
-                f"downgrade {actual} {tipe.name(self.conf.piece_names)} in {land.key}",
+            self._noncommit_entry(
+                LogEntry(
+                    action=Action.DOWNGRADE,
+                    src_land=land.key,
+                    src_piece=tipe.name(self.conf.piece_names),
+                    tgt_piece=tipe.response.name(self.conf.piece_names),
+                    count=actual,
+                )
             )
         return actual
 
     def _lair1(self) -> None:
         r0 = self.r0
         downgrades = (r0.explorers.cnt + r0.dahan.cnt) // 3
-        downgrades -= self._downgrade2(Town, r0, downgrades)
-        downgrades -= self._downgrade2(City, r0, downgrades)
+        downgrades -= self._downgrade(Town, r0, downgrades)
+        downgrades -= self._downgrade(City, r0, downgrades)
         self.wasted_downgrades += downgrades
 
     def _r1_least_dahan(self) -> List[Land]:
@@ -260,11 +270,11 @@ class Lair:
         self.wasted_dahan_gathers += gathers
 
     def _reserve(self, reserve: Reserve, prefix: str, what: str, cnt: int) -> int:
-        self.log.entry(f"{prefix} {what}: {cnt}")
+        self.log.entry(LogEntry(text=f"{prefix} {what}: {cnt}"))
         if reserve.cnt:
             to_reserve = min(cnt, reserve.cnt)
             with self.log.indent():
-                self.log.entry(f"reserved {to_reserve} {what}")
+                self.log.entry(LogEntry(text=f"reserved {to_reserve} {what}"))
             cnt -= to_reserve
             reserve.cnt -= to_reserve
         return cnt
@@ -304,7 +314,7 @@ class Lair:
                 gathers -= self._gather(tipe, land, gathers)
 
         self._commit_log()
-        self.log.entry(f"unused gathers left at end of slurp: {gathers}")
+        self.log.entry(LogEntry(text=f"unused gathers left at end of slurp: {gathers}"))
         self.wasted_invader_gathers += gathers
 
     @contextlib.contextmanager
@@ -315,7 +325,9 @@ class Lair:
             before = str(self.r0)
             yield
             self._commit_log()
-            oldlog.entry(f"{what} in {self.r0.key}: {before} => {self.r0}")
+            oldlog.entry(
+                LogEntry(text=f"{what} in {self.r0.key}: {before} => {self.r0}")
+            )
         self.log = oldlog
 
     def lair(self) -> None:
@@ -358,13 +370,19 @@ class Lair:
 
         kill = self._xchg(land, tipe, response, dmg // tipe.health)
         if kill:
-            if tipe.response:
-                response_log = f", MR adds {kill} {tipe.response.name(self.conf.piece_names)} in {respond_to.key}"
-            else:
-                response_log = ""
-            self._noncommit_log(
-                land,
-                f"destroy {kill} {tipe.name(self.conf.piece_names)} in {land.key}{response_log}",
+            self._noncommit_entry(
+                LogEntry(
+                    action=Action.DESTROY,
+                    src_land=land.key,
+                    src_piece=tipe.name(self.conf.piece_names),
+                    tgt_land=respond_to.key if tipe.response else "",
+                    tgt_piece=(
+                        tipe.response.name(self.conf.piece_names)
+                        if tipe.response
+                        else ""
+                    ),
+                    count=kill,
+                )
             )
         self.fear += kill * tipe.fear
         return kill * tipe.health
@@ -387,7 +405,7 @@ class Lair:
             dmg -= self._damage(land, Explorer, dmg)
 
         self._commit_log()
-        self.log.entry(f"unused damage left at end of ravage: {dmg}")
+        self.log.entry(LogEntry(text=f"unused damage left at end of ravage: {dmg}"))
         self.wasted_damage += dmg
 
         for land in itertools.chain([self.r0], self.r1):
