@@ -341,6 +341,8 @@ def main() -> None:
             for b in distant_lands.values():
                 if not b.key:
                     b.key = "dead"
+                elif not b.key.endswith("X"):
+                    b.key += "X"
                 a = lair.Land(
                     key=b.key,
                     land_type=b.land_type,
