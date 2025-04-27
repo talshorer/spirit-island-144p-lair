@@ -167,6 +167,16 @@ class Lair:
         self.reserve_damage = Reserve(conf.reserve_damage)
         self.fear = 0
         self.log = action_log.Actionlog()
+        self.uncommitted: List[Tuple[Land, str]] = []
+
+    def _commit_log(self) -> None:
+        self.uncommitted.sort(key=lambda pair: pair[0].key)
+        for _, entry in self.uncommitted:
+            self.log.entry(entry)
+        self.uncommitted = []
+
+    def _noncommit_log(self, land: Land, entry: str) -> None:
+        self.uncommitted.append((land, entry))
 
     def _xchg(
         self,
@@ -192,8 +202,9 @@ class Lair:
         actual = self._xchg(land, tipe, tipe.select(land.gathers_to), cnt)
         self.total_gathers += actual
         if actual:
-            self.log.entry(
-                f"gather {actual} {tipe.name(self.conf.piece_names)} from {land.key} to {land.gathers_to.key}"
+            self._noncommit_log(
+                land,
+                f"gather {actual} {tipe.name(self.conf.piece_names)} from {land.key} to {land.gathers_to.key}",
             )
         return actual
 
@@ -201,8 +212,9 @@ class Lair:
         assert tipe.response
         actual = self._xchg(land, tipe, tipe.response.select(land), cnt)
         if actual:
-            self.log.entry(
-                f"downgrade {actual} {tipe.name(self.conf.piece_names)} in {land.key}"
+            self._noncommit_log(
+                land,
+                f"downgrade {actual} {tipe.name(self.conf.piece_names)} in {land.key}",
             )
         return actual
 
@@ -275,6 +287,7 @@ class Lair:
             for land in self._r1_most_dahan():
                 gathers -= self._gather(tipe, land, gathers)
 
+        self._commit_log()
         self.log.entry(f"unused gathers left at end of slurp: {gathers}")
         self.wasted_invader_gathers += gathers
 
@@ -285,13 +298,16 @@ class Lair:
             self.log = newlog
             before = str(self.r0)
             yield
+            self._commit_log()
             oldlog.entry(f"{what} in {self.r0.key}: {before} => {self.r0}")
         self.log = oldlog
 
     def lair(self) -> None:
         with self._top_log("lair"):
             self._lair1()
+            self._commit_log()
             self._lair2()
+            self._commit_log()
             self._lair3()
 
     def _call_one(
@@ -326,14 +342,14 @@ class Lair:
 
         kill = self._xchg(land, tipe, response, dmg // tipe.health)
         if kill:
-            self.log.entry(
-                f"destroy {kill} {tipe.name(self.conf.piece_names)} in {land.key}"
-            )
             if tipe.response:
-                with self.log.indent():
-                    self.log.entry(
-                        f"MR adds {kill} {tipe.response.name(self.conf.piece_names)} in {respond_to.key}"
-                    )
+                response_log = f", MR adds {kill} {tipe.response.name(self.conf.piece_names)} in {respond_to.key}"
+            else:
+                response_log = ""
+            self._noncommit_log(
+                land,
+                f"destroy {kill} {tipe.name(self.conf.piece_names)} in {land.key}{response_log}",
+            )
         self.fear += kill * tipe.fear
         return kill * tipe.health
 
@@ -354,6 +370,7 @@ class Lair:
         for land in lands:
             dmg -= self._damage(land, Explorer, dmg)
 
+        self._commit_log()
         self.log.entry(f"unused damage left at end of ravage: {dmg}")
         self.wasted_damage += dmg
 
