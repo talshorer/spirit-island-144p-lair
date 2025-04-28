@@ -110,10 +110,7 @@ class Loader:
 
     def _load_board(self, islet: str, letter: str) -> Board:
         name = f"{islet}{letter}"
-        if islet in self._data["missing"]:
-            layout = Layout.A
-        else:
-            layout = getattr(Layout, self._data["boards"][name])
+        layout = getattr(Layout, self._data["boards"][name])
         board = Board(name, layout)
         self.boards[name] = board
         return board
