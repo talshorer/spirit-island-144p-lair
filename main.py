@@ -259,15 +259,17 @@ def cat_cafe(finallair: lair.Lair, parser: parse.Parser) -> None:
                 return entry.count
             return 0
 
-        row.explorers_diff -= piece_diff(lair.Explorer, entry.src_piece)
-        row.towns_diff -= piece_diff(lair.Town, entry.src_piece)
-        row.cities_diff -= piece_diff(lair.City, entry.src_piece)
-        row.dahan_diff -= piece_diff(lair.Dahan, entry.src_piece)
+        if entry.src_land == r0.key:
+            row.explorers_diff -= piece_diff(lair.Explorer, entry.src_piece)
+            row.towns_diff -= piece_diff(lair.Town, entry.src_piece)
+            row.cities_diff -= piece_diff(lair.City, entry.src_piece)
+            row.dahan_diff -= piece_diff(lair.Dahan, entry.src_piece)
 
-        row.explorers_diff += piece_diff(lair.Explorer, entry.tgt_piece)
-        row.towns_diff += piece_diff(lair.Town, entry.tgt_piece)
-        row.cities_diff += piece_diff(lair.City, entry.tgt_piece)
-        row.dahan_diff += piece_diff(lair.Dahan, entry.tgt_piece)
+        if entry.tgt_land == r0.key:
+            row.explorers_diff += piece_diff(lair.Explorer, entry.tgt_piece)
+            row.towns_diff += piece_diff(lair.Town, entry.tgt_piece)
+            row.cities_diff += piece_diff(lair.City, entry.tgt_piece)
+            row.dahan_diff += piece_diff(lair.Dahan, entry.tgt_piece)
 
         r0.explorers.cnt += row.explorers_diff
         r0.towns.cnt += row.towns_diff

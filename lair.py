@@ -237,6 +237,7 @@ class Lair:
                     action=Action.DOWNGRADE,
                     src_land=land.key,
                     src_piece=tipe.name(self.conf.piece_names),
+                    tgt_land=land.key,
                     tgt_piece=tipe.response.name(self.conf.piece_names),
                     count=actual,
                 )
