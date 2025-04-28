@@ -3,7 +3,7 @@ from __future__ import annotations
 import contextlib
 import dataclasses
 import itertools
-from typing import Callable, Iterator, List, Optional, Self, Tuple, cast
+from typing import Callable, Dict, Iterator, List, Optional, Self, Tuple, cast
 
 from action_log import Action, Actionlog, LogEntry
 
@@ -153,7 +153,6 @@ class Reserve:
 class LairConf:
     land_priority: str
     reserve_gathers: int
-    reserve_damage: int
     reckless_offensive: List[str]
     piece_names: PieceNames
 
@@ -179,7 +178,6 @@ class Lair:
         self.wasted_invader_gathers = 0
         self.wasted_dahan_gathers = 0
         self.reserve_gathers = Reserve(conf.reserve_gathers)
-        self.reserve_damage = Reserve(conf.reserve_damage)
         self.fear = 0
         self.log = Actionlog()
         self.uncommitted: List[LogEntry] = []
@@ -396,7 +394,6 @@ class Lair:
     def _ravage(self) -> None:
         r0 = self.r0
         dmg = max(0, r0.explorers.cnt - 6) + r0.towns.cnt * 2 + r0.cities.cnt * 3
-        dmg = self._reserve(self.reserve_damage, "available", "damage", dmg)
 
         lands = sorted(
             self.r1,

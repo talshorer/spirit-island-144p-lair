@@ -1,7 +1,8 @@
+import collections
 import csv
 import dataclasses
 import json
-from typing import Any, Dict, Iterator, List, Tuple, cast
+from typing import Any, Dict, Iterator, List, Optional, Tuple, cast
 
 
 import lair
@@ -20,6 +21,13 @@ class ParseConf:
 
 
 @dataclasses.dataclass
+class ActionCsvLands:
+    near: Dict[str, lair.Land]
+    distant: Dict[str, lair.Land]
+    lair_conf: lair.LairConf
+
+
+@dataclasses.dataclass
 class CsvAction:
     source_key: str
     destination_key: str
@@ -31,6 +39,63 @@ class CsvAction:
     action_id: str
     parent_action: str
     notes: str
+    after_toplevel: str
+
+    def run(self, lands: ActionCsvLands) -> None:
+        for key, mult in ((self.source_key, -1), (self.destination_key, 1)):
+            if not key:
+                continue
+            land_type = key[-1]
+            key = key[:-1]
+            if key in lands.near:
+                land = lands.near[key]
+                assert land_type == land.land_type
+                allow_negative = False
+            else:
+                allow_negative = True
+                dland = lands.distant.get(key)
+                if dland is not None:
+                    land = dland
+                else:
+                    land = lair.Land(
+                        key=key,
+                        land_type=land_type,
+                        explorers=0,
+                        towns=0,
+                        cities=0,
+                        dahan=0,
+                        gathers_to=None,
+                        conf=lands.lair_conf,
+                    )
+                    lands.distant[key] = land
+            land.add_pieces(
+                mult * to_int(self.explorers),
+                mult * to_int(self.towns),
+                mult * to_int(self.cities),
+                mult * to_int(self.dahan),
+                allow_negative,
+            )
+
+
+class DelayedActions:
+    def __init__(self, near: Dict[str, lair.Land], lair_conf: lair.LairConf):
+        self.actions: Dict[str, List[CsvAction]] = collections.defaultdict(lambda: [])
+        self.lands = ActionCsvLands(near=near, distant={}, lair_conf=lair_conf)
+
+    def push(self, action: CsvAction):
+        self.actions[action.after_toplevel].append(action)
+
+    def run(self, key: str) -> bool:
+        if key not in self.actions:
+            return False
+        for action in self.actions[key]:
+            action.run(self.lands)
+        self.actions[key] = []
+        return True
+
+    def run_all(self):
+        for key in list(self.actions.keys()):
+            self.run(key)
 
 
 class Parser:
@@ -75,7 +140,10 @@ class Parser:
             next(it)  # throw away header row
             yield from (CsvAction(*cast(Any, row)) for row in it)
 
-    def parse_all(self) -> Tuple[lair.Lair, Dict[str, lair.Land]]:
+    def parse_all(self) -> Tuple[
+        lair.Lair,
+        DelayedActions,
+    ]:
         lands: Dict[str, lair.Land] = {}
 
         r0 = self.parse_initial_lair()
@@ -116,40 +184,12 @@ class Parser:
                 lands[key] = land
                 r[rng].append(land)
 
-        distant_lands: Dict[str, lair.Land] = {}
+        csv_actions = DelayedActions(lands, self.lair_conf)
         for action in self.read_actions_csv():
-            for key, mult in ((action.source_key, -1), (action.destination_key, 1)):
-                if not key:
-                    continue
-                land_type = key[-1]
-                key = key[:-1]
-                if key in lands:
-                    land = lands[key]
-                    assert land_type == land.land_type
-                    allow_negative = False
-                else:
-                    allow_negative = True
-                    dland = distant_lands.get(key)
-                    if dland is not None:
-                        land = dland
-                    else:
-                        land = lair.Land(
-                            key=key,
-                            land_type=land_type,
-                            explorers=0,
-                            towns=0,
-                            cities=0,
-                            dahan=0,
-                            gathers_to=None,
-                            conf=self.lair_conf,
-                        )
-                        distant_lands[key] = land
-                land.add_pieces(
-                    mult * to_int(action.explorers),
-                    mult * to_int(action.towns),
-                    mult * to_int(action.cities),
-                    mult * to_int(action.dahan),
-                    allow_negative,
-                )
+            csv_actions.push(action)
+        csv_actions.run("")
         assert not r[0]
-        return lair.Lair(r0=r0, r1=r[1], r2=r[2], conf=self.lair_conf), distant_lands
+        return (
+            lair.Lair(r0=r0, r1=r[1], r2=r[2], conf=self.lair_conf),
+            csv_actions,
+        )
