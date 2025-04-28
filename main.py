@@ -208,9 +208,9 @@ def cat_cafe(finallair: lair.Lair, parser: parse.Parser) -> None:
         towns_diff = parse.to_int(action.towns)
         r0.towns.cnt += towns_diff
         cities_diff = parse.to_int(action.cities)
-        r0.cities.cnt += towns_diff
+        r0.cities.cnt += cities_diff
         dahan_diff = parse.to_int(action.dahan)
-        r0.dahan.cnt += towns_diff
+        r0.dahan.cnt += dahan_diff
         w.writerow(
             CatCafeRow(
                 explorers_diff=explorers_diff,
