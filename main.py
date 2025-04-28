@@ -379,10 +379,17 @@ def parse_args() -> argparse.Namespace:
         metavar="LAND-TYPES",
     )
     parser.add_argument(
-        "--reserve-gathers",
+        "--reserve-gathers-blue",
         type=int,
         default=0,
-        help="Reserve first N lair gathers for other actions",
+        help="Reserve first N blue lair gathers for other actions",
+        metavar="COUNT",
+    )
+    parser.add_argument(
+        "--reserve-gathers-orange",
+        type=int,
+        default=0,
+        help="Reserve first N orange lair gathers for other actions",
         metavar="COUNT",
     )
     parser.add_argument(
@@ -396,10 +403,11 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     res: List[Tuple[Tuple, lair.Lair]] = []
-    action_seqs = set(tuple(s) for s in perms(args.actions))
+    action_seqs = set(tuple(s) for s in perms(args.actions + ["lair_blue", "lair_orange"]))
     lair_conf = lair.LairConf(
         land_priority=args.land_priority,
-        reserve_gathers=args.reserve_gathers,
+        reserve_gathers_blue=args.reserve_gathers_blue,
+        reserve_gathers_orange=args.reserve_gathers_orange,
         reckless_offensive=args.reckless_offensive,
         piece_names=piece_names_emoji if args.server_emojis else piece_names_text,
     )

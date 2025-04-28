@@ -145,14 +145,10 @@ Dahan = PieceType(
 
 
 @dataclasses.dataclass
-class Reserve:
-    cnt: int
-
-
-@dataclasses.dataclass
 class LairConf:
     land_priority: str
-    reserve_gathers: int
+    reserve_gathers_blue: int
+    reserve_gathers_orange: int
     reckless_offensive: List[str]
     piece_names: PieceNames
 
@@ -177,7 +173,6 @@ class Lair:
         self.wasted_downgrades = 0
         self.wasted_invader_gathers = 0
         self.wasted_dahan_gathers = 0
-        self.reserve_gathers = Reserve(conf.reserve_gathers)
         self.fear = 0
         self.log = Actionlog()
         self.uncommitted: List[LogEntry] = []
@@ -269,15 +264,16 @@ class Lair:
             gathers -= self._gather(Dahan, land, gathers)
         self.wasted_dahan_gathers += gathers
 
-    def _reserve(self, reserve: Reserve, prefix: str, what: str, cnt: int) -> int:
+    def _reserve(self, reserve: int, prefix: str, what: str, cnt: int) -> int:
         self.log.entry(LogEntry(text=f"{prefix} {what}: {cnt}"))
-        if reserve.cnt:
-            to_reserve = min(cnt, reserve.cnt)
+        if reserve:
+            to_reserve = min(cnt, reserve)
             with self.log.indent():
                 self.log.entry(LogEntry(text=f"reserved {to_reserve} {what}"))
             cnt -= to_reserve
-            reserve.cnt -= to_reserve
-        return cnt
+            reserve -= to_reserve
+            return to_reserve
+        return 0
 
     def _least_dahan_land_priority_key(
         self,
@@ -294,11 +290,10 @@ class Lair:
 
         return key
 
-    def _lair3(self, reserve: bool) -> None:
+    def _lair3(self, reserve: int) -> None:
         r0 = self.r0
         gathers = (r0.explorers.cnt + r0.dahan.cnt) // 6
-        if reserve:
-            gathers = self._reserve(self.reserve_gathers, "slurp", "gathers", gathers)
+        gathers -= self._reserve(reserve, "slurp", "gathers", gathers)
 
         for land in sorted(
             self.r2,
@@ -331,16 +326,20 @@ class Lair:
             )
         self.log = oldlog
 
-    def lair(self, reserve: bool = False) -> None:
-        with self._top_log("lair"):
-            self._lair1()
-            self._commit_log()
-            self._lair2()
-            self._commit_log()
-            self._lair3(reserve)
+    def _lair_all(self, reserve: int) -> None:
+        self._lair1()
+        self._commit_log()
+        self._lair2()
+        self._commit_log()
+        self._lair3(reserve)
 
-    def lair_with_reserve(self) -> None:
-        self.lair(True)
+    def lair_blue(self) -> None:
+        with self._top_log("lair-blue"):
+            self._lair_all(self.conf.reserve_gathers_blue)
+
+    def lair_orange(self) -> None:
+        with self._top_log("lair-orange"):
+            self._lair_all(self.conf.reserve_gathers_orange)
 
     def _call_one(
         self,
