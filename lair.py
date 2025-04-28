@@ -293,10 +293,11 @@ class Lair:
 
         return key
 
-    def _lair3(self) -> None:
+    def _lair3(self, reserve: bool) -> None:
         r0 = self.r0
         gathers = (r0.explorers.cnt + r0.dahan.cnt) // 6
-        gathers = self._reserve(self.reserve_gathers, "slurp", "gathers", gathers)
+        if reserve:
+            gathers = self._reserve(self.reserve_gathers, "slurp", "gathers", gathers)
 
         for land in sorted(
             self.r2,
@@ -329,13 +330,16 @@ class Lair:
             )
         self.log = oldlog
 
-    def lair(self) -> None:
+    def lair(self, reserve: bool = False) -> None:
         with self._top_log("lair"):
             self._lair1()
             self._commit_log()
             self._lair2()
             self._commit_log()
-            self._lair3()
+            self._lair3(reserve)
+
+    def lair_with_reserve(self) -> None:
+        self.lair(True)
 
     def _call_one(
         self,
