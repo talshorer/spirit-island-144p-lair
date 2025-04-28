@@ -91,6 +91,8 @@ def log_entry_to_text(entry: action_log.LogEntry) -> str:
             return entry.text
         case action_log.Action.GATHER:
             return f"gather {entry.count} {entry.src_piece} from {entry.src_land} to {entry.tgt_land}"
+        case action_log.Action.ADD:
+            return f"add {entry.count} {entry.tgt_piece} in {entry.tgt_land}"
         case action_log.Action.DESTROY:
             if entry.tgt_piece:
                 response_log = (
@@ -249,6 +251,8 @@ def cat_cafe(finallair: lair.Lair, parser: parse.Parser) -> None:
             row.action = f"{toplevel} - downgrade"
         elif entry.action is action_log.Action.GATHER:
             row.action = f"{toplevel} - gather"
+        elif entry.action is action_log.Action.ADD:
+            row.action = f"{toplevel} - add"
         elif entry.action is action_log.Action.DESTROY:
             row.action = f"{toplevel} - military response"
         else:

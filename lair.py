@@ -418,8 +418,32 @@ class Lair:
         with self._top_log("ravage"):
             self._ravage()
 
+    def _add(self, land: Land, tipe: PieceType, cnt: int) -> None:
+        tipe.select(land).cnt += cnt
+        self.log.entry(
+            LogEntry(
+                action=Action.ADD,
+                tgt_land=land.key,
+                tgt_piece=tipe.name(self.conf.piece_names),
+                count=cnt,
+            )
+        )
+
+    def _build(self, land: Land):
+        if all(tipe.select(land).cnt == 0 for tipe in (Explorer, Town, City)):
+            return
+
+        if land.towns.cnt > land.cities.cnt:
+            tipe = City
+        else:
+            tipe = Town
+        self._add(land, tipe, 1)
+
     def blur(self) -> None:
         with self._top_log("blur"):
+            if self.r0.dahan.cnt > 0:
+                self._add(self.r0, Dahan, 1)
+            self._build(self.r0)
             self._ravage()
 
     def blur2(self) -> None:
