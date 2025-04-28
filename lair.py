@@ -217,12 +217,14 @@ class Lair:
         actual = self._xchg(land, tipe, tipe.select(land.gathers_to), cnt)
         self.total_gathers += actual
         if actual:
+            piece_name = tipe.name(self.conf.piece_names)
             self._noncommit_entry(
                 LogEntry(
                     action=Action.GATHER,
                     src_land=land.key,
-                    src_piece=tipe.name(self.conf.piece_names),
+                    src_piece=piece_name,
                     tgt_land=land.gathers_to.key,
+                    tgt_piece=piece_name,
                     count=actual,
                 )
             )
