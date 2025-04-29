@@ -326,20 +326,19 @@ class Lair:
             )
         self.log = oldlog
 
-    def _lair_all(self, reserve: int) -> None:
-        self._lair1()
-        self._commit_log()
-        self._lair2()
-        self._commit_log()
-        self._lair3(reserve)
+    def _lair_all(self, colour: str, reserve: int) -> None:
+        with self._top_log(f"lair-{colour}-thresh1"):
+            self._lair1()
+        with self._top_log(f"lair-{colour}-thresh2"):
+            self._lair2()
+        with self._top_log(f"lair-{colour}-thresh3"):
+            self._lair3(reserve)
 
     def lair_blue(self) -> None:
-        with self._top_log("lair-blue"):
-            self._lair_all(self.conf.reserve_gathers_blue)
+        self._lair_all("blue", self.conf.reserve_gathers_blue)
 
     def lair_orange(self) -> None:
-        with self._top_log("lair-orange"):
-            self._lair_all(self.conf.reserve_gathers_orange)
+        self._lair_all("orange", self.conf.reserve_gathers_orange)
 
     def _call_one(
         self,
