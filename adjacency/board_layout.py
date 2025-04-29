@@ -4,6 +4,11 @@ import dataclasses
 import enum
 from typing import Callable, Dict, Iterator, List, Optional, Self, Set, Tuple, cast
 
+'''
+For a given list of boards (in the specified format) -
+
+Generates an adjacency list of every land on that board.
+'''
 
 @dataclasses.dataclass
 class LayoutEdge:
