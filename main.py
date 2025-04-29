@@ -475,9 +475,9 @@ def main() -> None:
                 log_split_header = ""
             ls = LogSplit()
             ls.run(log)
+            shutil.rmtree(args.log_split, ignore_errors=True)
+            os.makedirs(args.log_split, exist_ok=True)
             for i, content in enumerate(ls.files):
-                shutil.rmtree(args.log_split, ignore_errors=True)
-                os.makedirs(args.log_split, exist_ok=True)
                 with open(os.path.join(args.log_split, f"msg{(i+1):02}.md"), "wb") as f:
                     f.write(
                         f"{thelair.r0.key} [{i+1}/{len(ls.files)}]{log_split_header}\n".encode()
