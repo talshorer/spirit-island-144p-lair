@@ -2,6 +2,7 @@ import argparse
 import csv
 import dataclasses
 import os
+import shutil
 import sys
 from typing import Any, List, Optional, Self, Tuple, TypeVar, Protocol
 
@@ -403,7 +404,9 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     res: List[Tuple[Tuple, lair.Lair]] = []
-    action_seqs = set(tuple(s) for s in perms(args.actions + ["lair_blue", "lair_orange"]))
+    action_seqs = set(
+        tuple(s) for s in perms(args.actions + ["lair_blue", "lair_orange"])
+    )
     lair_conf = lair.LairConf(
         land_priority=args.land_priority,
         reserve_gathers_blue=args.reserve_gathers_blue,
@@ -473,6 +476,7 @@ def main() -> None:
             ls = LogSplit()
             ls.run(log)
             for i, content in enumerate(ls.files):
+                shutil.rmtree(args.log_split, ignore_errors=True)
                 os.makedirs(args.log_split, exist_ok=True)
                 with open(os.path.join(args.log_split, f"msg{(i+1):02}.md"), "wb") as f:
                     f.write(
