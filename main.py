@@ -466,7 +466,7 @@ def main() -> None:
             ls.run(log)
             for i, content in enumerate(ls.files):
                 os.makedirs(args.log_split, exist_ok=True)
-                with open(os.path.join(args.log_split, f"msg{i:02}.md"), "wb") as f:
+                with open(os.path.join(args.log_split, f"msg{(i+1):02}.md"), "wb") as f:
                     f.write(
                         f"{thelair.r0.key} [{i+1}/{len(ls.files)}]{log_split_header}\n".encode()
                     )
