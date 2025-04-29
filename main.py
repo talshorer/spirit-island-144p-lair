@@ -1,8 +1,11 @@
-import abc
 import argparse
+import csv
+import dataclasses
 import os
-from typing import List, Self, Tuple, TypeVar, Protocol
+import sys
+from typing import Any, List, Optional, Self, Tuple, TypeVar, Protocol
 
+import action_log
 import parse
 import lair
 
@@ -24,20 +27,16 @@ def perms(it: List[T]) -> List[List[T]]:
     return ret
 
 
-def newlair(lair_conf: lair.LairConf, parse_conf: parse.ParseConf) -> lair.Lair:
-    return parse.parse(
-        csvpath="Turn4Start.csv",
-        jsonpath="initial-lair.json",
-        actionspath="Turn4Actions.csv",
-        lair_conf=lair_conf,
-        parse_conf=parse_conf,
-    )
-
-
-def cmplands(r: int, a: lair.Land, b: lair.Land, args: argparse.Namespace) -> None:
+def landdiff(
+    r: int | str,
+    a: lair.Land,
+    b: lair.Land,
+    args: argparse.Namespace,
+    allow_clear: bool = True,
+) -> str:
     assert a.key == b.key
     bstr = str(b)
-    if b.cities.cnt == b.towns.cnt == b.explorers.cnt == 0:
+    if allow_clear and b.cities.cnt == b.towns.cnt == b.explorers.cnt == 0:
         if b.dahan.cnt == 0 or not args.dahan_diff:
             bstr = "CLEAR"
     if (
@@ -47,13 +46,13 @@ def cmplands(r: int, a: lair.Land, b: lair.Land, args: argparse.Namespace) -> No
         and a.dahan.cnt == b.dahan.cnt
     ):
         if args.strict_diff:
-            return
+            return ""
         bstr = "UNCHANGED"
     if args.diff_range:
         range_ = f"({r}) "
     else:
         range_ = ""
-    print(f"{range_}{a.key}: {a} => {bstr}")
+    return f"{range_}{a.key}: {a} => {bstr}"
 
 
 class Comparable(Protocol):
@@ -83,6 +82,30 @@ piece_names_emoji = lair.PieceNames(
     city=":InvaderCity:",
     dahan=":Dahan:",
 )
+
+
+def log_entry_to_text(entry: action_log.LogEntry) -> str:
+    match entry.action:
+        case action_log.Action.COMMENT:
+            assert entry.text
+            return entry.text
+        case action_log.Action.GATHER:
+            return f"gather {entry.count} {entry.src_piece} from {entry.src_land} to {entry.tgt_land}"
+        case action_log.Action.DESTROY:
+            if entry.tgt_piece:
+                response_log = (
+                    f", MR adds {entry.count} {entry.tgt_piece} in {entry.tgt_land}"
+                )
+            else:
+                response_log = ""
+            return f"destroy {entry.count} {entry.src_piece} in {entry.src_land}{response_log}"
+        case action_log.Action.DOWNGRADE:
+            return f"downgrade {entry.count} {entry.src_piece} in {entry.src_land}"
+    raise LookupError(entry.action)
+
+
+def cut_toplevel_log(line: str) -> str:
+    return line.split(": ")[0]
 
 
 class LogSplit:
@@ -125,9 +148,140 @@ class LogSplit:
     def run(self, log: str) -> None:
         for line in log.splitlines():
             if line.startswith("-"):
-                self.toplevel = line.split(": ")[0]
+                self.toplevel = cut_toplevel_log(line)
             self.append(line.encode())
         self.commit(False)
+
+
+@dataclasses.dataclass
+class CatCafeRow:
+    explorers_diff: int
+    towns_diff: int
+    cities_diff: int
+    dahan_diff: int
+    explorers_total: int
+    towns_total: int
+    cities_total: int
+    dahan_total: int
+    source: str
+    action: str
+
+    def to_csv(self) -> List[Any]:
+        return [
+            self.explorers_diff or None,
+            self.towns_diff or None,
+            self.cities_diff or None,
+            self.dahan_diff or None,
+            self.explorers_total,
+            self.towns_total,
+            self.cities_total,
+            self.dahan_total,
+            self.source or None,
+            self.action or None,
+        ]
+
+
+def cat_cafe(finallair: lair.Lair, parser: parse.Parser) -> None:
+    w = csv.writer(sys.stdout)
+
+    r0 = parser.parse_initial_lair()
+    w.writerow(
+        CatCafeRow(
+            explorers_diff=r0.explorers.cnt,
+            towns_diff=r0.towns.cnt,
+            cities_diff=r0.cities.cnt,
+            dahan_diff=r0.dahan.cnt,
+            explorers_total=r0.explorers.cnt,
+            towns_total=r0.towns.cnt,
+            cities_total=r0.cities.cnt,
+            dahan_total=r0.dahan.cnt,
+            source="LAIR",
+            action="From last phase",
+        ).to_csv()
+    )
+
+    for action in parser.read_actions_csv():
+        if "LAIR" not in action.destination_key:
+            continue
+        explorers_diff = parse.to_int(action.explorers)
+        r0.explorers.cnt += explorers_diff
+        towns_diff = parse.to_int(action.towns)
+        r0.towns.cnt += towns_diff
+        cities_diff = parse.to_int(action.cities)
+        r0.cities.cnt += cities_diff
+        dahan_diff = parse.to_int(action.dahan)
+        r0.dahan.cnt += dahan_diff
+        w.writerow(
+            CatCafeRow(
+                explorers_diff=explorers_diff,
+                towns_diff=towns_diff,
+                cities_diff=cities_diff,
+                dahan_diff=dahan_diff,
+                explorers_total=r0.explorers.cnt,
+                towns_total=r0.towns.cnt,
+                cities_total=r0.cities.cnt,
+                dahan_total=r0.dahan.cnt,
+                source=action.source_key,
+                action=action.action_name,
+            ).to_csv()
+        )
+
+    toplevel: Optional[str] = ""
+    for nest, entry in finallair.log.entries:
+        if nest == 0:
+            assert entry.action == action_log.Action.COMMENT
+            toplevel = cut_toplevel_log(entry.text or "")
+
+        row = CatCafeRow(
+            explorers_diff=0,
+            towns_diff=0,
+            cities_diff=0,
+            dahan_diff=0,
+            explorers_total=0,
+            towns_total=0,
+            cities_total=0,
+            dahan_total=0,
+            source=entry.src_land or "",
+            action="",
+        )
+
+        if entry.action is action_log.Action.DOWNGRADE:
+            row.action = f"{toplevel} - downgrade"
+        elif entry.action is action_log.Action.GATHER:
+            row.action = f"{toplevel} - gather"
+        elif entry.action is action_log.Action.DESTROY:
+            row.action = f"{toplevel} - military response"
+        else:
+            continue
+
+        def piece_diff(piece: lair.PieceType, name: Optional[str]) -> int:
+            if parser.match_piece(piece, name or ""):
+                return entry.count
+            return 0
+
+        if entry.src_land == r0.key:
+            row.explorers_diff -= piece_diff(lair.Explorer, entry.src_piece)
+            row.towns_diff -= piece_diff(lair.Town, entry.src_piece)
+            row.cities_diff -= piece_diff(lair.City, entry.src_piece)
+            row.dahan_diff -= piece_diff(lair.Dahan, entry.src_piece)
+
+        if entry.tgt_land == r0.key:
+            row.explorers_diff += piece_diff(lair.Explorer, entry.tgt_piece)
+            row.towns_diff += piece_diff(lair.Town, entry.tgt_piece)
+            row.cities_diff += piece_diff(lair.City, entry.tgt_piece)
+            row.dahan_diff += piece_diff(lair.Dahan, entry.tgt_piece)
+
+        r0.explorers.cnt += row.explorers_diff
+        r0.towns.cnt += row.towns_diff
+        r0.cities.cnt += row.cities_diff
+        r0.dahan.cnt += row.dahan_diff
+
+        row.explorers_total = r0.explorers.cnt
+        row.towns_total = r0.towns.cnt
+        row.cities_total = r0.cities.cnt
+        row.dahan_total = r0.dahan.cnt
+
+        w.writerow(row.to_csv())
 
 
 def parse_args() -> argparse.Namespace:
@@ -171,6 +325,11 @@ def parse_args() -> argparse.Namespace:
         "--dahan-diff",
         action="store_true",
         help="Don't show a land as clear if it has dahan",
+    )
+    parser.add_argument(
+        "--distant-diff",
+        action="store_true",
+        help="Show distant lands in diff view",
     )
     parser.add_argument(
         "--strict-diff",
@@ -229,6 +388,11 @@ def parse_args() -> argparse.Namespace:
         help="Reserve first N lair damage for other actions",
         metavar="COUNT",
     )
+    parser.add_argument(
+        "--cat-cafe",
+        action="store_true",
+        help="Output cat-cafe-friendly csv",
+    )
     return parser.parse_args()
 
 
@@ -247,9 +411,16 @@ def main() -> None:
         server_emojis=args.server_emojis,
         ignore_lands=args.ignore_lands,
     )
+    parser = parse.Parser(
+        csvpath="Turn4Start.csv",
+        jsonpath="initial-lair.json",
+        actionspath="Turn4Actions.csv",
+        lair_conf=lair_conf,
+        parse_conf=parse_conf,
+    )
     for action_seq in action_seqs:
         action_seq += ("ravage",)
-        thelair = newlair(lair_conf, parse_conf)
+        thelair, _ = parser.parse_all()
         if args.pull_r1_dahan is not None:
             if args.pull_r1_dahan == "ALL":
                 pull = 1 << 32
@@ -279,7 +450,11 @@ def main() -> None:
                     ]
                 )
             )
-        log = thelair.log.collapse()
+
+        log = "\n".join(
+            " " * (nest * 2) + "- " + log_entry_to_text(entry)
+            for nest, entry in thelair.log.entries
+        )
         if args.log:
             print(log)
         if args.log_split:
@@ -297,12 +472,36 @@ def main() -> None:
                     )
                     f.write(content)
         if args.diff:
-            orig_lair = newlair(lair_conf, parse_conf)
-            cmplands(0, orig_lair.r0, thelair.r0, args)
+            all_diff = []
+            orig_lair, distant_lands = parser.parse_all()
+            all_diff.append(landdiff(0, orig_lair.r0, thelair.r0, args))
             for a, b in zip(orig_lair.r1, thelair.r1):
-                cmplands(1, a, b, args)
+                all_diff.append(landdiff(1, a, b, args))
             for a, b in zip(orig_lair.r2, thelair.r2):
-                cmplands(2, a, b, args)
+                all_diff.append(landdiff(2, a, b, args))
+            if args.distant_diff:
+                for b in distant_lands.values():
+                    if not b.key:
+                        b.key = "dead"
+                    elif not b.key.endswith("X"):
+                        b.key += "X"
+                    a = lair.Land(
+                        key=b.key,
+                        land_type=b.land_type,
+                        explorers=0,
+                        towns=0,
+                        cities=0,
+                        dahan=0,
+                        gathers_to=thelair.r0,  # whatever...
+                        conf=lair_conf,
+                    )
+                    all_diff.append(landdiff("far", a, b, args, allow_clear=False))
+            all_diff.sort()
+            for line in all_diff:
+                if line:
+                    print(line)
+        if args.cat_cafe:
+            cat_cafe(thelair, parser)
 
 
 if __name__ == "__main__":

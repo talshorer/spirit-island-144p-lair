@@ -1,32 +1,66 @@
 import contextlib
-from typing import Iterator, List, Self
+import dataclasses
+import enum
+from typing import Iterator, List, Optional, Self, Tuple
+
+
+class Action(enum.Enum):
+    COMMENT = enum.auto()
+    GATHER = enum.auto()
+    DESTROY = enum.auto()
+    DOWNGRADE = enum.auto()
+
+
+@dataclasses.dataclass
+class LogEntry:
+    action: Action = Action.COMMENT
+    text: Optional[str] = None
+    src_land: Optional[str] = None
+    src_piece: Optional[str] = None
+    tgt_land: Optional[str] = None
+    tgt_piece: Optional[str] = None
+    count: int = 0
 
 
 class Actionlog:
     def __init__(self) -> None:
-        self._indent = 0
-        self._entries: List[str] = []
+        self._nest = 0
+        self.entries: List[Tuple[int, LogEntry]] = []
 
     @contextlib.contextmanager
     def indent(self) -> Iterator[None]:
-        self._indent += 1
+        self._nest += 1
         try:
             yield
         finally:
-            self._indent -= 1
+            self._nest -= 1
 
-    def entry(self, entry: str) -> None:
-        self._entries.append((" " * self._indent * 2) + "- " + entry)
+    def entry(self, entry: LogEntry) -> None:
+        match entry.action:
+            case Action.COMMENT:
+                assert entry.text
+            case Action.GATHER:
+                assert entry.src_land
+                assert entry.src_piece
+                assert entry.tgt_land
+                assert entry.count
+            case Action.DESTROY:
+                assert entry.src_land
+                assert entry.src_piece
+                assert entry.count
+            case Action.DOWNGRADE:
+                assert entry.src_land
+                assert entry.src_piece
+                assert entry.tgt_piece
+                assert entry.count
+        self.entries.append((self._nest, entry))
 
     @contextlib.contextmanager
     def fork(self) -> Iterator[Self]:
         cls = type(self)
         fork = cls()
-        fork._indent = self._indent + 1
+        fork._nest = self._nest + 1
         try:
             yield fork
         finally:
-            self._entries.extend(fork._entries)
-
-    def collapse(self) -> str:
-        return "\n".join(self._entries)
+            self.entries.extend(fork.entries)
