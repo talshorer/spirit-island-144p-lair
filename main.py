@@ -412,9 +412,9 @@ def main() -> None:
         ignore_lands=args.ignore_lands,
     )
     parser = parse.Parser(
-        csvpath="config/Turn4Start.csv",
-        jsonpath="config/initial_lair_t4.json",
-        actionspath="config/Turn4Actions.csv",
+        csvpath="config/tuen4/start.csv",
+        jsonpath="config/turn4/initial_lair.csv",
+        actionspath="config/turn4/actions.csv",
         lair_conf=lair_conf,
         parse_conf=parse_conf,
     )
