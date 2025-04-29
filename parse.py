@@ -99,8 +99,10 @@ class Parser:
                 rng = int(srng)
                 if rng == 1:
                     gathers_to = r0
-                else:
+                elif rng == 2:
                     gathers_to = lands[gathers_to_land_key]
+                elif rng == 0:
+                    gathers_to = None
                 if key in self.parse_conf.ignore_lands:
                     continue
                 land = lair.Land(
@@ -114,7 +116,8 @@ class Parser:
                     conf=self.lair_conf,
                 )
                 lands[key] = land
-                r[rng].append(land)
+                if rng:
+                    r[rng].append(land)
 
         distant_lands: Dict[str, lair.Land] = {}
         for action in self.read_actions_csv():
