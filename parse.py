@@ -99,7 +99,7 @@ class Parser:
                 rng = int(srng)
                 if rng == 1:
                     gathers_to = r0
-                elif rng == 2:
+                elif rng >= 2:
                     gathers_to = lands[gathers_to_land_key]
                 elif rng == 0:
                     gathers_to = None
@@ -154,5 +154,4 @@ class Parser:
                     mult * to_int(action.dahan),
                     allow_negative,
                 )
-        assert not r[0]
         return lair.Lair(r0=r0, r1=r[1], r2=r[2], conf=self.lair_conf), distant_lands
