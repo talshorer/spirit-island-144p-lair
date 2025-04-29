@@ -7,6 +7,7 @@ from typing import Iterator, List, Optional, Self, Tuple
 class Action(enum.Enum):
     COMMENT = enum.auto()
     GATHER = enum.auto()
+    ADD = enum.auto()
     DESTROY = enum.auto()
     DOWNGRADE = enum.auto()
 
@@ -43,6 +44,10 @@ class Actionlog:
                 assert entry.src_land
                 assert entry.src_piece
                 assert entry.tgt_land
+                assert entry.count
+            case Action.ADD:
+                assert entry.tgt_land
+                assert entry.tgt_piece
                 assert entry.count
             case Action.DESTROY:
                 assert entry.src_land

@@ -3,7 +3,7 @@ from __future__ import annotations
 import contextlib
 import dataclasses
 import itertools
-from typing import Callable, Iterator, List, Optional, Self, Tuple, cast
+from typing import Callable, Dict, Iterator, List, Optional, Self, Tuple, cast
 
 from action_log import Action, Actionlog, LogEntry
 
@@ -145,15 +145,10 @@ Dahan = PieceType(
 
 
 @dataclasses.dataclass
-class Reserve:
-    cnt: int
-
-
-@dataclasses.dataclass
 class LairConf:
     land_priority: str
-    reserve_gathers: int
-    reserve_damage: int
+    reserve_gathers_blue: int
+    reserve_gathers_orange: int
     reckless_offensive: List[str]
     piece_names: PieceNames
 
@@ -178,8 +173,6 @@ class Lair:
         self.wasted_downgrades = 0
         self.wasted_invader_gathers = 0
         self.wasted_dahan_gathers = 0
-        self.reserve_gathers = Reserve(conf.reserve_gathers)
-        self.reserve_damage = Reserve(conf.reserve_damage)
         self.fear = 0
         self.log = Actionlog()
         self.uncommitted: List[LogEntry] = []
@@ -271,15 +264,16 @@ class Lair:
             gathers -= self._gather(Dahan, land, gathers)
         self.wasted_dahan_gathers += gathers
 
-    def _reserve(self, reserve: Reserve, prefix: str, what: str, cnt: int) -> int:
+    def _reserve(self, reserve: int, prefix: str, what: str, cnt: int) -> int:
         self.log.entry(LogEntry(text=f"{prefix} {what}: {cnt}"))
-        if reserve.cnt:
-            to_reserve = min(cnt, reserve.cnt)
+        if reserve:
+            to_reserve = min(cnt, reserve)
             with self.log.indent():
                 self.log.entry(LogEntry(text=f"reserved {to_reserve} {what}"))
             cnt -= to_reserve
-            reserve.cnt -= to_reserve
-        return cnt
+            reserve -= to_reserve
+            return to_reserve
+        return 0
 
     def _least_dahan_land_priority_key(
         self,
@@ -296,11 +290,10 @@ class Lair:
 
         return key
 
-    def _lair3(self, reserve: bool) -> None:
+    def _lair3(self, reserve: int) -> None:
         r0 = self.r0
         gathers = (r0.explorers.cnt + r0.dahan.cnt) // 6
-        if reserve:
-            gathers = self._reserve(self.reserve_gathers, "slurp", "gathers", gathers)
+        gathers -= self._reserve(reserve, "slurp", "gathers", gathers)
 
         for land in sorted(
             self.r2,
@@ -333,16 +326,20 @@ class Lair:
             )
         self.log = oldlog
 
-    def lair(self, reserve: bool = False) -> None:
-        with self._top_log("lair"):
-            self._lair1()
-            self._commit_log()
-            self._lair2()
-            self._commit_log()
-            self._lair3(reserve)
+    def _lair_all(self, reserve: int) -> None:
+        self._lair1()
+        self._commit_log()
+        self._lair2()
+        self._commit_log()
+        self._lair3(reserve)
 
-    def lair_with_reserve(self) -> None:
-        self.lair(True)
+    def lair_blue(self) -> None:
+        with self._top_log("lair-blue"):
+            self._lair_all(self.conf.reserve_gathers_blue)
+
+    def lair_orange(self) -> None:
+        with self._top_log("lair-orange"):
+            self._lair_all(self.conf.reserve_gathers_orange)
 
     def _call_one(
         self,
@@ -396,7 +393,6 @@ class Lair:
     def _ravage(self) -> None:
         r0 = self.r0
         dmg = max(0, r0.explorers.cnt - 6) + r0.towns.cnt * 2 + r0.cities.cnt * 3
-        dmg = self._reserve(self.reserve_damage, "available", "damage", dmg)
 
         lands = sorted(
             self.r1,
@@ -421,8 +417,32 @@ class Lair:
         with self._top_log("ravage"):
             self._ravage()
 
+    def _add(self, land: Land, tipe: PieceType, cnt: int) -> None:
+        tipe.select(land).cnt += cnt
+        self.log.entry(
+            LogEntry(
+                action=Action.ADD,
+                tgt_land=land.key,
+                tgt_piece=tipe.name(self.conf.piece_names),
+                count=cnt,
+            )
+        )
+
+    def _build(self, land: Land):
+        if all(tipe.select(land).cnt == 0 for tipe in (Explorer, Town, City)):
+            return
+
+        if land.towns.cnt > land.cities.cnt:
+            tipe = City
+        else:
+            tipe = Town
+        self._add(land, tipe, 1)
+
     def blur(self) -> None:
         with self._top_log("blur"):
+            if self.r0.dahan.cnt > 0:
+                self._add(self.r0, Dahan, 1)
+            self._build(self.r0)
             self._ravage()
 
     def blur2(self) -> None:

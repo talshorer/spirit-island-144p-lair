@@ -91,6 +91,8 @@ def log_entry_to_text(entry: action_log.LogEntry) -> str:
             return entry.text
         case action_log.Action.GATHER:
             return f"gather {entry.count} {entry.src_piece} from {entry.src_land} to {entry.tgt_land}"
+        case action_log.Action.ADD:
+            return f"add {entry.count} {entry.tgt_piece} in {entry.tgt_land}"
         case action_log.Action.DESTROY:
             if entry.tgt_piece:
                 response_log = (
@@ -249,6 +251,8 @@ def cat_cafe(finallair: lair.Lair, parser: parse.Parser) -> None:
             row.action = f"{toplevel} - downgrade"
         elif entry.action is action_log.Action.GATHER:
             row.action = f"{toplevel} - gather"
+        elif entry.action is action_log.Action.ADD:
+            row.action = f"{toplevel} - add"
         elif entry.action is action_log.Action.DESTROY:
             row.action = f"{toplevel} - military response"
         else:
@@ -375,17 +379,17 @@ def parse_args() -> argparse.Namespace:
         metavar="LAND-TYPES",
     )
     parser.add_argument(
-        "--reserve-gathers",
+        "--reserve-gathers-blue",
         type=int,
         default=0,
-        help="Reserve first N lair gathers for other actions",
+        help="Reserve first N blue lair gathers for other actions",
         metavar="COUNT",
     )
     parser.add_argument(
-        "--reserve-damage",
+        "--reserve-gathers-orange",
         type=int,
         default=0,
-        help="Reserve first N lair damage for other actions",
+        help="Reserve first N orange lair gathers for other actions",
         metavar="COUNT",
     )
     parser.add_argument(
@@ -399,11 +403,11 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     res: List[Tuple[Tuple, lair.Lair]] = []
-    action_seqs = set(tuple(s) for s in perms(args.actions))
+    action_seqs = set(tuple(s) for s in perms(args.actions + ["lair_blue", "lair_orange"]))
     lair_conf = lair.LairConf(
         land_priority=args.land_priority,
-        reserve_gathers=args.reserve_gathers,
-        reserve_damage=args.reserve_damage,
+        reserve_gathers_blue=args.reserve_gathers_blue,
+        reserve_gathers_orange=args.reserve_gathers_orange,
         reckless_offensive=args.reckless_offensive,
         piece_names=piece_names_emoji if args.server_emojis else piece_names_text,
     )
@@ -420,7 +424,7 @@ def main() -> None:
     )
     for action_seq in action_seqs:
         action_seq += ("ravage",)
-        thelair, _ = parser.parse_all()
+        thelair, delayed = parser.parse_all()
         if args.pull_r1_dahan is not None:
             if args.pull_r1_dahan == "ALL":
                 pull = 1 << 32
@@ -429,6 +433,10 @@ def main() -> None:
             thelair.pull_r1_dahan(pull)
         for action in action_seq:
             getattr(thelair, action)()
+            if delayed.run(action):
+                thelair.log.entry(
+                    action_log.LogEntry(text=f"_execute delayed actions for {action}_")
+                )
         res.append((action_seq, thelair))
 
     res.sort(key=lambda pair: score(pair[1]))
@@ -473,14 +481,15 @@ def main() -> None:
                     f.write(content)
         if args.diff:
             all_diff = []
-            orig_lair, distant_lands = parser.parse_all()
+            orig_lair, delayed = parser.parse_all()
             all_diff.append(landdiff(0, orig_lair.r0, thelair.r0, args))
             for a, b in zip(orig_lair.r1, thelair.r1):
                 all_diff.append(landdiff(1, a, b, args))
             for a, b in zip(orig_lair.r2, thelair.r2):
                 all_diff.append(landdiff(2, a, b, args))
             if args.distant_diff:
-                for b in distant_lands.values():
+                delayed.run_all()
+                for b in delayed.lands.distant.values():
                     if not b.key:
                         b.key = "dead"
                     elif not b.key.endswith("X"):
