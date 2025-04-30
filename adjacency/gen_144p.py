@@ -139,8 +139,8 @@ def main() -> None:
         board = boards[name]
         for i in range(1, 9):
             adjacencies = ", ".join(
-                f"{parent.name}{number}{parent.layout.terrains[number].value}"
-                for parent, number in board.adjacent(i)
+                f"{link.land.key}{link.land.board.layout.terrains[link.land.num].value}"
+                for link in board.lands[i].links.values()
             )
             print(
                 f"Neighbors of {board.name}{i}{board.layout.terrains[i].value}: {adjacencies}"

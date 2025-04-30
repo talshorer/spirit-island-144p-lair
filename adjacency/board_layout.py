@@ -4,11 +4,12 @@ import dataclasses
 import enum
 from typing import Callable, Dict, Iterator, List, Optional, Self, Set, Tuple, cast
 
-'''
+"""
 For a given list of boards (in the specified format) -
 
 Generates an adjacency list of every land on that board.
-'''
+"""
+
 
 @dataclasses.dataclass
 class LayoutEdge:
@@ -27,11 +28,13 @@ class Land:
         self.board = board
         self.num = num
         self.key = f"{board.name}{num}"
-        self.links: List[LandLink] = []
+        self.links: Dict[str, LandLink] = {}
 
     def _link_one_way(self, other: Self, distance: int) -> None:
-        assert not any(other.key == link.land.key for link in self.links)
-        self.links.append(LandLink(distance=distance, land=other))
+        if (link := self.links.get(other.key)) is not None:
+            assert link.distance == distance
+            return
+        self.links[other.key] = LandLink(distance=distance, land=other)
 
     def link(self, other: Self, distance: int = 1) -> None:
         self._link_one_way(other, distance)
@@ -50,6 +53,29 @@ class BoardEdge:
         self.position = position
         self.parent = parent
         self.neighbor: Optional[Self] = None
+
+    def _link_corners(self, neighbor: Self) -> None:
+        for rotate, antirotate in (
+            (clockwise, counterclockwise),
+            (counterclockwise, clockwise),
+        ):
+            neighbor_corner = neighbor.parent.layout.get_corner(
+                antirotate.to_corner(neighbor.position)
+            )
+            neighbor_corner_land = neighbor.parent.lands[neighbor_corner]
+            rotated_position = rotate.to_edge(self.position)
+            if rotated_position is None:
+                continue
+            other_neighbor = self.parent.edges[rotated_position].neighbor
+            if other_neighbor is None:
+                continue
+            other_neighbor_corner = other_neighbor.parent.layout.get_corner(
+                rotate.to_corner(other_neighbor.position)
+            )
+            other_neighbor_corner_land = other_neighbor.parent.lands[
+                other_neighbor_corner
+            ]
+            other_neighbor_corner_land.link(neighbor_corner_land)
 
     def link(self, neighbor: Self) -> None:
         assert self.neighbor is None
@@ -73,6 +99,9 @@ class BoardEdge:
                 neighbor_pos -= 1
             else:
                 self_pos += 1
+
+        self._link_corners(neighbor)
+        neighbor._link_corners(self)
 
 
 class Edge(enum.Enum):
@@ -253,51 +282,3 @@ class Board:
         for n, adj_set in self.layout.internal_adjacencies.items():
             for neigh in adj_set:
                 self.lands[n]._link_one_way(self.lands[neigh], 1)
-
-    def _edge_opt(self, pos: Optional[Edge]) -> Optional[BoardEdge]:
-        if pos is None:
-            return None
-        return self.edges[pos]
-
-    def _corner_adjacency(
-        self,
-        corner: Corner,
-        rotate: Rotate,
-    ) -> Optional[Tuple[Board, int]]:
-        edge: Optional[BoardEdge] = self._edge_opt(
-            rotate.to_edge(corner)
-        )  # own board edge
-        if edge is None or edge.neighbor is None:
-            return None
-        edge = edge.neighbor  # neighbor's touching edge
-        edge = edge.parent._edge_opt(
-            rotate.to_edge(edge.position)
-        )  # neighbor's rotated edge
-        if edge is None or edge.neighbor is None:
-            return None
-        edge = edge.neighbor  # corner neighbor edge
-        # wait, are we in standard-3 configuration?
-        standard3check = edge.parent._edge_opt(rotate.to_edge(edge.position))
-        if (
-            standard3check is not None
-            and standard3check.neighbor is not None
-            and standard3check.neighbor.parent == self
-        ):
-            return None
-        land = edge.parent.layout.get_corner(rotate.to_corner(edge.position))
-        return edge.parent, land
-
-    def adjacent(self, land: int) -> Iterator[Tuple[Board, int]]:
-        for link in self.lands[land].links:
-            yield link.land.board, link.land.num
-
-        yield from (
-            adjacency
-            for adjacency in (
-                self._corner_adjacency(corner, rotate)
-                for corner in Corner
-                for rotate in (clockwise, counterclockwise)
-                if self.layout.get_corner(corner) == land
-            )
-            if adjacency is not None
-        )
