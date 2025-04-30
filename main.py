@@ -307,9 +307,9 @@ def parse_args() -> argparse.Namespace:
         metavar="HEADER",
     )
     parser.add_argument(
-        "--no-summary",
+        "--summary",
         action="store_true",
-        help="Don't display final lair state summary",
+        help="Display final lair state summary",
     )
     parser.add_argument(
         "--server-emojis",
@@ -445,7 +445,7 @@ def main() -> None:
     res.sort(key=lambda pair: score(pair[1]))
 
     for action_seq, thelair in res[-args.best :]:
-        if not args.no_summary:
+        if args.summary:
             print(
                 " ".join(
                     [
