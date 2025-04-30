@@ -139,7 +139,7 @@ def main() -> None:
         board = boards[name]
         for i in range(1, 9):
             adjacencies = ", ".join(
-                f"{link.land.key}{link.land.board.layout.terrains[link.land.num].value}"
+                f"{link.land.key}{link.land.terrain.value}"
                 for link in board.lands[i].links.values()
             )
             print(

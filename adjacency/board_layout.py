@@ -29,6 +29,7 @@ class Land:
         self.num = num
         self.key = f"{board.name}{num}"
         self.links: Dict[str, LandLink] = {}
+        self.terrain = board.layout.terrains[num]
 
     def _link_one_way(self, other: Self, distance: int) -> None:
         if (link := self.links.get(other.key)) is not None:
