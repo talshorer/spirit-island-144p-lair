@@ -8,6 +8,7 @@ T = TypeVar("T")
 
 class Action(enum.Enum):
     COMMENT = enum.auto()
+    MANUAL = enum.auto()
     GATHER = enum.auto()
     ADD = enum.auto()
     DESTROY = enum.auto()

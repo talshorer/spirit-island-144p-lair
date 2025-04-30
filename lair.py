@@ -163,6 +163,7 @@ class Lair:
         r1: List[Land],
         r2: List[Land],
         conf: LairConf,
+        log: Actionlog,
     ):
         self.r0 = r0
         self.r1 = r1
@@ -174,7 +175,7 @@ class Lair:
         self.wasted_invader_gathers = 0
         self.wasted_dahan_gathers = 0
         self.fear = 0
-        self.log = Actionlog()
+        self.log = log
         self.uncommitted: List[LogEntry] = []
 
     def _commit_log(self) -> None:

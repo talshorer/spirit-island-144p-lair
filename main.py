@@ -108,6 +108,8 @@ def log_entry_to_text(entry: action_log.LogEntry) -> str:
             return f"destroy {log_entry_src_pieces_to_text(entry)} in {entry.src_land}{response_log} ({entry.total_count()})"
         case action_log.Action.DOWNGRADE:
             return f"downgrade {log_entry_src_pieces_to_text(entry)} in {entry.src_land} ({entry.total_count()})"
+        case action_log.Action.MANUAL:
+            return ""
     raise LookupError(entry.action)
 
 
@@ -207,36 +209,39 @@ def cat_cafe(finallair: lair.Lair, parser: parse.Parser) -> None:
         ).to_csv()
     )
 
-    for action in parser.read_actions_csv():
-        if "LAIR" not in action.destination_key:
-            continue
-        explorers_diff = parse.to_int(action.explorers)
-        r0.explorers.cnt += explorers_diff
-        towns_diff = parse.to_int(action.towns)
-        r0.towns.cnt += towns_diff
-        cities_diff = parse.to_int(action.cities)
-        r0.cities.cnt += cities_diff
-        dahan_diff = parse.to_int(action.dahan)
-        r0.dahan.cnt += dahan_diff
-        w.writerow(
-            CatCafeRow(
-                explorers_diff=explorers_diff,
-                towns_diff=towns_diff,
-                cities_diff=cities_diff,
-                dahan_diff=dahan_diff,
-                explorers_total=r0.explorers.cnt,
-                towns_total=r0.towns.cnt,
-                cities_total=r0.cities.cnt,
-                dahan_total=r0.dahan.cnt,
-                source=action.source_key,
-                action=action.action_name,
-            ).to_csv()
-        )
+    # for action in parser.read_actions_csv():
+    #     if "LAIR" not in action.destination_key:
+    #         continue
+    #     explorers_diff = parse.to_int(action.explorers)
+    #     r0.explorers.cnt += explorers_diff
+    #     towns_diff = parse.to_int(action.towns)
+    #     r0.towns.cnt += towns_diff
+    #     cities_diff = parse.to_int(action.cities)
+    #     r0.cities.cnt += cities_diff
+    #     dahan_diff = parse.to_int(action.dahan)
+    #     r0.dahan.cnt += dahan_diff
+    #     w.writerow(
+    #         CatCafeRow(
+    #             explorers_diff=explorers_diff,
+    #             towns_diff=towns_diff,
+    #             cities_diff=cities_diff,
+    #             dahan_diff=dahan_diff,
+    #             explorers_total=r0.explorers.cnt,
+    #             towns_total=r0.towns.cnt,
+    #             cities_total=r0.cities.cnt,
+    #             dahan_total=r0.dahan.cnt,
+    #             source=action.source_key,
+    #             action=action.action_name,
+    #         ).to_csv()
+    #     )
 
     toplevel: Optional[str] = ""
     for nest, entry in finallair.log.entries:
         if nest == 0:
-            assert entry.action == action_log.Action.COMMENT
+            assert entry.action in (
+                action_log.Action.COMMENT,
+                action_log.Action.MANUAL,
+            )
             toplevel = cut_toplevel_log(entry.text or "")
 
         row = CatCafeRow(
@@ -260,13 +265,18 @@ def cat_cafe(finallair: lair.Lair, parser: parse.Parser) -> None:
             row.action = f"{toplevel} - add"
         elif entry.action is action_log.Action.DESTROY:
             row.action = f"{toplevel} - military response"
+        elif entry.action is action_log.Action.MANUAL:
+            row.action = toplevel
         else:
             continue
 
+        def is_lair(key: Optional[str]) -> bool:
+            return key in (r0.key, "LAIRL")
+
         src_mult = tgt_mult = 0
-        if entry.src_land == r0.key:
+        if is_lair(entry.src_land):
             src_mult = 1
-        if entry.tgt_land == r0.key:
+        if is_lair(entry.tgt_land):
             tgt_mult = 1
         if src_mult == tgt_mult == 0:
             continue
@@ -464,8 +474,10 @@ def main() -> None:
             )
 
         log = "\n".join(
-            " " * (nest * 2) + "- " + log_entry_to_text(entry)
+            " " * (nest * 2) + "- " + line
             for nest, entry in thelair.log.entries
+            for line in (log_entry_to_text(entry),)
+            if line
         )
         if args.log:
             print(log)

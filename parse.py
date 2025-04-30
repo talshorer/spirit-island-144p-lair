@@ -5,6 +5,7 @@ import json
 from typing import Any, Dict, Iterator, List, Optional, Tuple, cast
 
 
+import action_log
 import lair
 
 
@@ -78,9 +79,16 @@ class CsvAction:
 
 
 class DelayedActions:
-    def __init__(self, near: Dict[str, lair.Land], lair_conf: lair.LairConf):
+    def __init__(
+        self,
+        near: Dict[str, lair.Land],
+        lair_conf: lair.LairConf,
+        log: action_log.Actionlog,
+    ):
         self.actions: Dict[str, List[CsvAction]] = collections.defaultdict(lambda: [])
+        self.lair_conf = lair_conf
         self.lands = ActionCsvLands(near=near, distant={}, lair_conf=lair_conf)
+        self.log = log
 
     def push(self, action: CsvAction) -> None:
         self.actions[action.after_toplevel].append(action)
@@ -88,8 +96,30 @@ class DelayedActions:
     def run(self, key: str) -> bool:
         if key not in self.actions:
             return False
+        pieces = [
+            self.lair_conf.piece_names.explorer,
+            self.lair_conf.piece_names.town,
+            self.lair_conf.piece_names.city,
+            self.lair_conf.piece_names.dahan,
+        ]
         for action in self.actions[key]:
             action.run(self.lands)
+            self.log.entry(
+                action_log.LogEntry(
+                    action=action_log.Action.MANUAL,
+                    text=action.action_name,
+                    src_land=action.source_key,
+                    tgt_land=action.destination_key,
+                    src_piece=pieces,
+                    tgt_piece=pieces,
+                    count=[
+                        to_int(action.explorers),
+                        to_int(action.towns),
+                        to_int(action.cities),
+                        to_int(action.dahan),
+                    ],
+                )
+            )
         self.actions[key] = []
         return True
 
@@ -187,11 +217,12 @@ class Parser:
                 if rng:
                     r[rng].append(land)
 
-        csv_actions = DelayedActions(lands, self.lair_conf)
+        log = action_log.Actionlog()
+        csv_actions = DelayedActions(lands, self.lair_conf, log)
         for action in self.read_actions_csv():
             csv_actions.push(action)
         csv_actions.run("")
         return (
-            lair.Lair(r0=r0, r1=r[1], r2=r[2], conf=self.lair_conf),
+            lair.Lair(r0=r0, r1=r[1], r2=r[2], conf=self.lair_conf, log=log),
             csv_actions,
         )
