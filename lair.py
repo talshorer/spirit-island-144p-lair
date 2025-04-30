@@ -427,7 +427,7 @@ class Lair:
             )
         )
 
-    def _build(self, land: Land):
+    def _build(self, land: Land) -> None:
         if all(tipe.select(land).cnt == 0 for tipe in (Explorer, Town, City)):
             return
 

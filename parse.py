@@ -82,7 +82,7 @@ class DelayedActions:
         self.actions: Dict[str, List[CsvAction]] = collections.defaultdict(lambda: [])
         self.lands = ActionCsvLands(near=near, distant={}, lair_conf=lair_conf)
 
-    def push(self, action: CsvAction):
+    def push(self, action: CsvAction) -> None:
         self.actions[action.after_toplevel].append(action)
 
     def run(self, key: str) -> bool:
@@ -93,7 +93,7 @@ class DelayedActions:
         self.actions[key] = []
         return True
 
-    def run_all(self):
+    def run_all(self) -> None:
         for key in list(self.actions.keys()):
             self.run(key)
 
