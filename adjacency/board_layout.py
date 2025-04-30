@@ -297,11 +297,11 @@ class Board:
                 self.lands[n]._link_one_way(self.lands[neigh], 1)
         self.archipelago_links: Dict[str, Self] = {}
 
-    def _link_archipelago_one_way(self, other: Self):
+    def _link_archipelago_one_way(self, other: Self) -> None:
         assert other.name not in self.archipelago_links
         self.archipelago_links[other.name] = other
 
-    def link_archipelago(self, other: Self):
+    def link_archipelago(self, other: Self) -> None:
         self._link_archipelago_one_way(other)
         other._link_archipelago_one_way(self)
         for self_land in self.lands.values():
@@ -312,8 +312,8 @@ class Board:
                     continue
                 self_land.link(other=other_land, distance=2)
 
-    def cast_down(self):
-        for land in self.lands.values():
+    def cast_down(self) -> None:
+        for land in list(self.lands.values()):
             land.sink(deeps=False)
 
         for other in self.archipelago_links.values():

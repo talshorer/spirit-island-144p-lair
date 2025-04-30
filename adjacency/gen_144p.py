@@ -43,7 +43,7 @@ def link_rim(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None
     t.edges[Edge.CLOCK9].link(u.edges[Edge.CLOCK3])
 
 
-class Loader:
+class Map144P:
     def __init__(
         self,
         data: Dict[str, Any],
@@ -52,6 +52,7 @@ class Loader:
         self.boards: Dict[str, Board] = {}
         self._load_continent("blue")
         self._load_continent("orange")
+        self._cast_down()
 
     def _load_continent(self, name: str) -> None:
         data = self._data[name]
@@ -140,16 +141,28 @@ class Loader:
         self.boards[name] = board
         return board
 
+    def _cast_down(self) -> None:
+        data = self._data["cast_down"]
+        for board in data["boards"]:
+            self.boards[board].cast_down()
+            del self.boards[board]
+        for land in data["lands"]:
+            self.boards[land[:-1]].lands[int(land[-1])].sink(deeps=False)
+
 
 def main() -> None:
     with open("config/144p_board_layout.json") as f:
         data = json.load(f)
-    boards = Loader(data).boards
-    for islet in ["🌱", "🌵", "😎"]:
+    map = Map144P(data)
+    for islet in ["🍪"]:
         for letter in "PQRSTU":
             name = f"{islet}{letter}"
-            board = boards[name]
+            if name not in map.boards:
+                continue
+            board = map.boards[name]
             for i in range(1, 9):
+                if i not in board.lands:
+                    continue
                 adjacencies = ", ".join(
                     f"{link.land.key}{link.land.terrain.value}{' (arc)' if link.distance == 2 else ''}"
                     for link in board.lands[i].links.values()
