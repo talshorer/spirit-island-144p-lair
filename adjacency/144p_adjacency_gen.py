@@ -2,13 +2,13 @@ import itertools
 import json
 from typing import Any, Callable, Dict
 
-from adjacency.board_layout import Board, Edge, Layout
+from .board_layout import Board, Edge, Layout
 
-'''
+"""
 For the 144p game specifically - 
 
 Generates the adjacency list of the map. Uses board_layout.py
-'''
+"""
 
 
 def link_hub(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None:
