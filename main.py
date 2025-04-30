@@ -209,32 +209,6 @@ def cat_cafe(finallair: lair.Lair, parser: parse.Parser) -> None:
         ).to_csv()
     )
 
-    # for action in parser.read_actions_csv():
-    #     if "LAIR" not in action.destination_key:
-    #         continue
-    #     explorers_diff = parse.to_int(action.explorers)
-    #     r0.explorers.cnt += explorers_diff
-    #     towns_diff = parse.to_int(action.towns)
-    #     r0.towns.cnt += towns_diff
-    #     cities_diff = parse.to_int(action.cities)
-    #     r0.cities.cnt += cities_diff
-    #     dahan_diff = parse.to_int(action.dahan)
-    #     r0.dahan.cnt += dahan_diff
-    #     w.writerow(
-    #         CatCafeRow(
-    #             explorers_diff=explorers_diff,
-    #             towns_diff=towns_diff,
-    #             cities_diff=cities_diff,
-    #             dahan_diff=dahan_diff,
-    #             explorers_total=r0.explorers.cnt,
-    #             towns_total=r0.towns.cnt,
-    #             cities_total=r0.cities.cnt,
-    #             dahan_total=r0.dahan.cnt,
-    #             source=action.source_key,
-    #             action=action.action_name,
-    #         ).to_csv()
-    #     )
-
     toplevel: Optional[str] = ""
     for nest, entry in finallair.log.entries:
         if nest == 0:
@@ -447,9 +421,13 @@ def main() -> None:
             thelair.pull_r1_dahan(pull)
         for action in action_seq:
             getattr(thelair, action)()
+            before_delayed = str(thelair.r0)
             if delayed.run(action):
+                after_delayed = str(thelair.r0)
                 thelair.log.entry(
-                    action_log.LogEntry(text=f"_execute delayed actions for {action}_")
+                    action_log.LogEntry(
+                        text=f"_execute delayed actions for {action}_ {before_delayed} => {after_delayed}"
+                    )
                 )
         res.append((action_seq, thelair))
 

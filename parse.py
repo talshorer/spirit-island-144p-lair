@@ -120,7 +120,7 @@ class DelayedActions:
                     ],
                 )
             )
-        self.actions[key] = []
+        del self.actions[key]
         return True
 
     def run_all(self) -> None:
