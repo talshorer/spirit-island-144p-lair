@@ -285,6 +285,32 @@ def cat_cafe(finallair: lair.Lair, parser: parse.Parser) -> None:
         w.writerow(row.to_csv())
 
 
+def run_action_seq(
+    parser: parse.Parser,
+    args: argparse.Namespace,
+    action_seq: Tuple[str, ...],
+) -> Tuple[Tuple[str, ...], lair.Lair]:
+    action_seq += ("ravage",)
+    thelair, delayed = parser.parse_all()
+    if args.pull_r1_dahan is not None:
+        if args.pull_r1_dahan == "ALL":
+            pull = 1 << 32
+        else:
+            pull = int(args.pull_r1_dahan)
+        thelair.pull_r1_dahan(pull)
+    for action in action_seq:
+        getattr(thelair, action)()
+        before_delayed = str(thelair.r0)
+        if delayed.run(action):
+            after_delayed = str(thelair.r0)
+            thelair.log.entry(
+                action_log.LogEntry(
+                    text=f"_execute delayed actions for {action}_ {before_delayed} => {after_delayed}"
+                )
+            )
+    return action_seq, thelair
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -412,25 +438,7 @@ def main() -> None:
         parse_conf=parse_conf,
     )
     for action_seq in action_seqs:
-        action_seq += ("ravage",)
-        thelair, delayed = parser.parse_all()
-        if args.pull_r1_dahan is not None:
-            if args.pull_r1_dahan == "ALL":
-                pull = 1 << 32
-            else:
-                pull = int(args.pull_r1_dahan)
-            thelair.pull_r1_dahan(pull)
-        for action in action_seq:
-            getattr(thelair, action)()
-            before_delayed = str(thelair.r0)
-            if delayed.run(action):
-                after_delayed = str(thelair.r0)
-                thelair.log.entry(
-                    action_log.LogEntry(
-                        text=f"_execute delayed actions for {action}_ {before_delayed} => {after_delayed}"
-                    )
-                )
-        res.append((action_seq, thelair))
+        res.append(run_action_seq(parser, args, action_seq))
 
     res.sort(key=lambda pair: score(pair[1]))
 
