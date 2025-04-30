@@ -85,25 +85,31 @@ piece_names_emoji = lair.PieceNames(
 )
 
 
+def log_entry_tgt_pieces_to_text(entry: action_log.LogEntry) -> str:
+    return " ".join(f"{cnt} {tgt}" for _, tgt, cnt in entry.pieces())
+
+
+def log_entry_src_pieces_to_text(entry: action_log.LogEntry) -> str:
+    return " ".join(f"{cnt} {src}" for src, _, cnt in entry.pieces())
+
+
 def log_entry_to_text(entry: action_log.LogEntry) -> str:
     match entry.action:
         case action_log.Action.COMMENT:
             assert entry.text
             return entry.text
         case action_log.Action.GATHER:
-            return f"gather {entry.count} {entry.src_piece} from {entry.src_land} to {entry.tgt_land}"
+            return f"gather {log_entry_src_pieces_to_text(entry)} from {entry.src_land} to {entry.tgt_land} ({entry.total_count()})"
         case action_log.Action.ADD:
-            return f"add {entry.count} {entry.tgt_piece} in {entry.tgt_land}"
+            return f"add {log_entry_tgt_pieces_to_text(entry)} in {entry.tgt_land} ({entry.total_count()})"
         case action_log.Action.DESTROY:
             if entry.tgt_piece:
-                response_log = (
-                    f", MR adds {entry.count} {entry.tgt_piece} in {entry.tgt_land}"
-                )
+                response_log = f", MR adds {log_entry_tgt_pieces_to_text(entry)} in {entry.tgt_land}"
             else:
                 response_log = ""
-            return f"destroy {entry.count} {entry.src_piece} in {entry.src_land}{response_log}"
+            return f"destroy {log_entry_src_pieces_to_text(entry)} in {entry.src_land}{response_log} ({entry.total_count()})"
         case action_log.Action.DOWNGRADE:
-            return f"downgrade {entry.count} {entry.src_piece} in {entry.src_land}"
+            return f"downgrade {log_entry_src_pieces_to_text(entry)} in {entry.src_land} ({entry.total_count()})"
     raise LookupError(entry.action)
 
 
@@ -259,22 +265,29 @@ def cat_cafe(finallair: lair.Lair, parser: parse.Parser) -> None:
         else:
             continue
 
-        def piece_diff(piece: lair.PieceType, name: Optional[str]) -> int:
+        src_mult = tgt_mult = 0
+        if entry.src_land == r0.key:
+            src_mult = 1
+        if entry.tgt_land == r0.key:
+            tgt_mult = 1
+        if src_mult == tgt_mult == 0:
+            continue
+
+        def piece_diff(piece: lair.PieceType, name: Optional[str], cnt: int) -> int:
             if parser.match_piece(piece, name or ""):
-                return entry.count
+                return cnt
             return 0
 
-        if entry.src_land == r0.key:
-            row.explorers_diff -= piece_diff(lair.Explorer, entry.src_piece)
-            row.towns_diff -= piece_diff(lair.Town, entry.src_piece)
-            row.cities_diff -= piece_diff(lair.City, entry.src_piece)
-            row.dahan_diff -= piece_diff(lair.Dahan, entry.src_piece)
+        for src, tgt, cnt in entry.pieces():
+            row.explorers_diff -= piece_diff(lair.Explorer, src, cnt) * src_mult
+            row.towns_diff -= piece_diff(lair.Town, src, cnt) * src_mult
+            row.cities_diff -= piece_diff(lair.City, src, cnt) * src_mult
+            row.dahan_diff -= piece_diff(lair.Dahan, src, cnt) * src_mult
 
-        if entry.tgt_land == r0.key:
-            row.explorers_diff += piece_diff(lair.Explorer, entry.tgt_piece)
-            row.towns_diff += piece_diff(lair.Town, entry.tgt_piece)
-            row.cities_diff += piece_diff(lair.City, entry.tgt_piece)
-            row.dahan_diff += piece_diff(lair.Dahan, entry.tgt_piece)
+            row.explorers_diff += piece_diff(lair.Explorer, tgt, cnt) * tgt_mult
+            row.towns_diff += piece_diff(lair.Town, tgt, cnt) * tgt_mult
+            row.cities_diff += piece_diff(lair.City, tgt, cnt) * tgt_mult
+            row.dahan_diff += piece_diff(lair.Dahan, tgt, cnt) * tgt_mult
 
         r0.explorers.cnt += row.explorers_diff
         r0.towns.cnt += row.towns_diff
