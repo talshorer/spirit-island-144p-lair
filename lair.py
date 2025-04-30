@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import abc
 import contextlib
 import dataclasses
 import itertools
-from typing import Callable, Dict, Iterator, List, Optional, Self, Tuple, cast
+from typing import Callable, Iterator, List, Optional, Self, Tuple, Type, cast
 
 from action_log import Action, Actionlog, LogEntry
 
@@ -84,64 +85,122 @@ class PieceNames:
     dahan: str
 
 
-PieceSelect = Callable[[Land], Pieces]
-PieceNameSelect = Callable[[PieceNames], str]
+class _PieceType(abc.ABC):
+    @classmethod
+    def new(cls, cnt: int = 0) -> Pieces:
+        return Pieces(cnt=cnt, tipe=cls)
 
-
-@dataclasses.dataclass
-class PieceType:
-    select: PieceSelect
-    select_mr: PieceSelect
     health: int
     fear: int
-    response: Optional[Self]
-    name: PieceNameSelect
+    response: Optional[PieceType]
 
-    def new(self, cnt: int = 0) -> Pieces:
-        return Pieces(cnt=cnt, tipe=self)
+    @classmethod
+    @abc.abstractmethod
+    def select(cls, land: Land) -> Pieces:
+        pass
+
+    @classmethod
+    @abc.abstractmethod
+    def select_mr(cls, land: Land) -> Pieces:
+        pass
+
+    @classmethod
+    @abc.abstractmethod
+    def name(cls, pn: PieceNames) -> str:
+        pass
 
 
-Void: PieceType
-Void = PieceType(
-    select=cast(PieceSelect, lambda land: Void.new()),
-    select_mr=cast(PieceSelect, lambda land: Void.new()),
-    health=0,
-    fear=0,
-    response=None,
-    name=cast(PieceNameSelect, lambda pn: "void"),
-)
-Explorer = PieceType(
-    select=cast(PieceSelect, lambda land: land.explorers),
-    select_mr=cast(PieceSelect, lambda land: land.mr_explorers),
-    health=1,
-    fear=0,
-    response=None,
-    name=cast(PieceNameSelect, lambda pn: pn.explorer),
-)
-Town = PieceType(
-    select=cast(PieceSelect, lambda land: land.towns),
-    select_mr=cast(PieceSelect, lambda land: land.mr_towns),
-    health=2,
-    fear=1,
-    response=Explorer,
-    name=cast(PieceNameSelect, lambda pn: pn.town),
-)
-City = PieceType(
-    select=cast(PieceSelect, lambda land: land.cities),
-    select_mr=cast(PieceSelect, lambda land: Void.new()),
-    health=3,
-    fear=2,
-    response=Town,
-    name=cast(PieceNameSelect, lambda pn: pn.city),
-)
-Dahan = PieceType(
-    select=cast(PieceSelect, lambda land: land.dahan),
-    select_mr=cast(PieceSelect, lambda land: Void.new()),
-    health=2,
-    fear=0,
-    response=None,
-    name=cast(PieceNameSelect, lambda pn: pn.dahan),
-)
+PieceType = Type[_PieceType]
+
+
+class Void(_PieceType):
+    health = 0
+    fear = 0
+    response = None
+
+    @classmethod
+    def select(cls, land: Land) -> Pieces:
+        return cls.new()
+
+    @classmethod
+    def select_mr(cls, land: Land) -> Pieces:
+        return cls.new()
+
+    @classmethod
+    def name(cls, pn: PieceNames) -> str:
+        return "void"
+
+
+class Explorer(_PieceType):
+    health = 1
+    fear = 0
+    response = None
+
+    @classmethod
+    def select(cls, land: Land) -> Pieces:
+        return land.explorers
+
+    @classmethod
+    def select_mr(cls, land: Land) -> Pieces:
+        return land.mr_explorers
+
+    @classmethod
+    def name(cls, pn: PieceNames) -> str:
+        return pn.explorer
+
+
+class Town(_PieceType):
+    health = 2
+    fear = 1
+    response = Explorer
+
+    @classmethod
+    def select(cls, land: Land) -> Pieces:
+        return land.towns
+
+    @classmethod
+    def select_mr(cls, land: Land) -> Pieces:
+        return land.mr_towns
+
+    @classmethod
+    def name(cls, pn: PieceNames) -> str:
+        return pn.town
+
+
+class City(_PieceType):
+    health = 3
+    fear = 2
+    response = Town
+
+    @classmethod
+    def select(cls, land: Land) -> Pieces:
+        return land.cities
+
+    @classmethod
+    def select_mr(cls, land: Land) -> Pieces:
+        return Void.new()
+
+    @classmethod
+    def name(cls, pn: PieceNames) -> str:
+        return pn.city
+
+
+class Dahan(_PieceType):
+    health = 2
+    fear = 0
+    response = None
+
+    @classmethod
+    def select(cls, land: Land) -> Pieces:
+        return land.dahan
+
+    @classmethod
+    def select_mr(cls, land: Land) -> Pieces:
+        return Void.new()
+
+    @classmethod
+    def name(cls, pn: PieceNames) -> str:
+        return pn.dahan
 
 
 @dataclasses.dataclass
@@ -255,7 +314,7 @@ class Lair:
 
     def _lair2(self) -> None:
         gathers = 1
-        for tipe in [Explorer, Town]:
+        for tipe in (Explorer, Town):
             for land in self._r1_most_dahan():
                 gathers -= self._gather(tipe, land, gathers)
         self.wasted_invader_gathers += gathers
@@ -306,7 +365,7 @@ class Lair:
             gathers -= self._gather(City, land, gathers)
             gathers -= self._gather(Explorer, land, gathers)
 
-        for tipe in [Explorer, Town, City]:
+        for tipe in (Explorer, Town, City):
             for land in self._r1_most_dahan():
                 gathers -= self._gather(tipe, land, gathers)
 
@@ -432,6 +491,7 @@ class Lair:
         if all(tipe.select(land).cnt == 0 for tipe in (Explorer, Town, City)):
             return
 
+        tipe: PieceType
         if land.towns.cnt > land.cities.cnt:
             tipe = City
         else:

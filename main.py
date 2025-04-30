@@ -1,6 +1,7 @@
 import argparse
 import csv
 import dataclasses
+import multiprocessing
 import os
 import shutil
 import sys
@@ -311,6 +312,22 @@ def run_action_seq(
     return action_seq, thelair
 
 
+class Worker:
+    def __init__(
+        self,
+        parser: parse.Parser,
+        args: argparse.Namespace,
+    ):
+        self.parser = parser
+        self.args = args
+
+    def __call__(
+        self,
+        action_seq: Tuple[str, ...],
+    ) -> Tuple[Tuple[str, ...], lair.Lair]:
+        return run_action_seq(self.parser, self.args, action_seq)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -410,6 +427,12 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Output cat-cafe-friendly csv",
     )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=32,
+        help="Number of multiprocessing workers to run",
+    )
     return parser.parse_args()
 
 
@@ -437,9 +460,10 @@ def main() -> None:
         lair_conf=lair_conf,
         parse_conf=parse_conf,
     )
-    for action_seq in action_seqs:
-        res.append(run_action_seq(parser, args, action_seq))
 
+    worker = Worker(parser, args)
+    with multiprocessing.Pool(args.workers) as pool:
+        res = pool.map(worker, action_seqs)
     res.sort(key=lambda pair: score(pair[1]))
 
     for action_seq, thelair in res[-args.best :]:
