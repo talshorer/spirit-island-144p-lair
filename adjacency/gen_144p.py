@@ -93,6 +93,23 @@ class Loader:
             hubt = self.boards[f"{hub}T"]
             spoke2s.edges[Edge.CLOCK3].link(hubt.edges[Edge.CLOCK3])
 
+        for i in range(6):
+            spoke = data["spokes"][i]  # 🐍
+            hub1 = data["hub"][((i + 5) // 2) % 3]  # 😎
+            hub2 = data["hub"][((i + 1) // 2) % 3]  # 🏝️
+            rim = data["rim"][i]  # 🧀
+
+            hub1_letter = "U" if (i % 2 == 0) else "Q"
+            hub1_board = self.boards[f"{hub1}{hub1_letter}"]
+            for spoke_letter in "PQR":
+                self.boards[f"{spoke}{spoke_letter}"].link_archipelago(hub1_board)
+            self.boards[f"{rim}Q"].link_archipelago(hub1_board)
+
+            hub2_letter = "T" if (i % 2 == 0) else "P"
+            hub2_board = self.boards[f"{hub2}{hub2_letter}"]
+            for spoke_letter in "STU":
+                self.boards[f"{spoke}{spoke_letter}"].link_archipelago(hub2_board)
+
     def _load_islet(
         self,
         name: str,
@@ -128,23 +145,18 @@ def main() -> None:
     with open("config/144p_board_layout.json") as f:
         data = json.load(f)
     boards = Loader(data).boards
-    for name in [
-        "🌱P",
-        "🌱Q",
-        "🌱R",
-        "🌱S",
-        "🌱T",
-        "🌱U",
-    ]:
-        board = boards[name]
-        for i in range(1, 9):
-            adjacencies = ", ".join(
-                f"{link.land.key}{link.land.terrain.value}"
-                for link in board.lands[i].links.values()
-            )
-            print(
-                f"Neighbors of {board.name}{i}{board.layout.terrains[i].value}: {adjacencies}"
-            )
+    for islet in ["🌱", "🌵", "😎"]:
+        for letter in "PQRSTU":
+            name = f"{islet}{letter}"
+            board = boards[name]
+            for i in range(1, 9):
+                adjacencies = ", ".join(
+                    f"{link.land.key}{link.land.terrain.value}{' (arc)' if link.distance == 2 else ''}"
+                    for link in board.lands[i].links.values()
+                )
+                print(
+                    f"Neighbors of {board.name}{i}{board.layout.terrains[i].value}: {adjacencies}"
+                )
 
 
 if __name__ == "__main__":

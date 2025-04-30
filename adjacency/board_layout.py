@@ -24,12 +24,13 @@ class LandLink:
 
 
 class Land:
-    def __init__(self, board: Board, num: int) -> None:
+    def __init__(self, board: Board, num: int, coastal: bool) -> None:
         self.board = board
         self.num = num
         self.key = f"{board.name}{num}"
         self.links: Dict[str, LandLink] = {}
         self.terrain = board.layout.terrains[num]
+        self.coastal = coastal
 
     def _link_one_way(self, other: Self, distance: int) -> None:
         if (link := self.links.get(other.key)) is not None:
@@ -40,6 +41,17 @@ class Land:
     def link(self, other: Self, distance: int = 1) -> None:
         self._link_one_way(other, distance)
         other._link_one_way(self, distance)
+
+    def sink(self, deeps: bool) -> None:
+        for link in self.links.values():
+            if deeps:
+                link.land.coastal = True
+                # we're coastal now, link archipelago!
+                for board in self.board.archipelago_links.values():
+                    for other in board.lands.values():
+                        self.link(other, distance=2)
+            del link.land.links[self.key]
+        del self.board.lands[self.num]
 
 
 class BoardEdge:
@@ -279,7 +291,30 @@ class Board:
         self.edges = {
             pos: BoardEdge(edge, pos, self) for pos, edge in layout.edges.items()
         }
-        self.lands = {i: Land(board=self, num=i) for i in range(1, 9)}
+        self.lands = {i: Land(board=self, num=i, coastal=(i <= 3)) for i in range(1, 9)}
         for n, adj_set in self.layout.internal_adjacencies.items():
             for neigh in adj_set:
                 self.lands[n]._link_one_way(self.lands[neigh], 1)
+        self.archipelago_links: Dict[str, Self] = {}
+
+    def _link_archipelago_one_way(self, other: Self):
+        assert other.name not in self.archipelago_links
+        self.archipelago_links[other.name] = other
+
+    def link_archipelago(self, other: Self):
+        self._link_archipelago_one_way(other)
+        other._link_archipelago_one_way(self)
+        for self_land in self.lands.values():
+            if not self_land.coastal:
+                continue
+            for other_land in other.lands.values():
+                if not other_land.coastal:
+                    continue
+                self_land.link(other=other_land, distance=2)
+
+    def cast_down(self):
+        for land in self.lands.values():
+            land.sink(deeps=False)
+
+        for other in self.archipelago_links.values():
+            del other.archipelago_links[self.name]
