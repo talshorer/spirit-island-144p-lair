@@ -46,9 +46,7 @@ def landdiff(
         and a.cities.cnt == b.cities.cnt
         and a.dahan.cnt == b.dahan.cnt
     ):
-        if args.strict_diff:
-            return ""
-        bstr = "UNCHANGED"
+        return ""
     if args.diff_range:
         range_ = f"({r}) "
     else:
@@ -343,11 +341,6 @@ def parse_args() -> argparse.Namespace:
         "--dahan-diff",
         action="store_true",
         help="Don't show a land as clear if it has dahan",
-    )
-    parser.add_argument(
-        "--strict-diff",
-        action="store_true",
-        help="Skip lands in diff view if they didn't change",
     )
     parser.add_argument(
         "--pull-r1-dahan",
