@@ -54,19 +54,21 @@ class Loader:
         self._load_continent("orange")
 
     def _load_continent(self, name: str) -> None:
-        for islet in self._data[name]["rim"]:
+        data = self._data[name]
+
+        for islet in data["rim"]:
             self._load_islet(islet, link_rim)
-        for islet in self._data[name]["spokes"]:
+        for islet in data["spokes"]:
             self._load_islet(islet, link_spoke)
-        for islet in self._data[name]["hub"]:
+        for islet in data["hub"]:
             self._load_islet(islet, link_hub)
 
-        rim_ahead = iter(itertools.cycle(self._data[name]["rim"]))
+        rim_ahead = iter(itertools.cycle(data["rim"]))
         next(rim_ahead)
         for rim1, rim2, spoke in zip(
-            self._data[name]["rim"],  # 🧀
+            data["rim"],  # 🧀
             rim_ahead,  # 🌙
-            self._data[name]["spokes"],  # 🐍
+            data["spokes"],  # 🐍
         ):
             rim1p = self.boards[f"{rim1}P"]
             spokep = self.boards[f"{spoke}P"]
@@ -79,9 +81,9 @@ class Loader:
             spokeu.edges[Edge.CLOCK9].link(rim2s.edges[Edge.CLOCK6])
 
         for spoke1, spoke2, hub in zip(
-            self._data[name]["spokes"][0::2],  # 🐍
-            self._data[name]["spokes"][1::2],  # ♾️
-            self._data[name]["hub"],  # 🏝️
+            data["spokes"][0::2],  # 🐍
+            data["spokes"][1::2],  # ♾️
+            data["hub"],  # 🏝️
         ):
             spoke1s = self.boards[f"{spoke1}S"]
             hubp = self.boards[f"{hub}P"]
