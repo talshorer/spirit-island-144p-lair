@@ -160,7 +160,24 @@ class Split:
         for entry in leftover:
             self.append(entry)
 
+    def space_emojis(self, line: bytes) -> bytes:
+        idx = 0
+        while True:
+            try:
+                start = line.index(b":", idx)
+            except ValueError:
+                return line
+            if start < len(line) - 1 and line[start + 1] != ord(b" "):
+                end = line.index(b":", start + 1) + 1
+                before = b" " if start > 0 and line[start - 1] != ord(b" ") else b""
+                after = b" " if end < len(line) and line[end] != ord(b" ") else b""
+                line = line[:start] + before + line[start:end] + after + line[end:]
+                idx = end
+            else:
+                idx = start + 1
+
     def append(self, line: bytes) -> None:
+        line = self.space_emojis(line)
         real_length = len(line) + 1 + (line.count(b":") // 2 * DISCORD_EMOJI_COST)
         if self.cur_length + real_length > DISCORD_MESSAGE_LIMIT:
             self.commit(True)
