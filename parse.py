@@ -85,12 +85,21 @@ class DelayedActions:
         log: action_log.Actionlog,
     ):
         self.actions: Dict[str, List[CsvAction]] = collections.defaultdict(lambda: [])
+        self.by_id: Dict[str, CsvAction] = {}
         self.lair_conf = lair_conf
         self.lands = ActionCsvLands(near=near, distant={}, lair_conf=lair_conf)
         self.log = log
 
     def push(self, action: CsvAction) -> None:
         self.actions[action.after_toplevel].append(action)
+        # when an action is split into multiple rows, we only want the first
+        if action.action_id not in self.by_id:
+            self.by_id[action.action_id] = action
+
+    def progenitor(self, action: CsvAction) -> CsvAction:
+        while action.parent_action:
+            action = self.by_id[action.parent_action]
+        return action
 
     def run(self, key: str) -> bool:
         if key not in self.actions:
@@ -106,7 +115,7 @@ class DelayedActions:
             self.log.entry(
                 action_log.LogEntry(
                     action=action_log.Action.MANUAL,
-                    text=action.action_name,
+                    text=self.progenitor(action).action_name,
                     src_land=action.source_key,
                     tgt_land=action.destination_key,
                     src_piece=pieces,
