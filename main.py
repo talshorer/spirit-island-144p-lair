@@ -448,11 +448,6 @@ def parse_args() -> argparse.Namespace:
         help="Display final lair state summary",
     )
     parser.add_argument(
-        "--server-emojis",
-        action="store_true",
-        help="Use Spirit Island Discord server emojis where applicable",
-    )
-    parser.add_argument(
         "--diff-range",
         action="store_true",
         help="Show range from lair in diff view",
@@ -524,15 +519,16 @@ def main() -> None:
     action_seqs = set(
         tuple(s) for s in perms(args.actions + ["lair_blue", "lair_orange"])
     )
+    server_emojis = args.split
     lair_conf = lair.LairConf(
         land_priority=args.land_priority,
         reserve_gathers_blue=args.reserve_gathers_blue,
         reserve_gathers_orange=args.reserve_gathers_orange,
         reckless_offensive=args.reckless_offensive,
-        piece_names=piece_names_emoji if args.server_emojis else piece_names_text,
+        piece_names=piece_names_emoji if server_emojis else piece_names_text,
     )
     parse_conf = parse.ParseConf(
-        server_emojis=args.server_emojis,
+        server_emojis=server_emojis,
         ignore_lands=args.ignore_lands,
     )
     parser = parse.Parser(
