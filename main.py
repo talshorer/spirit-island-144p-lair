@@ -240,8 +240,7 @@ def cat_cafe(finallair: lair.Lair, parser: parse.Parser) -> None:
         elif entry.action is action_log.Action.DESTROY:
             row.action = f"{toplevel} - military response"
         elif entry.action is action_log.Action.MANUAL:
-            assert toplevel
-            row.action = toplevel
+            row.action = toplevel or "UNKNWON"
         else:
             continue
 
