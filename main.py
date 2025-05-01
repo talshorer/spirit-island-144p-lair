@@ -123,26 +123,33 @@ def cut_toplevel_log(line: str) -> str:
     return line.split(": ")[0]
 
 
-class LogSplit:
-    def __init__(self) -> None:
+class Split:
+    def __init__(
+        self,
+        may_break_second_level: bool,
+        force_commit_on_toplevel: bool,
+    ) -> None:
         self.entries: List[bytes] = []
         self.toplevel = ""
         self.cur_length = 0
         self.count = 0
         self.files: List[bytes] = []
+        self.may_break_second_level = may_break_second_level
+        self.force_commit_on_toplevel = force_commit_on_toplevel
 
     def commit(self, needs_cont: bool) -> None:
         if not self.entries:
             return
 
-        # don't break a second-level bullet in the middle
-        for i in range(len(self.entries) - 1, 0, -1):
-            if self.entries[i].startswith(b"  -"):
-                break
-        else:
-            i = len(self.entries)
-        self.files.append(b"\n".join(self.entries[:i]))
-        leftover = self.entries[i:]
+        upto = len(self.entries)
+        if not self.may_break_second_level:
+            # don't break a second-level bullet in the middle
+            for i in range(len(self.entries) - 1, 0, -1):
+                if self.entries[i].startswith(b"  -"):
+                    upto = i
+                    break
+        self.files.append(b"\n".join(self.entries[:upto]))
+        leftover = self.entries[upto:]
 
         self.count += 1
         self.cur_length = 0
@@ -160,12 +167,91 @@ class LogSplit:
         self.cur_length += real_length
         self.entries.append(line)
 
-    def run(self, log: str) -> None:
+    def run(
+        self,
+        log: str,
+        directory: str,
+        header_prefix: str,
+        header_suffix: str,
+    ) -> None:
+        shutil.rmtree(directory, ignore_errors=True)
+        os.makedirs(directory, exist_ok=True)
+
         for line in log.splitlines():
             if line.startswith("-"):
                 self.toplevel = cut_toplevel_log(line)
+                if self.force_commit_on_toplevel:
+                    self.commit(False)
             self.append(line.encode())
         self.commit(False)
+
+        for i, content in enumerate(self.files):
+            with open(
+                os.path.join(directory, f"msg{(i + 1):02}.md"),
+                "wb",
+            ) as f:
+                f.write(
+                    f"{header_prefix} [{i + 1}/{len(self.files)}]{header_suffix}\n".encode()
+                )
+                f.write(content)
+
+
+def print_or_split(
+    raw: str,
+    args: argparse.Namespace,
+    thelair: lair.Lair,
+    may_break_second_level: bool = False,
+    force_commit_on_toplevel: bool = False,
+) -> None:
+    if args.split:
+        if args.split_header:
+            split_header = f" {args.split_header}"
+        else:
+            split_header = ""
+        Split(
+            may_break_second_level=may_break_second_level,
+            force_commit_on_toplevel=force_commit_on_toplevel,
+        ).run(
+            raw,
+            args.split,
+            thelair.r0.key,
+            split_header,
+        )
+    else:
+        print(raw)
+
+
+def process_diffview(
+    parser: parse.Parser,
+    args: argparse.Namespace,
+    thelair: lair.Lair,
+) -> None:
+    all_diff = []
+    orig_lair, _ = parser.parse_all()
+    all_diff.append(landdiff(0, orig_lair.r0, thelair.r0, args))
+    for a, b in zip(orig_lair.r1, thelair.r1):
+        all_diff.append(landdiff(1, a, b, args))
+    for a, b in zip(orig_lair.r2, thelair.r2):
+        all_diff.append(landdiff(2, a, b, args))
+    all_diff.sort()
+    all_diff_md = []
+    last_islet = ""
+    for line in all_diff:
+        if not line:
+            continue
+        islet = line[0]
+        if islet != last_islet:
+            all_diff_md.append(f"- {thelair.r0.key} diff: {islet}")
+            last_islet = islet
+        all_diff_md.append(f"  - {line}")
+    diffview = "\n".join(all_diff_md)
+    print_or_split(
+        raw=diffview,
+        args=args,
+        thelair=thelair,
+        may_break_second_level=True,
+        force_commit_on_toplevel=True,
+    )
 
 
 @dataclasses.dataclass
@@ -347,13 +433,13 @@ def parse_args() -> argparse.Namespace:
         help="Output action log in markdown format to stdout",
     )
     parser.add_argument(
-        "--log-split",
-        help="Output action log to multiple files, split into discord message length",
+        "--split",
+        help="Output to multiple files, split into discord message length",
         metavar="DIRECTORY",
     )
     parser.add_argument(
-        "--log-split-header",
-        help="Append a marker to each split log header",
+        "--split-header",
+        help="Append a marker to each split file header",
         metavar="HEADER",
     )
     parser.add_argument(
@@ -480,46 +566,23 @@ def main() -> None:
                 )
             )
 
-        log = "\n".join(
-            " " * (nest * 2) + "- " + line
-            for nest, entry in thelair.log.entries
-            for line in (log_entry_to_text(entry),)
-            if line
-        )
         match args.output:
             case Output.LOG:
-                if args.log_split:
-                    if args.log_split_header:
-                        log_split_header = f" {args.log_split_header}"
-                    else:
-                        log_split_header = ""
-                    ls = LogSplit()
-                    ls.run(log)
-                    shutil.rmtree(args.log_split, ignore_errors=True)
-                    os.makedirs(args.log_split, exist_ok=True)
-                    for i, content in enumerate(ls.files):
-                        with open(
-                            os.path.join(args.log_split, f"msg{(i + 1):02}.md"),
-                            "wb",
-                        ) as f:
-                            f.write(
-                                f"{thelair.r0.key} [{i + 1}/{len(ls.files)}]{log_split_header}\n".encode()
-                            )
-                            f.write(content)
-                else:
-                    print(log)
+                log = "\n".join(
+                    " " * (nest * 2) + "- " + line
+                    for nest, entry in thelair.log.entries
+                    for line in (log_entry_to_text(entry),)
+                    if line
+                )
+                print_or_split(
+                    raw=log,
+                    args=args,
+                    thelair=thelair,
+                )
+
             case Output.DIFF:
-                all_diff = []
-                orig_lair, delayed = parser.parse_all()
-                all_diff.append(landdiff(0, orig_lair.r0, thelair.r0, args))
-                for a, b in zip(orig_lair.r1, thelair.r1):
-                    all_diff.append(landdiff(1, a, b, args))
-                for a, b in zip(orig_lair.r2, thelair.r2):
-                    all_diff.append(landdiff(2, a, b, args))
-                all_diff.sort()
-                for line in all_diff:
-                    if line:
-                        print(line)
+                process_diffview(parser, args, thelair)
+
             case Output.CAT_CAFE:
                 cat_cafe(thelair, parser)
 
