@@ -36,10 +36,6 @@ def landdiff(
     allow_clear: bool = True,
 ) -> str:
     assert a.key == b.key
-    bstr = str(b)
-    if allow_clear and b.cities.cnt == b.towns.cnt == b.explorers.cnt == 0:
-        if b.dahan.cnt == 0 or not args.dahan_diff:
-            bstr = "CLEAR"
     if (
         a.explorers.cnt == b.explorers.cnt
         and a.towns.cnt == b.towns.cnt
@@ -47,6 +43,15 @@ def landdiff(
         and a.dahan.cnt == b.dahan.cnt
     ):
         return ""
+    bstr = str(b)
+    if (
+        allow_clear
+        and b.cities.cnt == 0
+        and b.towns.cnt == 0
+        and b.explorers.cnt == 0
+        and b.dahan.cnt == 0
+    ):
+        bstr = "CLEAR"
     if args.diff_range:
         range_ = f"({r}) "
     else:
@@ -362,11 +367,6 @@ def parse_args() -> argparse.Namespace:
         "--diff-range",
         action="store_true",
         help="Show range from lair in diff view",
-    )
-    parser.add_argument(
-        "--dahan-diff",
-        action="store_true",
-        help="Don't show a land as clear if it has dahan",
     )
     parser.add_argument(
         "--pull-r1-dahan",
