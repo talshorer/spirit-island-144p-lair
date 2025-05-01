@@ -1,4 +1,5 @@
 import argparse
+import copy
 import csv
 import dataclasses
 import enum
@@ -393,12 +394,14 @@ def cat_cafe(finallair: lair.Lair, parser: parse.Parser) -> None:
         w.writerow(row.to_csv())
 
 
+ActionSeqResult = Tuple[Tuple[str, ...], lair.Lair, lair.Lair]
+
+
 def run_action_seq(
     parser: parse.Parser,
     args: argparse.Namespace,
     action_seq: Tuple[str, ...],
-) -> Tuple[Tuple[str, ...], lair.Lair]:
-    action_seq += ("ravage",)
+) -> ActionSeqResult:
     thelair, delayed = parser.parse_all()
     if args.pull_r1_dahan is not None:
         if args.pull_r1_dahan == "ALL":
@@ -416,7 +419,9 @@ def run_action_seq(
                     text=f"_execute delayed actions for {action}_ {before_delayed} => {after_delayed}"
                 )
             )
-    return action_seq, thelair
+    preravage = copy.deepcopy(thelair)
+    thelair.ravage()
+    return action_seq, preravage, thelair
 
 
 class Worker:
@@ -431,7 +436,7 @@ class Worker:
     def __call__(
         self,
         action_seq: Tuple[str, ...],
-    ) -> Tuple[Tuple[str, ...], lair.Lair]:
+    ) -> ActionSeqResult:
         return run_action_seq(self.parser, self.args, action_seq)
 
 
@@ -463,6 +468,11 @@ def parse_args() -> argparse.Namespace:
         "--summary",
         action="store_true",
         help="Display final lair state summary",
+    )
+    parser.add_argument(
+        "--postravage",
+        action="store_true",
+        help="Display postravage results instead of preravage",
     )
     parser.add_argument(
         "--diff-range",
@@ -532,7 +542,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    res: List[Tuple[Tuple, lair.Lair]] = []
+    res: List[ActionSeqResult] = []
     action_seqs = set(
         tuple(s) for s in perms(args.actions + ["lair_blue", "lair_orange"])
     )
@@ -559,9 +569,13 @@ def main() -> None:
     worker = Worker(parser, args)
     with multiprocessing.Pool(args.workers) as pool:
         res = pool.map(worker, action_seqs)
-    res.sort(key=lambda pair: score(pair[1]))
+    res.sort(key=lambda pair: score(pair[2]))  # score by postravage state
 
-    for action_seq, thelair in res[-args.best :]:
+    for action_seq, preravage, postravage in res[-args.best :]:
+        if args.postravage:
+            thelair = postravage
+        else:
+            thelair = preravage
         if args.summary:
             print(
                 " ".join(
