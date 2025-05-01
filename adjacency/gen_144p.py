@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict
 from .board_layout import Board, Edge, Layout
 
 """
-For the 144p game specifically - 
+For the 144p game specifically -
 
 Generates the adjacency list of the map. Uses board_layout.py
 """

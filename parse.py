@@ -2,8 +2,7 @@ import collections
 import csv
 import dataclasses
 import json
-from typing import Any, Dict, Iterator, List, Optional, Tuple, cast
-
+from typing import Any, Dict, Iterator, List, Tuple, cast
 
 import action_log
 import lair

@@ -5,12 +5,11 @@ import multiprocessing
 import os
 import shutil
 import sys
-from typing import Any, List, Optional, Self, Tuple, TypeVar, Protocol
+from typing import Any, List, Optional, Protocol, Self, Tuple, TypeVar
 
 import action_log
-import parse
 import lair
-
+import parse
 
 DISCORD_MESSAGE_LIMIT = 1900  # actually 2000, but we leave some space for a header
 DISCORD_EMOJI_COST = 21
@@ -502,9 +501,12 @@ def main() -> None:
             shutil.rmtree(args.log_split, ignore_errors=True)
             os.makedirs(args.log_split, exist_ok=True)
             for i, content in enumerate(ls.files):
-                with open(os.path.join(args.log_split, f"msg{(i+1):02}.md"), "wb") as f:
+                with open(
+                    os.path.join(args.log_split, f"msg{(i + 1):02}.md"),
+                    "wb",
+                ) as f:
                     f.write(
-                        f"{thelair.r0.key} [{i+1}/{len(ls.files)}]{log_split_header}\n".encode()
+                        f"{thelair.r0.key} [{i + 1}/{len(ls.files)}]{log_split_header}\n".encode()
                     )
                     f.write(content)
         if args.diff:
