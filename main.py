@@ -1,6 +1,7 @@
 import argparse
 import csv
 import dataclasses
+import enum
 import multiprocessing
 import os
 import shutil
@@ -331,11 +332,18 @@ class Worker:
         return run_action_seq(self.parser, self.args, action_seq)
 
 
+class Output(enum.Enum):
+    LOG = "log"
+    DIFF = "diff"
+    CAT_CAFE = "cat-cafe"
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--log",
-        action="store_true",
+        "--output",
+        metavar="|".join([repr(output.value) for output in Output]),
+        type=Output,
         help="Output action log in markdown format to stdout",
     )
     parser.add_argument(
@@ -357,11 +365,6 @@ def parse_args() -> argparse.Namespace:
         "--server-emojis",
         action="store_true",
         help="Use Spirit Island Discord server emojis where applicable",
-    )
-    parser.add_argument(
-        "--diff",
-        action="store_true",
-        help="Show each land's initial and final state",
     )
     parser.add_argument(
         "--diff-range",
@@ -419,11 +422,6 @@ def parse_args() -> argparse.Namespace:
         default=0,
         help="Reserve first N orange lair gathers for other actions",
         metavar="COUNT",
-    )
-    parser.add_argument(
-        "--cat-cafe",
-        action="store_true",
-        help="Output cat-cafe-friendly csv",
     )
     parser.add_argument(
         "--workers",
@@ -488,40 +486,42 @@ def main() -> None:
             for line in (log_entry_to_text(entry),)
             if line
         )
-        if args.log:
-            print(log)
-        if args.log_split:
-            if args.log_split_header:
-                log_split_header = f" {args.log_split_header}"
-            else:
-                log_split_header = ""
-            ls = LogSplit()
-            ls.run(log)
-            shutil.rmtree(args.log_split, ignore_errors=True)
-            os.makedirs(args.log_split, exist_ok=True)
-            for i, content in enumerate(ls.files):
-                with open(
-                    os.path.join(args.log_split, f"msg{(i + 1):02}.md"),
-                    "wb",
-                ) as f:
-                    f.write(
-                        f"{thelair.r0.key} [{i + 1}/{len(ls.files)}]{log_split_header}\n".encode()
-                    )
-                    f.write(content)
-        if args.diff:
-            all_diff = []
-            orig_lair, delayed = parser.parse_all()
-            all_diff.append(landdiff(0, orig_lair.r0, thelair.r0, args))
-            for a, b in zip(orig_lair.r1, thelair.r1):
-                all_diff.append(landdiff(1, a, b, args))
-            for a, b in zip(orig_lair.r2, thelair.r2):
-                all_diff.append(landdiff(2, a, b, args))
-            all_diff.sort()
-            for line in all_diff:
-                if line:
-                    print(line)
-        if args.cat_cafe:
-            cat_cafe(thelair, parser)
+        match args.output:
+            case Output.LOG:
+                if args.log_split:
+                    if args.log_split_header:
+                        log_split_header = f" {args.log_split_header}"
+                    else:
+                        log_split_header = ""
+                    ls = LogSplit()
+                    ls.run(log)
+                    shutil.rmtree(args.log_split, ignore_errors=True)
+                    os.makedirs(args.log_split, exist_ok=True)
+                    for i, content in enumerate(ls.files):
+                        with open(
+                            os.path.join(args.log_split, f"msg{(i + 1):02}.md"),
+                            "wb",
+                        ) as f:
+                            f.write(
+                                f"{thelair.r0.key} [{i + 1}/{len(ls.files)}]{log_split_header}\n".encode()
+                            )
+                            f.write(content)
+                else:
+                    print(log)
+            case Output.DIFF:
+                all_diff = []
+                orig_lair, delayed = parser.parse_all()
+                all_diff.append(landdiff(0, orig_lair.r0, thelair.r0, args))
+                for a, b in zip(orig_lair.r1, thelair.r1):
+                    all_diff.append(landdiff(1, a, b, args))
+                for a, b in zip(orig_lair.r2, thelair.r2):
+                    all_diff.append(landdiff(2, a, b, args))
+                all_diff.sort()
+                for line in all_diff:
+                    if line:
+                        print(line)
+            case Output.CAT_CAFE:
+                cat_cafe(thelair, parser)
 
 
 if __name__ == "__main__":
