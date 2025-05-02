@@ -1,7 +1,9 @@
+import collections
 import itertools
 import json
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, List
 
+from . import dijkstra
 from .board_layout import Board, Edge, Layout
 
 """
@@ -165,7 +167,7 @@ def main() -> None:
     with open("config/144p_board_layout.json") as f:
         data = json.load(f)
     map = Map144P(data)
-    for islet in ["🍪"]:
+    for islet in ["🌵"]:
         for letter in "PQRSTU":
             name = f"{islet}{letter}"
             if name not in map.boards:
@@ -181,6 +183,20 @@ def main() -> None:
                 print(
                     f"Neighbors of {board.name}{i}{board.layout.terrains[i].value}: {adjacencies}"
                 )
+
+    src = "🌵Q4"
+    dist, prev = dijkstra.distances_from(map.boards[src[:-1]].lands[int(src[-1])])
+    by_dist: Dict[int, List[str]] = collections.defaultdict(list)
+    for k, v in dist.items():
+        by_dist[v].append(k)
+    for k2 in sorted(by_dist.keys()):
+        print(k2, by_dist[k2])
+    dst = "🦋R4"
+    path = [dst]
+    while dst != src:
+        dst = prev[dst]
+        path.append(dst)
+    print(path[::-1])
 
 
 if __name__ == "__main__":
