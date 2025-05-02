@@ -4,7 +4,7 @@ import json
 from typing import Callable, Dict, List
 
 from . import dijkstra
-from .board_layout import Board, Edge, Layout
+from .board_layout import Board, Edge, Land, Layout
 
 """
 For the 144p game specifically -
@@ -158,7 +158,10 @@ class Map144P:
             self.boards[board].cast_down()
             del self.boards[board]
         for land in data["lands"]:
-            self.boards[land[:-1]].lands[int(land[-1])].sink(deeps=False)
+            self.land(land).sink(deeps=False)
+
+    def land(self, key: str) -> Land:
+        return self.boards[key[:-1]].lands[int(key[-1])]
 
 
 def main() -> None:
@@ -181,7 +184,7 @@ def main() -> None:
                 )
 
     src = "🌵Q4"
-    dist, prev = dijkstra.distances_from(map.boards[src[:-1]].lands[int(src[-1])])
+    dist, prev = dijkstra.distances_from(map.land(src))
     by_dist: Dict[int, List[str]] = collections.defaultdict(list)
     for k, v in dist.items():
         by_dist[v].append(k)
