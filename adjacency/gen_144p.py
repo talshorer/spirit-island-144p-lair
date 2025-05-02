@@ -1,7 +1,7 @@
 import collections
 import itertools
 import json
-from typing import Any, Callable, Dict, List
+from typing import Callable, Dict, List
 
 from . import dijkstra
 from .board_layout import Board, Edge, Layout
@@ -46,11 +46,9 @@ def link_rim(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None
 
 
 class Map144P:
-    def __init__(
-        self,
-        data: Dict[str, Any],
-    ):
-        self._data = data
+    def __init__(self) -> None:
+        with open("config/144p_board_layout.json") as f:
+            self._data = json.load(f)
         self.boards: Dict[str, Board] = {}
         self._load_continent("blue")
         self._load_continent("orange")
@@ -164,9 +162,7 @@ class Map144P:
 
 
 def main() -> None:
-    with open("config/144p_board_layout.json") as f:
-        data = json.load(f)
-    map = Map144P(data)
+    map = Map144P()
     for islet in ["🌵"]:
         for letter in "PQRSTU":
             name = f"{islet}{letter}"
