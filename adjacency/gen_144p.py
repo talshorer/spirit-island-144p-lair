@@ -52,6 +52,7 @@ class Map144P:
         self.boards: Dict[str, Board] = {}
         self._load_continent("blue")
         self._load_continent("orange")
+        self._connect_continents()
         self._cast_down()
 
     def _load_continent(self, name: str) -> None:
@@ -140,6 +141,16 @@ class Map144P:
         board = Board(name, layout)
         self.boards[name] = board
         return board
+
+    def _connect_continents(self) -> None:
+        for rim1, rim2 in zip(
+            self._data["blue"]["rim"],  # 🧀
+            self._data["orange"]["rim"],  # 🍌
+        ):
+            for letter in "PRSTU":
+                rim1_board = self.boards[f"{rim1}{letter}"]
+                rim2_board = self.boards[f"{rim2}{letter}"]
+                rim1_board.link_archipelago(rim2_board)
 
     def _cast_down(self) -> None:
         data = self._data["cast_down"]
