@@ -48,7 +48,7 @@ def link_rim(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None
 class Map144P:
     def __init__(self) -> None:
         with open("config/144p_board_layout.json") as f:
-            self._data = json.load(f)
+            self.data = json.load(f)
         self.boards: Dict[str, Board] = {}
         self._load_continent("blue")
         self._load_continent("orange")
@@ -56,7 +56,7 @@ class Map144P:
         self._cast_down()
 
     def _load_continent(self, name: str) -> None:
-        data = self._data[name]
+        data = self.data[name]
 
         for islet in data["rim"]:
             self._load_islet(islet, link_rim)
@@ -137,15 +137,15 @@ class Map144P:
 
     def _load_board(self, islet: str, letter: str) -> Board:
         name = f"{islet}{letter}"
-        layout = getattr(Layout, self._data["boards"][name])
+        layout = getattr(Layout, self.data["boards"][name])
         board = Board(name, layout)
         self.boards[name] = board
         return board
 
     def _connect_continents(self) -> None:
         for rim1, rim2 in zip(
-            self._data["blue"]["rim"],  # 🧀
-            self._data["orange"]["rim"],  # 🍌
+            self.data["blue"]["rim"],  # 🧀
+            self.data["orange"]["rim"],  # 🍌
         ):
             for letter in "PRSTU":
                 rim1_board = self.boards[f"{rim1}{letter}"]
@@ -153,7 +153,7 @@ class Map144P:
                 rim1_board.link_archipelago(rim2_board)
 
     def _cast_down(self) -> None:
-        data = self._data["cast_down"]
+        data = self.data["cast_down"]
         for board in data["boards"]:
             self.boards[board].cast_down()
             del self.boards[board]
