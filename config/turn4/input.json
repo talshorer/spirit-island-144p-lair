@@ -1,0 +1,19 @@
+{
+  "actions": [
+    "blur",
+    "blur",
+    "call",
+    "call"
+  ],
+  "land_priority": "MW",
+  "reserve_gathers_blue": 53,
+  "ignore_lands": [
+    "🇲🇺R2"
+  ],
+  "reckless_offensive": [
+    "⚡S1",
+    "🇲🇺R7",
+    "🍪S8",
+    "💖S8"
+  ]
+}

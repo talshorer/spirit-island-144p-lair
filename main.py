@@ -3,6 +3,7 @@ import copy
 import csv
 import dataclasses
 import enum
+import json
 import multiprocessing
 import os
 import shutil
@@ -474,46 +475,6 @@ def parse_args() -> argparse.Namespace:
         help="Show range from lair in diff view",
     )
     parser.add_argument(
-        "--actions",
-        nargs="+",
-        help="Available actions for the lair. Specify an action multiple times if it's available multiple times",
-        metavar="ACTION",
-    )
-    parser.add_argument(
-        "--reckless-offensive",
-        nargs="+",
-        default=[],
-        help="Reserve a list of lands to be qualified for Reckless Offensive event",
-        metavar="LAND",
-    )
-    parser.add_argument(
-        "--ignore-lands",
-        nargs="+",
-        default=[],
-        help="Lands to ignore",
-        metavar="LAND",
-    )
-    parser.add_argument(
-        "--land-priority",
-        default="",
-        help="Priority list of land types to clear",
-        metavar="LAND-TYPES",
-    )
-    parser.add_argument(
-        "--reserve-gathers-blue",
-        type=int,
-        default=0,
-        help="Reserve first N blue lair gathers for other actions",
-        metavar="COUNT",
-    )
-    parser.add_argument(
-        "--reserve-gathers-orange",
-        type=int,
-        default=0,
-        help="Reserve first N orange lair gathers for other actions",
-        metavar="COUNT",
-    )
-    parser.add_argument(
         "--workers",
         type=int,
         default=32,
@@ -524,21 +485,23 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    with open("config/turn4/input.json") as f:
+        input = json.load(f)
     res: List[ActionSeqResult] = []
     action_seqs = set(
-        tuple(s) for s in perms(args.actions + ["lair_blue", "lair_orange"])
+        tuple(s) for s in perms(input["actions"] + ["lair_blue", "lair_orange"])
     )
     server_emojis = args.split
     lair_conf = lair.LairConf(
-        land_priority=args.land_priority,
-        reserve_gathers_blue=args.reserve_gathers_blue,
-        reserve_gathers_orange=args.reserve_gathers_orange,
-        reckless_offensive=args.reckless_offensive,
+        land_priority=input.get("land_priority", ""),
+        reserve_gathers_blue=input.get("reserve_gathers_blue", 0),
+        reserve_gathers_orange=input.get("reserve_gathers_orange", 0),
+        reckless_offensive=input.get("reckless_offensive", []),
         piece_names=piece_names_emoji if server_emojis else piece_names_text,
     )
     parse_conf = parse.ParseConf(
         server_emojis=server_emojis,
-        ignore_lands=args.ignore_lands,
+        ignore_lands=input.get("ignore_lands", []),
     )
     parser = parse.Parser(
         csvpath="config/turn4/start.csv",
