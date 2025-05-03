@@ -403,12 +403,6 @@ def run_action_seq(
     action_seq: Tuple[str, ...],
 ) -> ActionSeqResult:
     thelair, delayed = parser.parse_all()
-    if args.pull_r1_dahan is not None:
-        if args.pull_r1_dahan == "ALL":
-            pull = 1 << 32
-        else:
-            pull = int(args.pull_r1_dahan)
-        thelair.pull_r1_dahan(pull)
     for action in action_seq:
         getattr(thelair, action)()
         before_delayed = str(thelair.r0)
@@ -478,11 +472,6 @@ def parse_args() -> argparse.Namespace:
         "--diff-range",
         action="store_true",
         help="Show range from lair in diff view",
-    )
-    parser.add_argument(
-        "--pull-r1-dahan",
-        help='Pull N (or "ALL") range-1 Dahan before any lair action',
-        metavar="COUNT",
     )
     parser.add_argument(
         "--actions",

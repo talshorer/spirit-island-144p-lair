@@ -508,7 +508,3 @@ class Lair:
     def blur2(self) -> None:
         self.blur()
         self.blur()
-
-    def pull_r1_dahan(self, gathers: int) -> None:
-        with self._top_log(f"pull-r1-dahan({gathers})"):
-            self._call_one(self._r1_least_dahan, Dahan, gathers)
