@@ -133,11 +133,14 @@ class DelayedActions:
                     )
                 )
             after = str(self.lands.near[LAIR_KEY])
-            self.log.entry(
-                action_log.LogEntry(
-                    text=f"execute delayed actions for {key}: {before} => {after}"
+            if key:
+                self.log.entry(
+                    action_log.LogEntry(
+                        text=f"execute delayed actions for {key}: {before} => {after}"
+                    )
                 )
-            )
+            else:
+                sublog.entries = []
         del self.actions[key]
 
     def run_all(self) -> None:
