@@ -113,7 +113,7 @@ def log_entry_to_text(entry: action_log.LogEntry) -> str:
                 response_log = f", MR adds {log_entry_tgt_pieces_to_text(entry)} in {entry.tgt_land}"
             else:
                 response_log = ""
-            return f"destroy {log_entry_src_pieces_to_text(entry)} in {entry.src_land}{response_log} ({entry.total_count()})"
+            return f"destroy {log_entry_src_pieces_to_text(entry)} in {entry.src_land}{response_log}"
         case action_log.Action.DOWNGRADE:
             return f"downgrade {log_entry_src_pieces_to_text(entry)} in {entry.src_land} ({entry.total_count()})"
         case action_log.Action.MANUAL:
