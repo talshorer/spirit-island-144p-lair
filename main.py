@@ -400,7 +400,6 @@ ActionSeqResult = Tuple[Tuple[str, ...], lair.Lair, lair.Lair]
 
 def run_action_seq(
     parser: parse.Parser,
-    args: argparse.Namespace,
     action_seq: Tuple[str, ...],
 ) -> ActionSeqResult:
     thelair, delayed = parser.parse_all()
@@ -420,19 +419,14 @@ def run_action_seq(
 
 
 class Worker:
-    def __init__(
-        self,
-        parser: parse.Parser,
-        args: argparse.Namespace,
-    ):
+    def __init__(self, parser: parse.Parser):
         self.parser = parser
-        self.args = args
 
     def __call__(
         self,
         action_seq: Tuple[str, ...],
     ) -> ActionSeqResult:
-        return run_action_seq(self.parser, self.args, action_seq)
+        return run_action_seq(self.parser, action_seq)
 
 
 class Output(enum.Enum):
@@ -511,7 +505,7 @@ def main() -> None:
         parse_conf=parse_conf,
     )
 
-    worker = Worker(parser, args)
+    worker = Worker(parser)
     with multiprocessing.Pool(args.workers) as pool:
         res = pool.map(worker, action_seqs)
     res.sort(key=lambda pair: score(pair[2]))  # score by postravage state
