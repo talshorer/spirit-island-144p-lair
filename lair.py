@@ -302,6 +302,7 @@ class Lair:
     def _lair1(self) -> None:
         r0 = self.r0
         downgrades = (r0.explorers.cnt + r0.dahan.cnt) // 3
+        self.log.entry(LogEntry(text=f"available downgrades: {downgrades}"))
         downgrades -= self._downgrade(Town, r0, downgrades)
         downgrades -= self._downgrade(City, r0, downgrades)
         self.wasted_downgrades += downgrades
@@ -324,14 +325,10 @@ class Lair:
             gathers -= self._gather(Dahan, land, gathers)
         self.wasted_dahan_gathers += gathers
 
-    def _reserve(self, reserve: int, prefix: str, what: str, cnt: int) -> int:
-        self.log.entry(LogEntry(text=f"{prefix} {what}: {cnt}"))
+    def _reserve(self, reserve: int, what: str, cnt: int) -> int:
         if reserve:
             to_reserve = min(cnt, reserve)
-            with self.log.indent():
-                self.log.entry(LogEntry(text=f"reserved {to_reserve} {what}"))
-            cnt -= to_reserve
-            reserve -= to_reserve
+            self.log.entry(LogEntry(text=f"reserved {to_reserve} {what}"))
             return to_reserve
         return 0
 
@@ -353,7 +350,9 @@ class Lair:
     def _lair3(self, reserve: int) -> None:
         r0 = self.r0
         gathers = (r0.explorers.cnt + r0.dahan.cnt) // 6
-        gathers -= self._reserve(reserve, "slurp", "gathers", gathers)
+        self.log.entry(LogEntry(text=f"available gathers: {gathers}"))
+        with self.log.indent():
+            gathers -= self._reserve(reserve, "gathers", gathers)
 
         for land in sorted(
             self.r2,
