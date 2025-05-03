@@ -7,6 +7,8 @@ from typing import Any, Dict, Iterator, List, Tuple, cast
 import action_log
 import lair
 
+LAIR_KEY = "LAIR"
+
 
 def to_int(s: str) -> int:
     if s == "":
@@ -99,37 +101,44 @@ class DelayedActions:
     def progenitor(self, action: CsvAction) -> CsvAction:
         while action.parent_action:
             action = self.by_id[action.parent_action]
-        return action
+        return self.by_id[action.action_id]
 
-    def run(self, key: str) -> bool:
+    def run(self, key: str) -> None:
         if key not in self.actions:
-            return False
+            return
         pieces = [
             self.lair_conf.piece_names.explorer,
             self.lair_conf.piece_names.town,
             self.lair_conf.piece_names.city,
             self.lair_conf.piece_names.dahan,
         ]
-        for action in self.actions[key]:
-            action.run(self.lands)
+        before = str(self.lands.near[LAIR_KEY])
+        with self.log.fork() as sublog:
+            for action in self.actions[key]:
+                action.run(self.lands)
+                sublog.entry(
+                    action_log.LogEntry(
+                        action=action_log.Action.MANUAL,
+                        text=self.progenitor(action).action_name,
+                        src_land=action.source_key,
+                        tgt_land=action.destination_key,
+                        src_piece=pieces,
+                        tgt_piece=pieces,
+                        count=[
+                            to_int(action.explorers),
+                            to_int(action.towns),
+                            to_int(action.cities),
+                            to_int(action.dahan),
+                        ],
+                    )
+                )
+            after = str(self.lands.near[LAIR_KEY])
             self.log.entry(
                 action_log.LogEntry(
-                    action=action_log.Action.MANUAL,
-                    text=self.progenitor(action).action_name,
-                    src_land=action.source_key,
-                    tgt_land=action.destination_key,
-                    src_piece=pieces,
-                    tgt_piece=pieces,
-                    count=[
-                        to_int(action.explorers),
-                        to_int(action.towns),
-                        to_int(action.cities),
-                        to_int(action.dahan),
-                    ],
+                    text=f"execute delayed actions for {key}: {before} => {after}"
                 )
             )
         del self.actions[key]
-        return True
 
     def run_all(self) -> None:
         for key in list(self.actions.keys()):
@@ -185,7 +194,7 @@ class Parser:
         lands: Dict[str, lair.Land] = {}
 
         r0 = self.parse_initial_lair()
-        lands["LAIR"] = r0
+        lands[LAIR_KEY] = r0
 
         r: List[List[lair.Land]] = [[], [], []]
         with open(self.csvpath, encoding="utf-8") as f:

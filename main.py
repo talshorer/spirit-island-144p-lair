@@ -92,11 +92,11 @@ piece_names_emoji = lair.PieceNames(
 
 
 def log_entry_tgt_pieces_to_text(entry: action_log.LogEntry) -> str:
-    return " ".join(f"{cnt} {tgt}" for _, tgt, cnt in entry.pieces())
+    return " ".join(f"{cnt} {tgt}" for _, tgt, cnt in entry.pieces() if cnt)
 
 
 def log_entry_src_pieces_to_text(entry: action_log.LogEntry) -> str:
-    return " ".join(f"{cnt} {src}" for src, _, cnt in entry.pieces())
+    return " ".join(f"{cnt} {src}" for src, _, cnt in entry.pieces() if cnt)
 
 
 def log_entry_to_text(entry: action_log.LogEntry) -> str:
@@ -117,7 +117,15 @@ def log_entry_to_text(entry: action_log.LogEntry) -> str:
         case action_log.Action.DOWNGRADE:
             return f"downgrade {log_entry_src_pieces_to_text(entry)} in {entry.src_land} ({entry.total_count()})"
         case action_log.Action.MANUAL:
-            return ""
+            if entry.tgt_land and any(entry.tgt_piece):
+                tgt = f" +({log_entry_tgt_pieces_to_text(entry)}) in {entry.tgt_land}"
+            else:
+                tgt = ""
+            if entry.src_land and any(entry.src_piece):
+                src = f" -({log_entry_src_pieces_to_text(entry)}) in {entry.src_land}"
+            else:
+                src = ""
+            return f"manual action: {entry.text}{src}{tgt}"
     raise LookupError(entry.action)
 
 
@@ -351,7 +359,7 @@ def cat_cafe(finallair: lair.Lair, parser: parse.Parser) -> None:
         elif entry.action is action_log.Action.DESTROY:
             row.action = f"{toplevel} - military response"
         elif entry.action is action_log.Action.MANUAL:
-            row.action = toplevel or "UNKNWON"
+            row.action = entry.text or "UNKNOWN"
         else:
             continue
 
@@ -405,14 +413,7 @@ def run_action_seq(
     thelair, delayed = parser.parse_all()
     for action in action_seq:
         getattr(thelair, action)()
-        before_delayed = str(thelair.r0)
-        if delayed.run(action):
-            after_delayed = str(thelair.r0)
-            thelair.log.entry(
-                action_log.LogEntry(
-                    text=f"_execute delayed actions for {action}_ {before_delayed} => {after_delayed}"
-                )
-            )
+        delayed.run(action)
     preravage = copy.deepcopy(thelair)
     thelair.ravage()
     return action_seq, preravage, thelair
