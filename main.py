@@ -353,7 +353,7 @@ def cat_cafe(finallair: lair.Lair, parser: parse.Parser) -> None:
         if entry.action is action_log.Action.DOWNGRADE:
             row.action = f"{toplevel} - downgrade"
         elif entry.action is action_log.Action.GATHER:
-            row.action = f"{toplevel} - gather"
+            row.action = f"{toplevel} - gather ({entry.total_count()})"
         elif entry.action is action_log.Action.ADD:
             row.action = f"{toplevel} - add"
         elif entry.action is action_log.Action.DESTROY:
