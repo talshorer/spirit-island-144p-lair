@@ -152,7 +152,7 @@ class Split:
             return
 
         upto = len(self.entries)
-        if not self.may_break_second_level:
+        if needs_cont and not self.may_break_second_level:
             # don't break a second-level bullet in the middle
             for i in range(len(self.entries) - 1, 0, -1):
                 if self.entries[i].startswith(b"  -"):
@@ -190,7 +190,7 @@ class Split:
         line = self.space_emojis(line)
         real_length = len(line) + 1 + (line.count(b":") // 2 * DISCORD_EMOJI_COST)
         if self.cur_length + real_length > DISCORD_MESSAGE_LIMIT:
-            self.commit(True)
+            self.commit(not line.startswith(b"-"))
         self.cur_length += real_length
         self.entries.append(line)
 
