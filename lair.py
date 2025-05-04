@@ -62,6 +62,9 @@ class Land:
             piece.cnt += added
             assert allow_negative or piece.cnt >= 0, f"land {self.key}"
 
+    def total_invaders(self) -> int:
+        return self.explorers.cnt + self.towns.cnt + self.cities.cnt
+
     def __str__(self) -> str:
         pieces = ", ".join(
             [
