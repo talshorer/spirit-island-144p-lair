@@ -32,7 +32,7 @@ The possible output types are:
 
 Additional useful arguments include:
 - `--split $DIRECTORY`: Split log/diff output into files of the correct size to be sent as discord messages. Those files will use server emojis from the _Spirit Island - Second Wave_ discord server.
-- `--split-header` - append a string to the first line of each discord message. This is useful to indicate the finality state of the turn by appending one of ❌, ☑️, or ✅.
+- `--split-header $HEADER` - append a string to the first line of each discord message. This is useful to indicate the finality state of the turn by appending one of ❌, ☑️, or ✅.
 
 For a full list of commandline arguments, run
 ```
