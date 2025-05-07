@@ -12,7 +12,10 @@ map: Optional[gen_144p.Map144P] = None
 dijstra_cache: Dict[str, Dict[str, int]] = {}
 
 
-def tryone(lands: List[str]) -> Tuple[int, List[str], Dict[int, List[str]]]:
+def tryone(
+    lands: List[str],
+    filter_coastal: bool = True,
+) -> Tuple[int, List[str], Dict[int, List[str]]]:
     global map
     if map is None:
         map = gen_144p.Map144P()
@@ -29,7 +32,7 @@ def tryone(lands: List[str]) -> Tuple[int, List[str], Dict[int, List[str]]]:
                 all_dist[k] = v
     by_dist: Dict[int, List[str]] = collections.defaultdict(list)
     for k, v in all_dist.items():
-        if not map.land(k).coastal:
+        if filter_coastal and not map.land(k).coastal:
             continue
         by_dist[v].append(k)
     return (sorted(by_dist.keys())[-1], lands, by_dist)
@@ -79,10 +82,15 @@ def main() -> None:
         default=[],
         help="Lands from which to measure distance",
     )
+    parser.add_argument(
+        "--coastal",
+        action="store_true",
+        help="Only show coastal lands in output",
+    )
     args = parser.parse_args()
 
     if args.lands:
-        _, _, by_dist = tryone(args.lands)
+        _, _, by_dist = tryone(args.lands, filter_coastal=args.coastal)
         for k2 in sorted(by_dist.keys()):
             print(k2, by_dist[k2])
         return
