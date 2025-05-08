@@ -9,6 +9,7 @@ import os
 import shutil
 import sys
 from typing import Any, List, Optional, Protocol, Self, Tuple, TypeVar
+import traceback
 
 import action_log
 import lair
@@ -59,7 +60,7 @@ def landdiff(
         range_ = f"({r}) "
     else:
         range_ = ""
-    return f"{range_}{a.key}: {a} => {bstr}"
+    return f"{range_}{a.display_name}: {a} => {bstr}"
 
 
 class Comparable(Protocol):
@@ -427,8 +428,13 @@ class Worker:
         self,
         action_seq: Tuple[str, ...],
     ) -> ActionSeqResult:
-        return run_action_seq(self.parser, action_seq)
-
+        try:
+            return run_action_seq(self.parser, action_seq)
+        except Exception as e:
+            # Log the exception and stack trace
+            print(f"Exception in worker for action_seq {action_seq}: {e}")
+            traceback.print_exc()
+            raise  # Re-raise the exception to propagate it
 
 class Output(enum.Enum):
     LOG = "log"
@@ -480,7 +486,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    with open("config/turn4/input.json") as f:
+    with open("config/turn4/input.json", encoding='utf-8') as f:
         input = json.load(f)
     res: List[ActionSeqResult] = []
     action_seqs = set(

@@ -22,6 +22,7 @@ class Land:
     def __init__(
         self,
         key: str,  # example: 🌙R4
+        display_name: str,  # example: 🌙R4 OR 🌙R4:Wetlands:
         land_type: str,  # example: M
         explorers: int,
         towns: int,
@@ -31,6 +32,7 @@ class Land:
         conf: LairConf,
     ):
         self.key = key
+        self.display_name = display_name
         self.land_type = land_type
         self.explorers = Explorer.new(explorers)
         self.towns = Town.new(towns)
@@ -277,9 +279,9 @@ class Lair:
             self._noncommit_entry(
                 LogEntry(
                     action=Action.GATHER,
-                    src_land=land.key,
+                    src_land=land.display_name,
                     src_piece=piece_name,
-                    tgt_land=land.gathers_to.key,
+                    tgt_land=land.gathers_to.display_name,
                     tgt_piece=piece_name,
                     count=actual,
                 )
@@ -293,9 +295,9 @@ class Lair:
             self._noncommit_entry(
                 LogEntry(
                     action=Action.DOWNGRADE,
-                    src_land=land.key,
+                    src_land=land.display_name,
                     src_piece=tipe.name(self.conf.piece_names),
-                    tgt_land=land.key,
+                    tgt_land=land.display_name,
                     tgt_piece=tipe.response.name(self.conf.piece_names),
                     count=actual,
                 )

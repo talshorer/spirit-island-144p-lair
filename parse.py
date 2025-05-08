@@ -6,6 +6,7 @@ from typing import Any, Dict, Iterator, List, Tuple, cast
 
 import action_log
 import lair
+from adjacency.board_layout import Layout, Terrain
 
 LAIR_KEY = "LAIR"
 
@@ -61,6 +62,7 @@ class CsvAction:
                 else:
                     land = lair.Land(
                         key=key,
+                        display_name=key,
                         land_type=land_type,
                         explorers=0,
                         towns=0,
@@ -175,6 +177,7 @@ class Parser:
             r0_key = "lair"
         return lair.Land(
             key=r0_key,
+            display_name=r0_key,
             land_type="L",
             explorers=initial["explorers"],
             towns=initial["towns"],
@@ -190,6 +193,18 @@ class Parser:
             next(it)  # throw away header row
             yield from (CsvAction(*cast(Any, row)) for row in it)
 
+    def add_land_type(self, land_type: str) -> str:
+        if Terrain(land_type) == Terrain.Mountain:
+            return ":LandMountain:"
+        if Terrain(land_type) == Terrain.Jungle:
+            return ":LandJungle:"
+        if Terrain(land_type) == Terrain.Wetlands:
+            return ":LandWetlands:"
+        if Terrain(land_type) == Terrain.Sands:
+            return ":LandSands:"
+     
+        return ""
+    
     def parse_all(self) -> Tuple[
         lair.Lair,
         DelayedActions,
@@ -214,17 +229,27 @@ class Parser:
                     land_type,
                     gathers_to_land_key,
                 ) = row
-                rng = int(srng)
+                rng = int(srng)           
                 if rng == 1:
                     gathers_to = r0
                 elif rng >= 2:
-                    gathers_to = lands[gathers_to_land_key]
+                    if self.parse_conf.server_emojis:
+                        # we need to find not the land with the key but the land that starts with the key
+                        #gathers_to = next( v for k, v in lands.items() if k.startswith(gathers_to_land_key))
+                        gathers_to = lands[gathers_to_land_key]
+                    else:
+                        gathers_to = lands[gathers_to_land_key]
                 elif rng == 0:
                     gathers_to = None
+                display_name = key
+                if self.parse_conf.server_emojis:
+                    display_name = f"{display_name}{self.add_land_type(land_type)}"                    
                 if key in self.parse_conf.ignore_lands:
                     continue
+                
                 land = lair.Land(
                     key=key,
+                    display_name=display_name,
                     land_type=land_type,
                     explorers=to_int(explorers),
                     towns=to_int(towns),
