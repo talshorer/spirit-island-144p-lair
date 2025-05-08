@@ -8,8 +8,8 @@ import multiprocessing
 import os
 import shutil
 import sys
-from typing import Any, List, Optional, Protocol, Self, Tuple, TypeVar
 import traceback
+from typing import Any, List, Optional, Protocol, Self, Tuple, TypeVar
 
 import action_log
 import lair
@@ -436,6 +436,7 @@ class Worker:
             traceback.print_exc()
             raise  # Re-raise the exception to propagate it
 
+
 class Output(enum.Enum):
     LOG = "log"
     DIFF = "diff"
@@ -486,7 +487,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    with open("config/turn4/input.json", encoding='utf-8') as f:
+    with open("config/turn4/input.json", encoding="utf-8") as f:
         input = json.load(f)
     res: List[ActionSeqResult] = []
     action_seqs = set(

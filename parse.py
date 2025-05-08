@@ -6,7 +6,7 @@ from typing import Any, Dict, Iterator, List, Tuple, cast
 
 import action_log
 import lair
-from adjacency.board_layout import Layout, Terrain
+from adjacency.board_layout import Terrain
 
 LAIR_KEY = "LAIR"
 
@@ -202,9 +202,9 @@ class Parser:
             return ":LandWetlands:"
         if Terrain(land_type) == Terrain.Sands:
             return ":LandSands:"
-     
+
         return ""
-    
+
     def parse_all(self) -> Tuple[
         lair.Lair,
         DelayedActions,
@@ -229,13 +229,13 @@ class Parser:
                     land_type,
                     gathers_to_land_key,
                 ) = row
-                rng = int(srng)           
+                rng = int(srng)
                 if rng == 1:
                     gathers_to = r0
                 elif rng >= 2:
                     if self.parse_conf.server_emojis:
                         # we need to find not the land with the key but the land that starts with the key
-                        #gathers_to = next( v for k, v in lands.items() if k.startswith(gathers_to_land_key))
+                        # gathers_to = next( v for k, v in lands.items() if k.startswith(gathers_to_land_key))
                         gathers_to = lands[gathers_to_land_key]
                     else:
                         gathers_to = lands[gathers_to_land_key]
@@ -243,10 +243,10 @@ class Parser:
                     gathers_to = None
                 display_name = key
                 if self.parse_conf.server_emojis:
-                    display_name = f"{display_name}{self.add_land_type(land_type)}"                    
+                    display_name = f"{display_name}{self.add_land_type(land_type)}"
                 if key in self.parse_conf.ignore_lands:
                     continue
-                
+
                 land = lair.Land(
                     key=key,
                     display_name=display_name,
