@@ -193,18 +193,6 @@ class Parser:
             next(it)  # throw away header row
             yield from (CsvAction(*cast(Any, row)) for row in it)
 
-    def add_land_type(self, land_type: str) -> str:
-        if Terrain(land_type) == Terrain.Mountain:
-            return ":LandMountain:"
-        if Terrain(land_type) == Terrain.Jungle:
-            return ":LandJungle:"
-        if Terrain(land_type) == Terrain.Wetlands:
-            return ":LandWetlands:"
-        if Terrain(land_type) == Terrain.Sands:
-            return ":LandSands:"
-
-        return ""
-
     def parse_all(self) -> Tuple[
         lair.Lair,
         DelayedActions,
@@ -236,9 +224,11 @@ class Parser:
                     gathers_to = lands[gathers_to_land_key]
                 elif rng == 0:
                     gathers_to = None
-                display_name = key
                 if self.parse_conf.server_emojis:
-                    display_name = f"{display_name}{self.add_land_type(land_type)}"
+                    terrain = Terrain(land_type)
+                    display_name = f"{key}:Land{terrain.name}:"
+                else:
+                    display_name = f"{key}{land_type}"
                 if key in self.parse_conf.ignore_lands:
                     continue
 
