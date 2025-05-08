@@ -176,6 +176,5 @@ cython_debug/
 # log split output
 msg*.md
 
-
-#vscode
+# editors
 .vscode/
