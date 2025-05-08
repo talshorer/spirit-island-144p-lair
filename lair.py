@@ -439,9 +439,9 @@ class Lair:
             self._noncommit_entry(
                 LogEntry(
                     action=Action.DESTROY,
-                    src_land=land.key,
+                    src_land=land.display_name,
                     src_piece=tipe.name(self.conf.piece_names),
-                    tgt_land=respond_to.key if tipe.response else "",
+                    tgt_land=respond_to.display_name if tipe.response else "",
                     tgt_piece=(
                         tipe.response.name(self.conf.piece_names)
                         if tipe.response
@@ -485,7 +485,7 @@ class Lair:
         self.log.entry(
             LogEntry(
                 action=Action.ADD,
-                tgt_land=land.key,
+                tgt_land=land.display_name,
                 tgt_piece=tipe.name(self.conf.piece_names),
                 count=cnt,
             )
