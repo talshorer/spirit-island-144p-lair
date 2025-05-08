@@ -233,12 +233,7 @@ class Parser:
                 if rng == 1:
                     gathers_to = r0
                 elif rng >= 2:
-                    if self.parse_conf.server_emojis:
-                        # we need to find not the land with the key but the land that starts with the key
-                        # gathers_to = next( v for k, v in lands.items() if k.startswith(gathers_to_land_key))
-                        gathers_to = lands[gathers_to_land_key]
-                    else:
-                        gathers_to = lands[gathers_to_land_key]
+                    gathers_to = lands[gathers_to_land_key]
                 elif rng == 0:
                     gathers_to = None
                 display_name = key
