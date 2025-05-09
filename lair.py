@@ -3,10 +3,12 @@ from __future__ import annotations
 import abc
 import contextlib
 import dataclasses
+import functools
 import itertools
 from typing import Callable, Iterator, List, Optional, Self, Tuple, Type, cast
 
 from action_log import Action, Actionlog, LogEntry
+from adjacency.gen_144p import Map144P
 
 
 @dataclasses.dataclass
@@ -220,6 +222,11 @@ class LairConf:
 ConvertLand = Callable[[Land], Land]
 
 
+@functools.cache
+def get_map() -> Map144P:
+    return Map144P()
+
+
 class Lair:
     def __init__(
         self,
@@ -337,17 +344,29 @@ class Lair:
             return to_reserve
         return 0
 
+    def _land_type_priority(self, land_type: str) -> int:
+        try:
+            return self.conf.land_priority.index(land_type)
+        except ValueError:
+            return len(self.conf.land_priority)
+
     def _least_dahan_land_priority_key(
         self,
         convert: ConvertLand,
     ) -> Callable[[Land], Tuple[int, int]]:
         def key(land: Land) -> Tuple[int, int]:
+            land_priority = self._land_type_priority(land.land_type)
+
             try:
-                land_priority = self.conf.land_priority.index(land.land_type)
-            except ValueError:
-                land_priority = len(self.conf.land_priority)
+                coastal = get_map().land(land.key).coastal
+            except KeyError:
+                coastal = False
+            if coastal:
+                land_priority = min(land_priority, self._land_type_priority("C"))
+
             land = convert(land)
             assert land
+
             return (land_priority, land.dahan.cnt)
 
         return key
