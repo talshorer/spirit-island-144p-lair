@@ -54,6 +54,7 @@ class Map144P:
         self._load_continent("orange")
         self._connect_continents()
         self._cast_down()
+        self._deeps()
 
     def _load_continent(self, name: str) -> None:
         data = self.data[name]
@@ -160,13 +161,17 @@ class Map144P:
         for land in data["lands"]:
             self.land(land).sink(deeps=False)
 
+    def _deeps(self) -> None:
+        for land in self.data["deeps"]:
+            self.land(land).sink(deeps=True)
+
     def land(self, key: str) -> Land:
         return self.boards[key[:-1]].lands[int(key[-1])]
 
 
 def main() -> None:
     map = Map144P()
-    for islet in ["🌵"]:
+    for islet in ["⛰️"]:
         for letter in "PQRSTU":
             name = f"{islet}{letter}"
             if name not in map.boards:
