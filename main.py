@@ -74,7 +74,7 @@ def score(thelair: lair.Lair) -> Comparable:
         for land in thelair.r2
         if land.land_type in thelair.conf.land_priority
     )
-    return (thelair.r0.explorers.cnt, cleared_lands)
+    return (cleared_lands, thelair.r0.total_invaders())
 
 
 piece_names_text = lair.PieceNames(
