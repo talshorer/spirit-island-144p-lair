@@ -520,6 +520,7 @@ def main() -> None:
         csvpath="config/turn4/start.csv",
         jsonpath="config/turn4/initial_lair.json",
         actionspath="config/turn4/actions.csv",
+        weaves="config/turn4/weaves.json",
         lair_conf=lair_conf,
         parse_conf=parse_conf,
     )

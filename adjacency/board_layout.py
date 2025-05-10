@@ -34,7 +34,10 @@ class Land:
 
     def _link_one_way(self, other: Self, distance: int) -> None:
         if (link := self.links.get(other.key)) is not None:
-            assert link.distance == distance
+            if distance == 0:
+                link.distance = 0  # force a weave
+            else:
+                assert link.distance in (0, distance)  # don't override a previous weave
             return
         self.links[other.key] = LandLink(distance=distance, land=other)
 
