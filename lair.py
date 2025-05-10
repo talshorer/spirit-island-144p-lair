@@ -227,6 +227,20 @@ def get_map() -> Map144P:
     return Map144P()
 
 
+@dataclasses.dataclass
+class LairState:
+    r0: Land
+    r1: List[Land]
+    r2: List[Land]
+    log: Actionlog
+    total_gathers: int = 0
+    wasted_damage: int = 0
+    wasted_downgrades: int = 0
+    wasted_invader_gathers: int = 0
+    wasted_dahan_gathers: int = 0
+    fear: int = 0
+
+
 class Lair:
     def __init__(
         self,
@@ -236,23 +250,14 @@ class Lair:
         conf: LairConf,
         log: Actionlog,
     ):
-        self.r0 = r0
-        self.r1 = r1
-        self.r2 = r2
+        self.state = LairState(r0=r0, r1=r1, r2=r2, log=log)
         self.conf = conf
-        self.total_gathers = 0
-        self.wasted_damage = 0
-        self.wasted_downgrades = 0
-        self.wasted_invader_gathers = 0
-        self.wasted_dahan_gathers = 0
-        self.fear = 0
-        self.log = log
         self.uncommitted: List[LogEntry] = []
 
     def _commit_log(self) -> None:
         self.uncommitted.sort(key=lambda entry: entry.src_land or "")
         for entry in self.uncommitted:
-            self.log.entry(entry)
+            self.state.log.entry(entry)
         self.uncommitted = []
 
     def _noncommit_entry(self, entry: LogEntry) -> None:
@@ -280,7 +285,7 @@ class Lair:
     def _gather(self, tipe: PieceType, land: Land, cnt: int) -> int:
         assert land.gathers_to
         actual = self._xchg(land, tipe, tipe.select(land.gathers_to), cnt)
-        self.total_gathers += actual
+        self.state.total_gathers += actual
         if actual:
             piece_name = tipe.name(self.conf.piece_names)
             self._noncommit_entry(
@@ -312,35 +317,35 @@ class Lair:
         return actual
 
     def _lair1(self) -> None:
-        r0 = self.r0
+        r0 = self.state.r0
         downgrades = (r0.explorers.cnt + r0.dahan.cnt) // 3
-        self.log.entry(LogEntry(text=f"available downgrades: {downgrades}"))
+        self.state.log.entry(LogEntry(text=f"available downgrades: {downgrades}"))
         downgrades -= self._downgrade(Town, r0, downgrades)
         downgrades -= self._downgrade(City, r0, downgrades)
-        self.wasted_downgrades += downgrades
+        self.state.wasted_downgrades += downgrades
 
     def _r1_least_dahan(self) -> List[Land]:
-        return sorted(self.r1, key=lambda land: land.dahan.cnt)
+        return sorted(self.state.r1, key=lambda land: land.dahan.cnt)
 
     def _r1_most_dahan(self) -> List[Land]:
-        return sorted(self.r1, key=lambda land: -land.dahan.cnt)
+        return sorted(self.state.r1, key=lambda land: -land.dahan.cnt)
 
     def _lair2(self) -> None:
         gathers = 1
         for tipe in (Explorer, Town):
             for land in self._r1_most_dahan():
                 gathers -= self._gather(tipe, land, gathers)
-        self.wasted_invader_gathers += gathers
+        self.state.wasted_invader_gathers += gathers
 
         gathers = 1
         for land in self._r1_most_dahan():
             gathers -= self._gather(Dahan, land, gathers)
-        self.wasted_dahan_gathers += gathers
+        self.state.wasted_dahan_gathers += gathers
 
     def _reserve(self, reserve: int, what: str, cnt: int) -> int:
         if reserve:
             to_reserve = min(cnt, reserve)
-            self.log.entry(LogEntry(text=f"reserved {to_reserve} {what}"))
+            self.state.log.entry(LogEntry(text=f"reserved {to_reserve} {what}"))
             return to_reserve
         return 0
 
@@ -372,14 +377,14 @@ class Lair:
         return key
 
     def _lair3(self, reserve: int) -> None:
-        r0 = self.r0
+        r0 = self.state.r0
         gathers = (r0.explorers.cnt + r0.dahan.cnt) // 6
-        self.log.entry(LogEntry(text=f"available gathers: {gathers}"))
-        with self.log.indent():
+        self.state.log.entry(LogEntry(text=f"available gathers: {gathers}"))
+        with self.state.log.indent():
             gathers -= self._reserve(reserve, "gathers", gathers)
 
         for land in sorted(
-            self.r2,
+            self.state.r2,
             key=self._least_dahan_land_priority_key(
                 cast(ConvertLand, lambda land: land.gathers_to)
             ),
@@ -393,21 +398,25 @@ class Lair:
                 gathers -= self._gather(tipe, land, gathers)
 
         self._commit_log()
-        self.log.entry(LogEntry(text=f"unused gathers left at end of slurp: {gathers}"))
-        self.wasted_invader_gathers += gathers
+        self.state.log.entry(
+            LogEntry(text=f"unused gathers left at end of slurp: {gathers}")
+        )
+        self.state.wasted_invader_gathers += gathers
 
     @contextlib.contextmanager
     def _top_log(self, what: str) -> Iterator[None]:
-        oldlog = self.log
-        with self.log.fork() as newlog:
-            self.log = newlog
-            before = str(self.r0)
+        oldlog = self.state.log
+        with self.state.log.fork() as newlog:
+            self.state.log = newlog
+            before = str(self.state.r0)
             yield
             self._commit_log()
             oldlog.entry(
-                LogEntry(text=f"{what} in {self.r0.key}: {before} => {self.r0}")
+                LogEntry(
+                    text=f"{what} in {self.state.r0.key}: {before} => {self.state.r0}"
+                )
             )
-        self.log = oldlog
+        self.state.log = oldlog
 
     def _lair_all(self, colour: str, reserve: int) -> None:
         with self._top_log(f"lair-{colour}-thresh1"):
@@ -435,11 +444,15 @@ class Lair:
 
     def call(self) -> None:
         with self._top_log("call"):
-            self.wasted_invader_gathers += self._call_one(self._r1_most_dahan, Town, 5)
-            self.wasted_invader_gathers += self._call_one(
+            self.state.wasted_invader_gathers += self._call_one(
+                self._r1_most_dahan, Town, 5
+            )
+            self.state.wasted_invader_gathers += self._call_one(
                 self._r1_most_dahan, Explorer, 15
             )
-            self.wasted_dahan_gathers += self._call_one(self._r1_least_dahan, Dahan, 5)
+            self.state.wasted_dahan_gathers += self._call_one(
+                self._r1_least_dahan, Dahan, 5
+            )
 
     def _damage(self, land: Land, tipe: PieceType, dmg: int) -> int:
         assert land.gathers_to
@@ -469,15 +482,15 @@ class Lair:
                     count=kill,
                 )
             )
-        self.fear += kill * tipe.fear
+        self.state.fear += kill * tipe.fear
         return kill * tipe.health
 
     def _ravage(self) -> None:
-        r0 = self.r0
+        r0 = self.state.r0
         dmg = max(0, r0.explorers.cnt - 6) + r0.towns.cnt * 2 + r0.cities.cnt * 3
 
         lands = sorted(
-            self.r1,
+            self.state.r1,
             key=self._least_dahan_land_priority_key(
                 cast(ConvertLand, lambda land: land)
             ),
@@ -489,10 +502,12 @@ class Lair:
             dmg -= self._damage(land, Explorer, dmg)
 
         self._commit_log()
-        self.log.entry(LogEntry(text=f"unused damage left at end of ravage: {dmg}"))
-        self.wasted_damage += dmg
+        self.state.log.entry(
+            LogEntry(text=f"unused damage left at end of ravage: {dmg}")
+        )
+        self.state.wasted_damage += dmg
 
-        for land in itertools.chain([self.r0], self.r1):
+        for land in itertools.chain([self.state.r0], self.state.r1):
             land.mr()
 
     def ravage(self) -> None:
@@ -501,7 +516,7 @@ class Lair:
 
     def _add(self, land: Land, tipe: PieceType, cnt: int) -> None:
         tipe.select(land).cnt += cnt
-        self.log.entry(
+        self.state.log.entry(
             LogEntry(
                 action=Action.ADD,
                 tgt_land=land.display_name,
@@ -523,9 +538,9 @@ class Lair:
 
     def blur(self) -> None:
         with self._top_log("blur"):
-            if self.r0.dahan.cnt > 0:
-                self._add(self.r0, Dahan, 1)
-            self._build(self.r0)
+            if self.state.r0.dahan.cnt > 0:
+                self._add(self.state.r0, Dahan, 1)
+            self._build(self.state.r0)
             self._ravage()
 
     def blur2(self) -> None:

@@ -68,11 +68,11 @@ class Comparable(Protocol):
         pass
 
 
-def score(thelair: lair.Lair) -> Comparable:
+def score(lair_conf: lair.LairConf, thelair: lair.LairState) -> Comparable:
     cleared_lands = sum(
         int(land.total_invaders() == 0)
         for land in thelair.r2
-        if land.land_type in thelair.conf.land_priority
+        if land.land_type in lair_conf.land_priority
     )
     return (cleared_lands, thelair.r0.total_invaders())
 
@@ -231,7 +231,7 @@ class Split:
 def print_or_split(
     raw: str,
     args: argparse.Namespace,
-    thelair: lair.Lair,
+    thelair: lair.LairState,
     may_break_second_level: bool = False,
     force_commit_on_toplevel: bool = False,
 ) -> None:
@@ -256,14 +256,14 @@ def print_or_split(
 def process_diffview(
     parser: parse.Parser,
     args: argparse.Namespace,
-    thelair: lair.Lair,
+    thelair: lair.LairState,
 ) -> None:
     all_diff = []
     orig_lair, _ = parser.parse_all()
-    all_diff.append(landdiff(0, orig_lair.r0, thelair.r0, args))
-    for a, b in zip(orig_lair.r1, thelair.r1):
+    all_diff.append(landdiff(0, orig_lair.state.r0, thelair.r0, args))
+    for a, b in zip(orig_lair.state.r1, thelair.r1):
         all_diff.append(landdiff(1, a, b, args))
-    for a, b in zip(orig_lair.r2, thelair.r2):
+    for a, b in zip(orig_lair.state.r2, thelair.r2):
         all_diff.append(landdiff(2, a, b, args))
     all_diff.sort()
     all_diff_md = []
@@ -316,7 +316,7 @@ class CatCafeRow:
         ]
 
 
-def cat_cafe(finallair: lair.Lair, parser: parse.Parser) -> None:
+def cat_cafe(finallair: lair.LairState, parser: parse.Parser) -> None:
     w = csv.writer(sys.stdout)
 
     r0 = parser.parse_initial_lair()
@@ -410,7 +410,7 @@ def cat_cafe(finallair: lair.Lair, parser: parse.Parser) -> None:
         w.writerow(row.to_csv())
 
 
-ActionSeqResult = Tuple[Tuple[str, ...], lair.Lair, lair.Lair]
+ActionSeqResult = Tuple[Tuple[str, ...], lair.LairState, lair.LairState]
 
 
 def run_action_seq(
@@ -421,9 +421,9 @@ def run_action_seq(
     for action in action_seq:
         getattr(thelair, action)()
         delayed.run(action)
-    preravage = copy.deepcopy(thelair)
+    preravage = copy.deepcopy(thelair.state)
     thelair.ravage()
-    return action_seq, preravage, thelair
+    return action_seq, preravage, thelair.state
 
 
 class Worker:
@@ -527,7 +527,7 @@ def main() -> None:
     worker = Worker(parser)
     with multiprocessing.Pool(args.workers) as pool:
         res = pool.map(worker, action_seqs)
-    res.sort(key=lambda pair: score(pair[2]))  # score by postravage state
+    res.sort(key=lambda pair: score(lair_conf, pair[2]))  # score by postravage state
 
     action_seq, preravage, postravage = res[-1]
     if args.postravage:
@@ -546,7 +546,7 @@ def main() -> None:
                     f"wasted_dahan_gathers={thelair.wasted_dahan_gathers}",
                     f"wasted_downgrades={thelair.wasted_downgrades}",
                     f"fear={thelair.fear}",
-                    f"score={score(thelair)}",
+                    f"score={score(lair_conf, thelair)}",
                 ]
             )
         )
