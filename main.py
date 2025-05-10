@@ -271,6 +271,8 @@ def process_diffview(
     for line in all_diff:
         if not line:
             continue
+        if args.filter not in line:
+            continue
         islet = line[0]
         if islet != last_islet:
             all_diff_md.append(f"- {thelair.r0.key} diff: {islet}")
@@ -466,6 +468,11 @@ def parse_args() -> argparse.Namespace:
         metavar="HEADER",
     )
     parser.add_argument(
+        "--filter",
+        default="",
+        help="Show only actions for a specific island",
+    )
+    parser.add_argument(
         "--summary",
         action="store_true",
         help="Display final lair state summary",
@@ -551,6 +558,7 @@ def main() -> None:
                 for nest, entry in thelair.log.entries
                 for line in (log_entry_to_text(entry),)
                 if line
+                if (nest == 0) or (args.filter in line)
             )
             print_or_split(
                 raw=log,
