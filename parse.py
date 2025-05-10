@@ -95,11 +95,13 @@ class DelayedActions:
         self,
         near: Dict[str, lair.Land],
         lair_conf: lair.LairConf,
+        parse_conf: ParseConf,
         log: action_log.Actionlog,
     ):
         self.actions: Dict[str, List[CsvAction]] = collections.defaultdict(lambda: [])
         self.by_id: Dict[str, CsvAction] = {}
         self.lair_conf = lair_conf
+        self.parse_conf = parse_conf
         self.lands = ActionCsvLands(near=near, distant={}, lair_conf=lair_conf)
         self.log = log
 
@@ -115,6 +117,14 @@ class DelayedActions:
             action = self.by_id[action.parent_action]
             actions.append(action.action_name)
         return " - ".join(actions[::-1])
+
+    def land_display_name(self, land: str) -> str:
+        if not land:
+            return ""
+        return self.parse_conf.land_display_name(
+            key=land[:-1],
+            land_type=land[-1],
+        )
 
     def run(self, key: str) -> None:
         if key not in self.actions:
@@ -133,8 +143,8 @@ class DelayedActions:
                     action_log.LogEntry(
                         action=action_log.Action.MANUAL,
                         text=self.construct_action_text(action),
-                        src_land=action.source_key,
-                        tgt_land=action.destination_key,
+                        src_land=self.land_display_name(action.source_key),
+                        tgt_land=self.land_display_name(action.destination_key),
                         src_piece=pieces,
                         tgt_piece=pieces,
                         count=[
@@ -258,7 +268,7 @@ class Parser:
                     r[rng].append(land)
 
         log = action_log.Actionlog()
-        csv_actions = DelayedActions(lands, self.lair_conf, log)
+        csv_actions = DelayedActions(lands, self.lair_conf, self.parse_conf, log)
         for action in self.read_actions_csv():
             csv_actions.push(action)
         csv_actions.run("")
