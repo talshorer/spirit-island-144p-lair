@@ -22,6 +22,15 @@ class ParseConf:
     server_emojis: bool
     ignore_lands: List[str]
 
+    def land_display_name(self, key: str, land_type: str) -> str:
+        if self.server_emojis:
+            try:
+                terrain = Terrain(land_type)
+                return f"{key}:Land{terrain.name}:"
+            except ValueError:
+                pass
+        return f"{key}{land_type}"
+
 
 @dataclasses.dataclass
 class ActionCsvLands:
@@ -226,11 +235,10 @@ class Parser:
                     gathers_to = lands[gathers_to_land_key]
                 elif rng == 0:
                     gathers_to = None
-                if self.parse_conf.server_emojis:
-                    terrain = Terrain(land_type)
-                    display_name = f"{key}:Land{terrain.name}:"
-                else:
-                    display_name = f"{key}{land_type}"
+                display_name = self.parse_conf.land_display_name(
+                    key=key,
+                    land_type=land_type,
+                )
                 if key in self.parse_conf.ignore_lands:
                     continue
 
