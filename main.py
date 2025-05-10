@@ -126,7 +126,11 @@ def log_entry_to_text(entry: action_log.LogEntry) -> str:
                 src = f" -({log_entry_src_pieces_to_text(entry)}) in {entry.src_land}"
             else:
                 src = ""
-            return f"manual action: {entry.text}{src}{tgt}"
+            if entry.text:
+                text = " " + entry.text.split(" - ")[-1]
+            else:
+                text = ""
+            return f"manual action:{text}{src}{tgt}"
     raise LookupError(entry.action)
 
 

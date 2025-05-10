@@ -100,10 +100,12 @@ class DelayedActions:
         if action.action_id not in self.by_id:
             self.by_id[action.action_id] = action
 
-    def progenitor(self, action: CsvAction) -> CsvAction:
+    def construct_action_text(self, action: CsvAction) -> str:
+        actions = [action.action_name]
         while action.parent_action:
             action = self.by_id[action.parent_action]
-        return self.by_id[action.action_id]
+            actions.append(action.action_name)
+        return " - ".join(actions[::-1])
 
     def run(self, key: str) -> None:
         if key not in self.actions:
@@ -121,7 +123,7 @@ class DelayedActions:
                 sublog.entry(
                     action_log.LogEntry(
                         action=action_log.Action.MANUAL,
-                        text=self.progenitor(action).action_name,
+                        text=self.construct_action_text(action),
                         src_land=action.source_key,
                         tgt_land=action.destination_key,
                         src_piece=pieces,
