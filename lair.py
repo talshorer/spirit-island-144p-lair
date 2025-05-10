@@ -3,7 +3,6 @@ from __future__ import annotations
 import abc
 import contextlib
 import dataclasses
-import functools
 import itertools
 from typing import Callable, Iterator, List, Optional, Self, Tuple, Type, cast
 
@@ -222,11 +221,6 @@ class LairConf:
 ConvertLand = Callable[[Land], Land]
 
 
-@functools.cache
-def get_map() -> Map144P:
-    return Map144P()
-
-
 @dataclasses.dataclass
 class LairState:
     r0: Land
@@ -249,10 +243,12 @@ class Lair:
         r2: List[Land],
         conf: LairConf,
         log: Actionlog,
+        map: Map144P,
     ):
         self.state = LairState(r0=r0, r1=r1, r2=r2, log=log)
         self.conf = conf
         self.uncommitted: List[LogEntry] = []
+        self.map = map
 
     def _commit_log(self) -> None:
         self.uncommitted.sort(key=lambda entry: entry.src_land or "")
@@ -363,7 +359,7 @@ class Lair:
             land_priority = self._land_type_priority(land.land_type)
 
             try:
-                coastal = get_map().land(land.key).coastal
+                coastal = self.map.land(land.key).coastal
             except KeyError:
                 coastal = False
             if coastal:

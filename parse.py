@@ -7,6 +7,7 @@ from typing import Any, Dict, Iterator, List, Tuple, cast
 import action_log
 import lair
 from adjacency.board_layout import Terrain
+from adjacency.gen_144p import Map144P
 
 LAIR_KEY = "LAIR"
 
@@ -268,11 +269,12 @@ class Parser:
                     r[rng].append(land)
 
         log = action_log.Actionlog()
+        map = Map144P()
         csv_actions = DelayedActions(lands, self.lair_conf, self.parse_conf, log)
         for action in self.read_actions_csv():
             csv_actions.push(action)
         csv_actions.run("")
         return (
-            lair.Lair(r0=r0, r1=r[1], r2=r[2], conf=self.lair_conf, log=log),
+            lair.Lair(r0=r0, r1=r[1], r2=r[2], conf=self.lair_conf, log=log, map=map),
             csv_actions,
         )
