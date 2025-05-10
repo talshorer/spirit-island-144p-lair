@@ -167,10 +167,6 @@ class DelayedActions:
                 sublog.entries = []
         del self.actions[key]
 
-    def run_all(self) -> None:
-        for key in list(self.actions.keys()):
-            self.run(key)
-
 
 class Parser:
     def __init__(
