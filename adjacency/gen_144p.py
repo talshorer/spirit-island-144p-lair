@@ -96,6 +96,13 @@ class Map144P:
             hubt = self.boards[f"{hub}T"]
             spoke2s.edges[Edge.CLOCK3].link(hubt.edges[Edge.CLOCK3])
 
+        for i in range(3):
+            hub1 = data["hub"][(i + 0) % 3]  # 🏝️
+            hub2 = data["hub"][(i + 1) % 3]  # 💖
+            hub1u = self.boards[f"{hub1}U"]
+            hub2r = self.boards[f"{hub2}R"]
+            hub1u.edges[Edge.CLOCK3].link(hub2r.edges[Edge.CLOCK3])
+
         for i in range(6):
             spoke = data["spokes"][i]  # 🐍
             hub1 = data["hub"][((i + 5) // 2) % 3]  # 😎
