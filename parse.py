@@ -224,20 +224,28 @@ class Parser:
 
         lands[lair.LAIR_KEY], src = self._parse_initial_lair()
 
+        map = Map144P()
+        with open(self.weaves) as f:
+            weaves = json.load(f)
+        for weave in weaves:
+            first, second = weave.split(",")
+            try:
+                map.land(first).link(map.land(second), 0)
+            except KeyError:
+                pass
+
         with open(self.csvpath, encoding="utf-8") as f:
             it = iter(csv.reader(f))
             next(it)  # throw away header row
             for row in it:
                 (
                     key,
-                    srng,
                     cities,
                     towns,
                     explorers,
                     dahan,
-                    land_type,
-                    gathers_to_land_key,
                 ) = row
+                land_type = map.boards[key[:-1]].layout.terrains[int(key[-1])].value
                 display_name = self.parse_conf.land_display_name(
                     key=key,
                     land_type=land_type,
@@ -262,16 +270,6 @@ class Parser:
         for action in self.read_actions_csv():
             csv_actions.push(action)
         csv_actions.run("")
-
-        map = Map144P()
-        with open(self.weaves) as f:
-            weaves = json.load(f)
-        for weave in weaves:
-            first, second = weave.split(",")
-            try:
-                map.land(first).link(map.land(second), 0)
-            except KeyError:
-                pass
 
         return (
             lair.Lair(lands=lands, src=src, conf=self.lair_conf, log=log, map=map),
