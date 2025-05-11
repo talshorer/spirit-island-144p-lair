@@ -488,6 +488,13 @@ def parse_args() -> argparse.Namespace:
         help="Show range from lair in diff view",
     )
     parser.add_argument(
+        "--best",
+        type=int,
+        default=1,
+        metavar="N",
+        help="Display N best solutions",
+    )
+    parser.add_argument(
         "--workers",
         type=int,
         default=32,
@@ -530,48 +537,48 @@ def main() -> None:
         res = pool.map(worker, action_seqs)
     res.sort(key=lambda pair: score(lair_conf, pair[2]))  # score by postravage state
 
-    action_seq, preravage, postravage = res[-1]
-    if args.postravage:
-        thelair = postravage
-    else:
-        thelair = preravage
-    if args.summary:
-        print(
-            " ".join(
-                [
-                    f"{str(action_seq):<{58}}",
-                    str(thelair.r0),
-                    f"wasted_damage={thelair.wasted_damage}",
-                    f"total_gathers={thelair.total_gathers}",
-                    f"wasted_invader_gathers={thelair.wasted_invader_gathers}",
-                    f"wasted_dahan_gathers={thelair.wasted_dahan_gathers}",
-                    f"wasted_downgrades={thelair.wasted_downgrades}",
-                    f"fear={thelair.fear}",
-                    f"score={score(lair_conf, thelair)}",
-                ]
-            )
-        )
-
-    match args.output:
-        case Output.LOG:
-            log = "\n".join(
-                " " * (nest * 2) + "- " + line
-                for nest, entry in thelair.log.entries
-                for line in (log_entry_to_text(entry),)
-                if line
-                if (nest == 0) or (args.filter in line)
-            )
-            print_or_split(
-                raw=log,
-                args=args,
-                thelair=thelair,
+    for action_seq, preravage, postravage in res[-args.best :]:
+        if args.postravage:
+            thelair = postravage
+        else:
+            thelair = preravage
+        if args.summary:
+            print(
+                " ".join(
+                    [
+                        f"{str(action_seq):<{58}}",
+                        str(thelair.r0),
+                        f"wasted_damage={thelair.wasted_damage}",
+                        f"total_gathers={thelair.total_gathers}",
+                        f"wasted_invader_gathers={thelair.wasted_invader_gathers}",
+                        f"wasted_dahan_gathers={thelair.wasted_dahan_gathers}",
+                        f"wasted_downgrades={thelair.wasted_downgrades}",
+                        f"fear={thelair.fear}",
+                        f"score={score(lair_conf, thelair)}",
+                    ]
+                )
             )
 
-        case Output.DIFF:
-            process_diffview(parser, args, thelair)
+        match args.output:
+            case Output.LOG:
+                log = "\n".join(
+                    " " * (nest * 2) + "- " + line
+                    for nest, entry in thelair.log.entries
+                    for line in (log_entry_to_text(entry),)
+                    if line
+                    if (nest == 0) or (args.filter in line)
+                )
+                print_or_split(
+                    raw=log,
+                    args=args,
+                    thelair=thelair,
+                )
 
-        case Output.CAT_CAFE:
-            cat_cafe(thelair, parser)
+            case Output.DIFF:
+                process_diffview(parser, args, thelair)
+
+            case Output.CAT_CAFE:
+                cat_cafe(thelair, parser)
 
 
 if __name__ == "__main__":
