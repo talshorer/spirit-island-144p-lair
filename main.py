@@ -498,7 +498,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    with open("config/turn4/input.json", encoding="utf-8") as f:
+    with open("config/turn5/input.json", encoding="utf-8") as f:
         input = json.load(f)
     res: List[ActionSeqResult] = []
     action_seqs = set(
@@ -517,10 +517,10 @@ def main() -> None:
         ignore_lands=input.get("ignore_lands", []),
     )
     parser = parse.Parser(
-        csvpath="config/turn4/start.csv",
-        jsonpath="config/turn4/initial_lair.json",
-        actionspath="config/turn4/actions.csv",
-        weaves="config/turn4/weaves.json",
+        csvpath="config/turn5/start.csv",
+        jsonpath="config/turn5/initial_lair.json",
+        actionspath="config/turn5/actions.csv",
+        weaves="config/turn5/weaves.json",
         lair_conf=lair_conf,
         parse_conf=parse_conf,
     )
