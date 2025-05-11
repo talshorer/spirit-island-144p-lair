@@ -1,0 +1,11 @@
+{
+  "actions": [
+    "blur",
+    "call"
+  ],
+  "land_priority": "WC",
+  "reserve_gathers_blue": 0,
+  "reserve_gathers_orange": 0,
+  "ignore_lands": [
+  ]
+}
