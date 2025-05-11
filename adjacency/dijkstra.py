@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Dict, Self, Set, Tuple
+from typing import Callable, Dict, Protocol, Self, Set, Tuple
 
 from .board_layout import Land
 
@@ -14,16 +14,43 @@ class _Dist:
         return self.value.__lt__(other.value)
 
 
-def distances_from(land: Land) -> Tuple[Dict[str, int], Dict[str, str]]:
+class Comparable(Protocol):
+    def __lt__(self: Self, other: Self) -> bool:
+        pass
+
+
+def _default_tiebreaker(
+    land: Land,
+    dist: Dict[str, int],
+    prev: Dict[str, str],
+) -> Comparable:
+    return 0
+
+
+def distances_from(
+    land: Land,
+    tiebreaker: Callable[
+        [
+            Land,
+            Dict[str, int],
+            Dict[str, str],
+        ],
+        Comparable,
+    ] = _default_tiebreaker,
+) -> Tuple[Dict[str, int], Dict[str, str]]:
     visited: Set[str] = set()
     queue: Dict[str, Land] = {}
     dist: Dict[str, int] = {}
     prev: Dict[str, str] = {}
+    priority: Dict[str, Comparable] = {}
     dist[land.key] = 0
     queue[land.key] = land
+    priority[land.key] = tiebreaker(land, dist, prev)
     while queue:
         vertex = min(queue.values(), key=lambda v: dist[v.key])
         del queue[vertex.key]
+        if vertex.key not in priority:
+            priority[vertex.key] = tiebreaker(vertex, dist, prev)
         visited.add(vertex.key)
         base = dist[vertex.key]
         for key, link in vertex.links.items():
@@ -31,7 +58,14 @@ def distances_from(land: Land) -> Tuple[Dict[str, int], Dict[str, str]]:
                 continue
             queue[key] = link.land
             alt = base + link.distance
-            if key not in dist or alt < dist[key]:
-                dist[key] = alt
-                prev[key] = vertex.key
+            if key in dist and alt > dist[key]:
+                continue
+            if (
+                key in dist
+                and alt == dist[key]
+                and priority[vertex.key] > priority[prev[key]]
+            ):
+                continue
+            dist[key] = alt
+            prev[key] = vertex.key
     return dist, prev

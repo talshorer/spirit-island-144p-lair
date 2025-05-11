@@ -4,10 +4,10 @@ import abc
 import contextlib
 import dataclasses
 import itertools
-from typing import Callable, Iterator, List, Optional, Self, Tuple, Type, cast
+from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type
 
 from action_log import Action, Actionlog, LogEntry
-from adjacency.gen_144p import Map144P
+from adjacency import board_layout, dijkstra, gen_144p
 
 
 @dataclasses.dataclass
@@ -17,6 +17,9 @@ class Pieces:
 
     def __str__(self) -> str:
         return str(self.cnt)
+
+
+LAIR_KEY = "LAIR"
 
 
 class Land:
@@ -29,7 +32,6 @@ class Land:
         towns: int,
         cities: int,
         dahan: int,
-        gathers_to: Optional[Self],
         conf: LairConf,
     ):
         self.key = key
@@ -39,7 +41,6 @@ class Land:
         self.towns = Town.new(towns)
         self.cities = City.new(cities)
         self.dahan = Dahan.new(dahan)
-        self.gathers_to = gathers_to
         self.mr_explorers = Explorer.new()
         self.mr_towns = Town.new()
         self.conf = conf
@@ -217,6 +218,18 @@ class LairConf:
     reckless_offensive: List[str]
     piece_names: PieceNames
 
+    def _land_type_priority(self, land_type: str) -> int:
+        try:
+            return self.land_priority.index(land_type)
+        except ValueError:
+            return len(self.land_priority)
+
+    def land_type_priority(self, land_type: str, coastal: bool) -> int:
+        priority = self._land_type_priority(land_type)
+        if coastal:
+            priority = min(priority, self._land_type_priority("C"))
+        return priority
+
 
 ConvertLand = Callable[[Land], Land]
 
@@ -235,16 +248,58 @@ class LairState:
     fear: int = 0
 
 
+def construct_distance_map(
+    conf: LairConf,
+    lands: Dict[str, Land],
+    map: gen_144p.Map144P,
+    src: str,
+) -> Tuple[Dict[str, int], Dict[str, str]]:
+    def tiebreaker(
+        land: board_layout.Land,
+        dist: Dict[str, int],
+        prev: Dict[str, str],
+    ) -> dijkstra.Comparable:
+        priority = conf.land_type_priority(land.terrain.value, land.coastal)
+        key = land.key
+        while dist[key] > 1 and key in prev:
+            key = prev[key]
+        if dist[key] == 1:
+            r1_dahan = lands[key].dahan.cnt
+        else:
+            r1_dahan = 0  # it's the lair..
+        return (-priority, r1_dahan)
+
+    return dijkstra.distances_from(map.land(src), tiebreaker)
+
+
 class Lair:
     def __init__(
         self,
-        r0: Land,
-        r1: List[Land],
-        r2: List[Land],
+        lands: Dict[str, Land],
+        src: str,
         conf: LairConf,
         log: Actionlog,
-        map: Map144P,
+        map: gen_144p.Map144P,
     ):
+        dist, prev = construct_distance_map(conf, lands, map, src)
+        self.gathers_to = {
+            key: lands.get(prev[key])
+            for key in lands.keys()
+            if key in prev and dist[key] != 0
+        }
+        r0 = lands[LAIR_KEY]
+        r1 = []
+        r2 = []
+        for key, land in lands.items():
+            if key == LAIR_KEY or key not in prev or dist[key] == 0:
+                continue
+            elif dist[key] == 1:
+                self.gathers_to[key] = r0
+                r1.append(land)
+            else:
+                r2.append(land)
+
+        self.dist = dist
         self.state = LairState(r0=r0, r1=r1, r2=r2, log=log)
         self.conf = conf
         self.uncommitted: List[LogEntry] = []
@@ -279,8 +334,9 @@ class Lair:
         return actual
 
     def _gather(self, tipe: PieceType, land: Land, cnt: int) -> int:
-        assert land.gathers_to
-        actual = self._xchg(land, tipe, tipe.select(land.gathers_to), cnt)
+        gathers_to = self.gathers_to[land.key]
+        assert gathers_to
+        actual = self._xchg(land, tipe, tipe.select(gathers_to), cnt)
         self.state.total_gathers += actual
         if actual:
             piece_name = tipe.name(self.conf.piece_names)
@@ -289,7 +345,7 @@ class Lair:
                     action=Action.GATHER,
                     src_land=land.display_name,
                     src_piece=piece_name,
-                    tgt_land=land.gathers_to.display_name,
+                    tgt_land=gathers_to.display_name,
                     tgt_piece=piece_name,
                     count=actual,
                 )
@@ -345,32 +401,24 @@ class Lair:
             return to_reserve
         return 0
 
-    def _land_type_priority(self, land_type: str) -> int:
-        try:
-            return self.conf.land_priority.index(land_type)
-        except ValueError:
-            return len(self.conf.land_priority)
-
-    def _least_dahan_land_priority_key(
+    def _least_r1_dahan_land_priority_key(
         self,
-        convert: ConvertLand,
-    ) -> Callable[[Land], Tuple[int, int]]:
-        def key(land: Land) -> Tuple[int, int]:
-            land_priority = self._land_type_priority(land.land_type)
+        land: Land,
+    ) -> Tuple[int, int, int]:
+        try:
+            coastal = self.map.land(land.key).coastal
+        except KeyError:
+            coastal = False
+        land_priority = self.conf.land_type_priority(land.land_type, coastal)
 
-            try:
-                coastal = self.map.land(land.key).coastal
-            except KeyError:
-                coastal = False
-            if coastal:
-                land_priority = min(land_priority, self._land_type_priority("C"))
+        dist = self.dist[land.key]
 
-            land = convert(land)
-            assert land
+        while self.dist[land.key] > 1:
+            prev_land = self.gathers_to[land.key]
+            assert prev_land
+            land = prev_land
 
-            return (land_priority, land.dahan.cnt)
-
-        return key
+        return (land_priority, dist, land.dahan.cnt)
 
     def _lair3(self, reserve: int) -> None:
         r0 = self.state.r0
@@ -381,13 +429,14 @@ class Lair:
 
         for land in sorted(
             self.state.r2,
-            key=self._least_dahan_land_priority_key(
-                cast(ConvertLand, lambda land: land.gathers_to)
-            ),
+            key=self._least_r1_dahan_land_priority_key,
         ):
             gathers -= self._gather(Town, land, gathers)
             gathers -= self._gather(City, land, gathers)
             gathers -= self._gather(Explorer, land, gathers)
+
+        # TODO: loop again if we have gathers left and didn't clear r2,
+        #       but need to ensure resulting log doesn't break causality.
 
         for tipe in (Explorer, Town, City):
             for land in self._r1_most_dahan():
@@ -451,13 +500,15 @@ class Lair:
             )
 
     def _damage(self, land: Land, tipe: PieceType, dmg: int) -> int:
-        assert land.gathers_to
+        assert land.key in self.gathers_to
 
+        respond_to: Optional[Land] = None
         if tipe.response:
             if land.dahan.cnt:
                 respond_to = land
             else:
-                respond_to = land.gathers_to
+                respond_to = self.gathers_to[land.key]
+            assert respond_to
             response = tipe.response.select_mr(respond_to)
         else:
             response = Void.new()
@@ -469,7 +520,7 @@ class Lair:
                     action=Action.DESTROY,
                     src_land=land.display_name,
                     src_piece=tipe.name(self.conf.piece_names),
-                    tgt_land=respond_to.display_name if tipe.response else "",
+                    tgt_land=respond_to.display_name if respond_to else "",
                     tgt_piece=(
                         tipe.response.name(self.conf.piece_names)
                         if tipe.response
@@ -487,9 +538,7 @@ class Lair:
 
         lands = sorted(
             self.state.r1,
-            key=self._least_dahan_land_priority_key(
-                cast(ConvertLand, lambda land: land)
-            ),
+            key=self._least_r1_dahan_land_priority_key,
         )
         for land in lands:
             dmg -= self._damage(land, Town, dmg)

@@ -9,8 +9,6 @@ import lair
 from adjacency.board_layout import Terrain
 from adjacency.gen_144p import Map144P
 
-LAIR_KEY = "LAIR"
-
 
 def to_int(s: str) -> int:
     if s == "":
@@ -78,7 +76,6 @@ class CsvAction:
                         towns=0,
                         cities=0,
                         dahan=0,
-                        gathers_to=None,
                         conf=lands.lair_conf,
                     )
                     lands.distant[key] = land
@@ -136,7 +133,7 @@ class DelayedActions:
             self.lair_conf.piece_names.city,
             self.lair_conf.piece_names.dahan,
         ]
-        before = str(self.lands.near[LAIR_KEY])
+        before = str(self.lands.near[lair.LAIR_KEY])
         with self.log.fork() as sublog:
             for action in self.actions[key]:
                 action.run(self.lands)
@@ -156,7 +153,7 @@ class DelayedActions:
                         ],
                     )
                 )
-            after = str(self.lands.near[LAIR_KEY])
+            after = str(self.lands.near[lair.LAIR_KEY])
             if key:
                 self.log.entry(
                     action_log.LogEntry(
@@ -188,24 +185,30 @@ class Parser:
     def match_piece(self, piece: lair.PieceType, name: str) -> bool:
         return piece.name(self.lair_conf.piece_names) == name
 
-    def parse_initial_lair(self) -> lair.Land:
+    def _parse_initial_lair(self) -> Tuple[lair.Land, str]:
         with open(self.jsonpath) as f:
             initial = json.load(f)
         if self.parse_conf.server_emojis:
             r0_key = ":IncarnaAspectLair:"
         else:
             r0_key = "lair"
-        return lair.Land(
-            key=r0_key,
-            display_name=r0_key,
-            land_type="L",
-            explorers=initial["explorers"],
-            towns=initial["towns"],
-            cities=initial["cities"],
-            dahan=initial["dahan"],
-            gathers_to=None,
-            conf=self.lair_conf,
+        return (
+            lair.Land(
+                key=r0_key,
+                display_name=r0_key,
+                land_type="L",
+                explorers=initial["explorers"],
+                towns=initial["towns"],
+                cities=initial["cities"],
+                dahan=initial["dahan"],
+                conf=self.lair_conf,
+            ),
+            initial["land"],
         )
+
+    def parse_initial_lair(self) -> lair.Land:
+        land, _ = self._parse_initial_lair()
+        return land
 
     def read_actions_csv(self) -> Iterator[CsvAction]:
         with open(self.actionspath, encoding="utf-8") as f:
@@ -219,10 +222,8 @@ class Parser:
     ]:
         lands: Dict[str, lair.Land] = {}
 
-        r0 = self.parse_initial_lair()
-        lands[LAIR_KEY] = r0
+        lands[lair.LAIR_KEY], src = self._parse_initial_lair()
 
-        r: List[List[lair.Land]] = [[], [], []]
         with open(self.csvpath, encoding="utf-8") as f:
             it = iter(csv.reader(f))
             next(it)  # throw away header row
@@ -237,13 +238,6 @@ class Parser:
                     land_type,
                     gathers_to_land_key,
                 ) = row
-                rng = int(srng)
-                if rng == 1:
-                    gathers_to = r0
-                elif rng >= 2:
-                    gathers_to = lands[gathers_to_land_key]
-                elif rng == 0:
-                    gathers_to = None
                 display_name = self.parse_conf.land_display_name(
                     key=key,
                     land_type=land_type,
@@ -259,12 +253,9 @@ class Parser:
                     towns=to_int(towns),
                     cities=to_int(cities),
                     dahan=to_int(dahan),
-                    gathers_to=gathers_to,
                     conf=self.lair_conf,
                 )
                 lands[key] = land
-                if rng:
-                    r[rng].append(land)
 
         log = action_log.Actionlog()
         csv_actions = DelayedActions(lands, self.lair_conf, self.parse_conf, log)
@@ -283,6 +274,6 @@ class Parser:
                 pass
 
         return (
-            lair.Lair(r0=r0, r1=r[1], r2=r[2], conf=self.lair_conf, log=log, map=map),
+            lair.Lair(lands=lands, src=src, conf=self.lair_conf, log=log, map=map),
             csv_actions,
         )
