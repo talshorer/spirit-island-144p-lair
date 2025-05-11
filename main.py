@@ -473,9 +473,9 @@ def parse_args() -> argparse.Namespace:
         help="Show only actions for a specific island",
     )
     parser.add_argument(
-        "--summary",
+        "--no-summary",
         action="store_true",
-        help="Display final lair state summary",
+        help="Don't display final lair state summary",
     )
     parser.add_argument(
         "--postravage",
@@ -542,7 +542,7 @@ def main() -> None:
             thelair = postravage
         else:
             thelair = preravage
-        if args.summary:
+        if not args.no_summary:
             print(
                 " ".join(
                     [
