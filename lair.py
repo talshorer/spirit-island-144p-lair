@@ -267,7 +267,8 @@ def construct_distance_map(
             r1_dahan = lands[key].dahan.cnt
         else:
             r1_dahan = 0  # it's the lair..
-        return (-priority, r1_dahan)
+        ignored = land.key not in lands
+        return (ignored, -priority, r1_dahan)
 
     return dijkstra.distances_from(map.land(src), tiebreaker)
 
