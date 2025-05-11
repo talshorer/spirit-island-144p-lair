@@ -20,21 +20,22 @@ def tryone(
     if map is None:
         map = gen_144p.Map144P()
     all_dist: Dict[str, int] = {}
-    for land in lands:
-        if land not in dijstra_cache:
-            dist, _ = dijkstra.distances_from(map.land(land))
-            dijstra_cache[land] = dist
+    for src in lands:
+        if src not in dijstra_cache:
+            dist, _ = dijkstra.distances_from(map.land(src))
+            dijstra_cache[src] = dist
         else:
-            dist = dijstra_cache[land]
+            dist = dijstra_cache[src]
         for k, v in dist.items():
             prev = all_dist.get(k)
             if prev is None or prev > v:
                 all_dist[k] = v
     by_dist: Dict[int, List[str]] = collections.defaultdict(list)
     for k, v in all_dist.items():
-        if filter_coastal and not map.land(k).coastal:
+        land = map.land(k)
+        if filter_coastal and not land.coastal:
             continue
-        by_dist[v].append(k)
+        by_dist[v].append(f"{k}{land.terrain.value}")
     return (sorted(by_dist.keys())[-1], lands, by_dist)
 
 
