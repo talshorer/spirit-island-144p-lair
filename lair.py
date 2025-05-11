@@ -240,6 +240,7 @@ class LairState:
     r1: List[Land]
     r2: List[Land]
     log: Actionlog
+    dist: Dict[str, int]
     total_gathers: int = 0
     wasted_damage: int = 0
     wasted_downgrades: int = 0
@@ -300,8 +301,7 @@ class Lair:
             else:
                 r2.append(land)
 
-        self.dist = dist
-        self.state = LairState(r0=r0, r1=r1, r2=r2, log=log)
+        self.state = LairState(r0=r0, r1=r1, r2=r2, log=log, dist=dist)
         self.conf = conf
         self.uncommitted: List[LogEntry] = []
         self.map = map
@@ -412,9 +412,9 @@ class Lair:
             coastal = False
         land_priority = self.conf.land_type_priority(land.land_type, coastal)
 
-        dist = self.dist[land.key]
+        dist = self.state.dist[land.key]
 
-        while self.dist[land.key] > 1:
+        while self.state.dist[land.key] > 1:
             prev_land = self.gathers_to[land.key]
             assert prev_land
             land = prev_land

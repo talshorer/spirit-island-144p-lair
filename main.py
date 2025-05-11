@@ -264,7 +264,7 @@ def process_diffview(
     for a, b in zip(orig_lair.state.r1, thelair.r1):
         all_diff.append(landdiff(1, a, b, args))
     for a, b in zip(orig_lair.state.r2, thelair.r2):
-        all_diff.append(landdiff(2, a, b, args))
+        all_diff.append(landdiff(thelair.dist[a.key], a, b, args))
     all_diff.sort()
     all_diff_md = []
     last_islet = ""
