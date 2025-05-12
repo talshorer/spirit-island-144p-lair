@@ -70,7 +70,7 @@ class CsvAction:
                 else:
                     land = lair.Land(
                         key=key,
-                        display_name=key,
+                        display_name="FAKE",
                         land_type=land_type,
                         explorers=0,
                         towns=0,

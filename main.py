@@ -56,11 +56,7 @@ def landdiff(
         and b.dahan.cnt == 0
     ):
         bstr = "CLEAR"
-    if args.diff_range:
-        range_ = f"({r}) "
-    else:
-        range_ = ""
-    return f"{range_}{a.display_name}: {a} => {bstr}"
+    return f"{a.display_name}: {a} => {bstr}"
 
 
 class Comparable(Protocol):
@@ -106,9 +102,9 @@ def log_entry_to_text(entry: action_log.LogEntry) -> str:
             assert entry.text
             return entry.text
         case action_log.Action.GATHER:
-            return f"gather {log_entry_src_pieces_to_text(entry)} from {entry.src_land} to {entry.tgt_land} ({entry.total_count()})"
+            return f"gather {log_entry_src_pieces_to_text(entry)} from {entry.src_land} to {entry.tgt_land} (total {entry.total_count()})"
         case action_log.Action.ADD:
-            return f"add {log_entry_tgt_pieces_to_text(entry)} in {entry.tgt_land} ({entry.total_count()})"
+            return f"add {log_entry_tgt_pieces_to_text(entry)} in {entry.tgt_land} (total {entry.total_count()})"
         case action_log.Action.DESTROY:
             if entry.tgt_piece:
                 response_log = f", MR adds {log_entry_tgt_pieces_to_text(entry)} in {entry.tgt_land}"
@@ -116,7 +112,7 @@ def log_entry_to_text(entry: action_log.LogEntry) -> str:
                 response_log = ""
             return f"destroy {log_entry_src_pieces_to_text(entry)} in {entry.src_land}{response_log}"
         case action_log.Action.DOWNGRADE:
-            return f"downgrade {log_entry_src_pieces_to_text(entry)} in {entry.src_land} ({entry.total_count()})"
+            return f"downgrade {log_entry_src_pieces_to_text(entry)} in {entry.src_land} (total {entry.total_count()})"
         case action_log.Action.MANUAL:
             if entry.tgt_land and any(entry.tgt_piece):
                 tgt = f" +({log_entry_tgt_pieces_to_text(entry)}) in {entry.tgt_land}"
@@ -484,9 +480,9 @@ def parse_args() -> argparse.Namespace:
         help="Display postravage results instead of preravage",
     )
     parser.add_argument(
-        "--diff-range",
+        "--show-range",
         action="store_true",
-        help="Show range from lair in diff view",
+        help="Show range in each land's display name",
     )
     parser.add_argument(
         "--best",
@@ -519,6 +515,7 @@ def main() -> None:
         reserve_gathers_orange=input.get("reserve_gathers_orange", 0),
         reckless_offensive=input.get("reckless_offensive", []),
         piece_names=piece_names_emoji if server_emojis else piece_names_text,
+        show_range=args.show_range,
     )
     parse_conf = parse.ParseConf(
         server_emojis=server_emojis,
