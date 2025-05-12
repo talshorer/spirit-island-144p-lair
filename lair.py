@@ -283,6 +283,10 @@ class Lair:
         log: Actionlog,
         map: gen_144p.Map144P,
     ):
+        self.map = map
+        self.conf = conf
+        self.uncommitted: List[LogEntry] = []
+
         dist, prev = construct_distance_map(conf, lands, map, src)
         self.gathers_to = {
             key: lands.get(prev[key])
@@ -298,13 +302,22 @@ class Lair:
             elif dist[key] == 1:
                 self.gathers_to[key] = r0
                 r1.append(land)
-            else:
+            elif self._r1_gathers_to(land, dist) is not None:
                 r2.append(land)
 
         self.state = LairState(r0=r0, r1=r1, r2=r2, log=log, dist=dist)
-        self.conf = conf
-        self.uncommitted: List[LogEntry] = []
-        self.map = map
+
+    def _r1_gathers_to(
+        self,
+        land: Land,
+        dist: Dict[str, int],
+    ) -> Optional[Land]:
+        while dist[land.key] > 1:
+            prev_land = self.gathers_to[land.key]
+            if prev_land is None:
+                return None
+            land = prev_land
+        return land
 
     def _commit_log(self) -> None:
         self.uncommitted.sort(key=lambda entry: entry.src_land or "")
@@ -413,14 +426,10 @@ class Lair:
         land_priority = self.conf.land_type_priority(land.land_type, coastal)
 
         dist = self.state.dist[land.key]
+        r1_land = self._r1_gathers_to(land, self.state.dist)
+        assert r1_land
 
-        orig_key = land.key
-        while self.state.dist[land.key] > 1:
-            prev_land = self.gathers_to[land.key]
-            assert prev_land, f"no gather path for {orig_key}"
-            land = prev_land
-
-        return (land_priority, dist, land.dahan.cnt)
+        return (land_priority, dist, r1_land.dahan.cnt)
 
     def _lair3(self, reserve: int) -> None:
         r0 = self.state.r0
