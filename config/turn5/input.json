@@ -1,9 +1,11 @@
 {
   "actions": [
+    "blur"
   ],
-  "land_priority": "WC",
-  "reserve_gathers_blue": 0,
+  "land_priority": "W",
+  "reserve_gathers_blue": 9,
   "reserve_gathers_orange": 0,
   "ignore_lands": [
+    "🇲🇺U5W"
   ]
 }
