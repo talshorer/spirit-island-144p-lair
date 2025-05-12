@@ -1,6 +1,7 @@
 {
   "actions": [
     "blur",
+    "call",
     "call"
   ],
   "land_priority": "WC",
