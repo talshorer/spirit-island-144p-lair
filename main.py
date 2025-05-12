@@ -418,6 +418,7 @@ def run_action_seq(
     action_seq: Tuple[str, ...],
 ) -> ActionSeqResult:
     thelair, delayed = parser.parse_all()
+    delayed.run("start")
     for action in action_seq:
         getattr(thelair, action)()
         delayed.run(action)
