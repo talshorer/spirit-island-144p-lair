@@ -3,10 +3,9 @@
     "blur"
   ],
   "land_priority": "WC",
-  "reserve_gathers_blue": 24,
+  "reserve_gathers_blue": 19,
   "reserve_gathers_orange": 0,
   "ignore_lands": [
-    "🇲🇺U5",
     "🐑P6",
     "🐑P7",
     "🤖U1",
