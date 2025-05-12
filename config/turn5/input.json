@@ -2,7 +2,7 @@
   "actions": [
     "blur"
   ],
-  "land_priority": "W",
+  "land_priority": "WC",
   "reserve_gathers_blue": 24,
   "reserve_gathers_orange": 0,
   "ignore_lands": [
