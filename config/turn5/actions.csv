@@ -1,10 +1,17 @@
 Source,Destination,City,Town,Explorer,Dahan,Action Name,Action ID,Parent,Notes,After Toplevel
-🇲🇺R7S,LAIRL,,,3,,Irresistible Call,0,,,
-🇲🇺R1M,LAIRL,,1,,,Irresistible Call,0,,,
-🐀U8S,LAIRL,,1,,,Irresistible Call,0,,,
-🐀U6M,LAIRL,,2,,3,Irresistible Call,0,,,
-🐀T1W,LAIRL,,1,,,Irresistible Call,0,,,
-🐀T3S,LAIRL,,,,,Irresistible Call,0,,,
-🐀T2M,LAIRL,,,3,2,Irresistible Call,0,,,
-🐑P3M,LAIRL,,,1,,Irresistible Call,0,,,
-👻P2M,LAIRL,,,7,,Irresistible Call,0,,,
+🇲🇺R5W,LAIRL,,,,,Starting land,0,,,start
+🐀T4J,LAIRL,,2,2,2,Weave,0,,Has blight,start
+🐑R7S,LAIRL,,,,,Weave,0,,Empty,start
+🍪S4M,LAIRL,,,,,Weave,0,,Empty,start
+🍪R4J,LAIRL,,,,2,Enticing splendor  (Robin),0,,,start
+🇲🇺R7S,LAIRL,,,3,,Irresistible Call,0,,,start
+🇲🇺R1M,LAIRL,,1,,,Irresistible Call,0,,,start
+🐀U8S,LAIRL,,1,,,Irresistible Call,0,,,start
+🐀U6M,LAIRL,,2,,3,Irresistible Call,0,,,start
+🐀T1W,LAIRL,,1,,,Irresistible Call,0,,,start
+🐀T2M,LAIRL,,,3,2,Irresistible Call,0,,,start
+🐑P3M,LAIRL,,,1,,Irresistible Call,0,,,start
+👻P2M,LAIRL,,,7,,Irresistible Call (blue finder adj),0,,,start
+🍪R4J,LAIRL,,,1,,Irresistible Call,0,,,start
+🇲🇺T3M,LAIRL,1,6,1,,Weave,0,,,start
+🎈U3W,LAIRL,,,,,Weave,0,,,start
