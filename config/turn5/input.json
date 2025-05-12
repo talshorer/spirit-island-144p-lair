@@ -1,8 +1,6 @@
 {
   "actions": [
-    "blur",
-    "call",
-    "call"
+    "blur"
   ],
   "land_priority": "WC",
   "reserve_gathers_blue": 0,
