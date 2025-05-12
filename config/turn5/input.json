@@ -3,9 +3,32 @@
     "blur"
   ],
   "land_priority": "W",
-  "reserve_gathers_blue": 9,
+  "reserve_gathers_blue": 21,
   "reserve_gathers_orange": 0,
   "ignore_lands": [
-    "🇲🇺U5W"
+    "🇲🇺U5",
+    "👻S4",
+    "🐑P6",
+    "🐑P7",
+    "🐑P8",
+    "🐑Q3",
+    "🤖U1",
+    "🤖U2",
+    "🤖U3",
+    "🤖U4",
+    "🤖U5",
+    "🤖U6",
+    "🤖U8",
+    "🍪U1",
+    "🤖P6",
+    "🇲🇺R2",
+    "🎈U8",
+    "🎈T6",
+    "🎈T6"
+  ],
+  "ignored_because" : [
+    ["🐑P6","🐑P7","caused","🐑P8","🐑Q3"],
+    ["🇲🇺U5","caused","👻S4"],
+    ["🎈U8","caused","🎈T6","🎈T8"]
   ]
 }
