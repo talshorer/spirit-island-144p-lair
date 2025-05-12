@@ -414,9 +414,10 @@ class Lair:
 
         dist = self.state.dist[land.key]
 
+        orig_key = land.key
         while self.state.dist[land.key] > 1:
             prev_land = self.gathers_to[land.key]
-            assert prev_land
+            assert prev_land, f"no gather path for {orig_key}"
             land = prev_land
 
         return (land_priority, dist, land.dahan.cnt)
