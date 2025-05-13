@@ -224,6 +224,7 @@ class Parser:
         lands: Dict[str, lair.Land] = {}
 
         lands[lair.LAIR_KEY], src = self._parse_initial_lair()
+        ignored: List[lair.Land] = []
 
         map = Map144P()
         with open(self.weaves) as f:
@@ -251,9 +252,6 @@ class Parser:
                     key=key,
                     land_type=land_type,
                 )
-                if key in self.parse_conf.ignore_lands:
-                    continue
-
                 land = lair.Land(
                     key=key,
                     display_name=display_name,
@@ -264,7 +262,10 @@ class Parser:
                     dahan=to_int(dahan),
                     conf=self.lair_conf,
                 )
-                lands[key] = land
+                if key in self.parse_conf.ignore_lands:
+                    ignored.append(land)
+                else:
+                    lands[key] = land
 
         log = action_log.Actionlog()
         csv_actions = DelayedActions(lands, self.lair_conf, self.parse_conf, log)
@@ -273,6 +274,13 @@ class Parser:
         csv_actions.run("", self.parse_conf.log_prestart)
 
         return (
-            lair.Lair(lands=lands, src=src, conf=self.lair_conf, log=log, map=map),
+            lair.Lair(
+                lands=lands,
+                ignored=ignored,
+                src=src,
+                conf=self.lair_conf,
+                log=log,
+                map=map,
+            ),
             csv_actions,
         )

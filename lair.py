@@ -240,6 +240,7 @@ class LairState:
     r0: Land
     r1: List[Land]
     r2: List[Land]
+    ignored: List[Land]
     log: Actionlog
     dist: Dict[str, int]
     total_gathers: int = 0
@@ -287,6 +288,7 @@ class Lair:
     def __init__(
         self,
         lands: Dict[str, Land],
+        ignored: List[Land],
         src: str,
         conf: LairConf,
         log: Actionlog,
@@ -315,8 +317,17 @@ class Lair:
                 r1.append(land)
             elif self._r1_gathers_to(land, dist) is not None:
                 r2.append(land)
+            else:
+                ignored.append(land)
 
-        self.state = LairState(r0=r0, r1=r1, r2=r2, log=log, dist=dist)
+        self.state = LairState(
+            r0=r0,
+            r1=r1,
+            r2=r2,
+            ignored=ignored,
+            log=log,
+            dist=dist,
+        )
 
     def _r1_gathers_to(
         self,

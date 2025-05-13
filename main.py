@@ -3,6 +3,7 @@ import copy
 import csv
 import dataclasses
 import enum
+import itertools
 import json
 import multiprocessing
 import os
@@ -257,9 +258,11 @@ def process_diffview(
     all_diff = []
     orig_lair, _ = parser.parse_all()
     all_diff.append(landdiff(0, orig_lair.state.r0, thelair.r0, args))
-    for a, b in zip(orig_lair.state.r1, thelair.r1):
-        all_diff.append(landdiff(1, a, b, args))
-    for a, b in zip(orig_lair.state.r2, thelair.r2):
+    for a, b in itertools.chain(
+        zip(orig_lair.state.r1, thelair.r1),
+        zip(orig_lair.state.r2, thelair.r2),
+        zip(orig_lair.state.ignored, thelair.ignored),
+    ):
         all_diff.append(landdiff(thelair.dist[a.key], a, b, args))
     all_diff.sort()
     all_diff_md = []
