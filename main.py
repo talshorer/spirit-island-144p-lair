@@ -497,6 +497,13 @@ def parse_args() -> argparse.Namespace:
         default=32,
         help="Number of multiprocessing workers to run",
     )
+    parser.add_argument(
+        "--force-line",
+        nargs="+",
+        default=[],
+        help="Force specicif line instead of calculating best line",
+        metavar="ACTION",
+    )
     return parser.parse_args()
 
 
@@ -505,9 +512,12 @@ def main() -> None:
     with open("config/turn5/input.json", encoding="utf-8") as f:
         input = json.load(f)
     res: List[ActionSeqResult] = []
-    action_seqs = set(
-        tuple(s) for s in perms(input["actions"] + ["lair_blue", "lair_orange"])
-    )
+    if args.force_line:
+        action_seqs = set([tuple(args.force_line)])
+    else:
+        action_seqs = set(
+            tuple(s) for s in perms(input["actions"] + ["lair_blue", "lair_orange"])
+        )
     server_emojis = args.split
     lair_conf = lair.LairConf(
         land_priority=input.get("land_priority", ""),
