@@ -19,6 +19,7 @@ def to_int(s: str) -> int:
 @dataclasses.dataclass
 class ParseConf:
     server_emojis: bool
+    log_prestart: bool
     ignore_lands: List[str]
 
     def land_display_name(self, key: str, land_type: str) -> str:
@@ -124,7 +125,7 @@ class DelayedActions:
             land_type=land[-1],
         )
 
-    def run(self, key: str) -> None:
+    def run(self, key: str, log: bool = True) -> None:
         if key not in self.actions:
             return
         pieces = [
@@ -154,7 +155,7 @@ class DelayedActions:
                     )
                 )
             after = str(self.lands.near[lair.LAIR_KEY])
-            if key:
+            if log:
                 self.log.entry(
                     action_log.LogEntry(
                         text=f"execute delayed actions for {key}: {before} => {after}"
@@ -269,7 +270,7 @@ class Parser:
         csv_actions = DelayedActions(lands, self.lair_conf, self.parse_conf, log)
         for action in self.read_actions_csv():
             csv_actions.push(action)
-        csv_actions.run("")
+        csv_actions.run("", self.parse_conf.log_prestart)
 
         return (
             lair.Lair(lands=lands, src=src, conf=self.lair_conf, log=log, map=map),

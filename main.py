@@ -519,6 +519,7 @@ def main() -> None:
             tuple(s) for s in perms(input["actions"] + ["lair_blue", "lair_orange"])
         )
     server_emojis = args.split
+    log_prestart = args.output is Output.CAT_CAFE
     lair_conf = lair.LairConf(
         land_priority=input.get("land_priority", ""),
         reserve_gathers_blue=input.get("reserve_gathers_blue", 0),
@@ -529,6 +530,7 @@ def main() -> None:
     )
     parse_conf = parse.ParseConf(
         server_emojis=server_emojis,
+        log_prestart=log_prestart,
         ignore_lands=input.get("ignore_lands", []),
     )
     parser = parse.Parser(
