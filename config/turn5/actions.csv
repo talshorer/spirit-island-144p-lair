@@ -11,15 +11,15 @@ Source,Destination,City,Town,Explorer,Dahan,Action Name,Action ID,Parent,Notes,A
 🍪R4J,LAIRL,,,,2,Enticing splendor  (Robin),31,,,start
 🐀T4J,LAIRL,,2,2,2,Weave,32,,Has blight,start
 🐑R7S,LAIRL,,,,,Weave,33,,Empty,start
-🇲🇺R7S,LAIRL,,,3,,Irresistible Call,50,,,start
-🇲🇺R1M,LAIRL,,1,,,Irresistible Call,51,,,start
-🐀U8S,LAIRL,,1,,,Irresistible Call,52,,,start
-🐀U6M,LAIRL,,2,,3,Irresistible Call,53,,,start
-🐀T1W,LAIRL,,1,,,Irresistible Call,54,,,start
-🐀T2M,LAIRL,,,3,2,Irresistible Call,55,,,start
-🐑P3M,LAIRL,,,1,,Irresistible Call,56,,,start
-👻P2M,LAIRL,,,7,,Irresistible Call (blue finder adj),57,,+1 beast,start
-🍪R4J,LAIRL,,,1,,Irresistible Call,58,,,start
+🇲🇺R7S,LAIRL,,,3,,Irresistable Call (sloverlord),50,,,start
+🇲🇺R1M,LAIRL,,1,,,Irresistable Call (sloverlord),51,,,start
+🐀U8S,LAIRL,,1,,,Irresistable Call (sloverlord),52,,,start
+🐀U6M,LAIRL,,2,,3,Irresistable Call (sloverlord),53,,,start
+🐀T1W,LAIRL,,1,,,Irresistable Call (sloverlord),54,,,start
+🐀T2M,LAIRL,,,3,2,Irresistable Call (sloverlord),55,,,start
+🐑P3M,LAIRL,,,1,,Irresistable Call (sloverlord),56,,,start
+👻P2M,LAIRL,,,7,,Irresistable Call (sloverlord) (blue finder adj),57,,+1 beast,start
+🍪R4J,LAIRL,,,1,,Irresistable Call (sloverlord),58,,,start
 🇲🇺T3M,LAIRL,1,6,1,,Weave,70,,,start
 🇲🇺U1M,LAIRL,1,5,,,Weave,71,,,start
 🎈U3W,LAIRL,,,,,Weave,72,,,start
