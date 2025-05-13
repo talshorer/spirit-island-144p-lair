@@ -1,5 +1,14 @@
 Source,Destination,City,Town,Explorer,Dahan,Action Name,Action ID,Parent,Notes,After Toplevel
 🇲🇺R5W,LAIRL,,,,,Starting land,0,,,
+🍪Delta,🍪Q7W,,-3,,,Manual delta,1,,Cookie,
+🍪Delta,🍪R1W,,-3,1,-1,Manual delta,2,,Cookie,
+🍪Delta,🍪R4J,,,1,-3,Manual delta,3,,Cookie,
+🍪Delta,🍪R6W,,,-1,2,Manual delta,4,,Cookie,
+🍪Delta,🍪S5J,1,2,,,Manual delta,5,,Cookie,
+🍪Delta,🍪S6W,-1,2,,,Manual delta,6,,Cookie,
+🍪Delta,🍪T1M,,,-1,,Manual delta,7,,Cookie,
+🍪Delta,🍪T6M,,,1,,Manual delta,8,,Cookie,
+🍪Delta,🍪T8J,,3,,,Manual delta,9,,Cookie,
 🦋DarkX,LAIRL,,1,3,,Escape (🦋Darkness),11,,,
 🌋BoomX,LAIRL,,7,31,,Volcano Boom MR (Torien),12,,,
 🐀S1M,LAIRL,,,1,,Finder Push (lumia),13,,,
@@ -8,9 +17,10 @@ Source,Destination,City,Town,Explorer,Dahan,Action Name,Action ID,Parent,Notes,A
 🐑T1W,LAIRL,,,1,,Wildfire MR (Bolaj),16,,,
 🍕P8S,LAIRL,,,1,,Blur (Alexininikovsky) - MR,17,,,
 🍪S4M,LAIRL,,,,,Weave,30,,Empty,start
-🍪R4J,LAIRL,,,,2,Enticing splendor  (Robin),31,,,start
-🐀T4J,LAIRL,,2,2,2,Weave,32,,Has blight,start
+🍪R4J,LAIRL,,,,1,Enticing splendor (Robin),31,,,start
+🏝️P6M,LAIRL,,,,1,Enticing splendor (Robin) (orng finder adj),32,,,start
 🐑R7S,LAIRL,,,,,Weave,33,,Empty,start
+🐀T4J,LAIRL,,2,2,2,Weave,34,,Has blight,start
 🇲🇺R7S,LAIRL,,,3,,Irresistable Call (sloverlord),50,,,start
 🇲🇺R1M,LAIRL,,1,,,Irresistable Call (sloverlord),51,,,start
 🐀U8S,LAIRL,,1,,,Irresistable Call (sloverlord),52,,,start
