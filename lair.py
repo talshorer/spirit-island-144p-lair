@@ -211,10 +211,16 @@ class Dahan(_PieceType):
 
 
 @dataclasses.dataclass
+class LairInnateConf:
+    reserve_gathers: int
+    max_range: int
+
+
+@dataclasses.dataclass
 class LairConf:
     land_priority: str
-    reserve_gathers_blue: int
-    reserve_gathers_orange: int
+    blue: LairInnateConf
+    orange: LairInnateConf
     reckless_offensive: List[str]
     piece_names: PieceNames
     show_range: bool
@@ -453,17 +459,19 @@ class Lair:
 
         return (land_priority, dist, r1_land.dahan.cnt)
 
-    def _lair3(self, reserve: int) -> None:
+    def _lair3(self, conf: LairInnateConf) -> None:
         r0 = self.state.r0
         gathers = (r0.explorers.cnt + r0.dahan.cnt) // 6
         self.state.log.entry(LogEntry(text=f"available gathers: {gathers}"))
         with self.state.log.indent():
-            gathers -= self._reserve(reserve, "gathers", gathers)
+            gathers -= self._reserve(conf.reserve_gathers, "gathers", gathers)
 
         for land in sorted(
             self.state.r2,
             key=self._least_r1_dahan_land_priority_key,
         ):
+            if self.state.dist[land.key] > conf.max_range:
+                continue
             gathers -= self._gather(Town, land, gathers)
             gathers -= self._gather(City, land, gathers)
             gathers -= self._gather(Explorer, land, gathers)
@@ -496,19 +504,19 @@ class Lair:
             )
         self.state.log = oldlog
 
-    def _lair_all(self, colour: str, reserve: int) -> None:
+    def _lair_all(self, colour: str, conf: LairInnateConf) -> None:
         with self._top_log(f"lair-{colour}-thresh1"):
             self._lair1()
         with self._top_log(f"lair-{colour}-thresh2"):
             self._lair2()
         with self._top_log(f"lair-{colour}-thresh3"):
-            self._lair3(reserve)
+            self._lair3(conf)
 
     def lair_blue(self) -> None:
-        self._lair_all("blue", self.conf.reserve_gathers_blue)
+        self._lair_all("blue", self.conf.blue)
 
     def lair_orange(self) -> None:
-        self._lair_all("orange", self.conf.reserve_gathers_orange)
+        self._lair_all("orange", self.conf.orange)
 
     def _call_one(
         self,

@@ -10,7 +10,7 @@ import os
 import shutil
 import sys
 import traceback
-from typing import Any, List, Optional, Protocol, Self, Tuple, TypeVar
+from typing import Any, Dict, List, Optional, Protocol, Self, Tuple, TypeVar
 
 import action_log
 import lair
@@ -510,6 +510,15 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def lair_innate_conf(data: Optional[Dict[str, Any]]) -> lair.LairInnateConf:
+    if data is None:
+        data = {}
+    return lair.LairInnateConf(
+        reserve_gathers=data.get("reserve_gathers", 0),
+        max_range=data.get("max_range", 0),
+    )
+
+
 def main() -> None:
     args = parse_args()
     with open("config/turn5/input.json", encoding="utf-8") as f:
@@ -525,8 +534,8 @@ def main() -> None:
     log_prestart = args.output is Output.CAT_CAFE
     lair_conf = lair.LairConf(
         land_priority=input.get("land_priority", ""),
-        reserve_gathers_blue=input.get("reserve_gathers_blue", 0),
-        reserve_gathers_orange=input.get("reserve_gathers_orange", 0),
+        blue=lair_innate_conf(input.get("blue_lair")),
+        orange=lair_innate_conf(input.get("orange_lair")),
         reckless_offensive=input.get("reckless_offensive", []),
         piece_names=piece_names_emoji if server_emojis else piece_names_text,
         show_range=args.show_range,

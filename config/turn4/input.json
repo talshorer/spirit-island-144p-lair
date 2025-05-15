@@ -6,7 +6,13 @@
     "call"
   ],
   "land_priority": "MW",
-  "reserve_gathers_blue": 53,
+  "blue_lair": {
+    "reserve_gathers": 53,
+    "max_range": 2
+  },
+  "orange_lair": {
+    "max_range": 2
+  },
   "ignore_lands": [
     "🇲🇺R2"
   ],
