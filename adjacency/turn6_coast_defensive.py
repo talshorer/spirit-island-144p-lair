@@ -12,6 +12,12 @@ map: Optional[gen_144p.Map144P] = None
 dijstra_cache: Dict[str, Tuple[Dict[str, int], Dict[str, str]]] = {}
 
 
+def ensure_map() -> None:
+    global map
+    if map is None:
+        map = gen_144p.Map144P()
+
+
 def tryone(
     lands: List[str],
     filter_coastal: bool = True,
@@ -22,9 +28,8 @@ def tryone(
     Dict[str, int],
     Dict[str, List[str]],
 ]:
-    global map
-    if map is None:
-        map = gen_144p.Map144P()
+    ensure_map()
+    assert map
     all_dist: Dict[str, int] = {}
     all_paths: Dict[str, List[str]] = {}
     for src in lands:
@@ -47,7 +52,14 @@ def tryone(
     return (sorted(by_dist.keys())[-1], lands, by_dist, all_dist, all_paths)
 
 
-def tryone_no_dist(lands: List[str]) -> Tuple[int, List[str]]:
+def tryone_no_dist(lands: List[str]) -> Tuple[Optional[int], List[str]]:
+    ensure_map()
+    assert map
+    try:
+        for land in lands:
+            map.land(land)
+    except KeyError:
+        return None, []
     score, lands, by_dist, all_dist, all_paths = tryone(lands)
     return score, lands
 
@@ -153,6 +165,7 @@ def main() -> None:
                 "lands": lands,
             }
             for score, lands in res
+            if score is not None
         ]
         json.dump(out, sys.stdout, ensure_ascii=False, indent=2)
 
