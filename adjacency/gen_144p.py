@@ -203,11 +203,7 @@ def main() -> None:
     for k2 in sorted(by_dist.keys()):
         print(k2, by_dist[k2])
     dst = "🦋R4"
-    path = [dst]
-    while dst != src:
-        dst = prev[dst]
-        path.append(dst)
-    print(path[::-1])
+    print(dijkstra.construct_path(prev, src, dst))
 
 
 if __name__ == "__main__":

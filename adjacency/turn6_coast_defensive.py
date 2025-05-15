@@ -9,38 +9,46 @@ from typing import Any, Dict, Iterator, List, Optional, Tuple
 from . import dijkstra, gen_144p
 
 map: Optional[gen_144p.Map144P] = None
-dijstra_cache: Dict[str, Dict[str, int]] = {}
+dijstra_cache: Dict[str, Tuple[Dict[str, int], Dict[str, str]]] = {}
 
 
 def tryone(
     lands: List[str],
     filter_coastal: bool = True,
-) -> Tuple[int, List[str], Dict[int, List[str]]]:
+) -> Tuple[
+    int,
+    List[str],
+    Dict[int, List[str]],
+    Dict[str, int],
+    Dict[str, List[str]],
+]:
     global map
     if map is None:
         map = gen_144p.Map144P()
     all_dist: Dict[str, int] = {}
+    all_paths: Dict[str, List[str]] = {}
     for src in lands:
         if src not in dijstra_cache:
-            dist, _ = dijkstra.distances_from(map.land(src))
-            dijstra_cache[src] = dist
+            dist, prev = dijkstra.distances_from(map.land(src))
+            dijstra_cache[src] = (dist, prev)
         else:
-            dist = dijstra_cache[src]
+            dist, prev = dijstra_cache[src]
         for k, v in dist.items():
-            prev = all_dist.get(k)
-            if prev is None or prev > v:
+            best = all_dist.get(k)
+            if best is None or best > v:
                 all_dist[k] = v
+                all_paths[k] = dijkstra.construct_path(prev, src, k)
     by_dist: Dict[int, List[str]] = collections.defaultdict(list)
     for k, v in all_dist.items():
         land = map.land(k)
         if filter_coastal and not land.coastal:
             continue
         by_dist[v].append(f"{k}{land.terrain.value}")
-    return (sorted(by_dist.keys())[-1], lands, by_dist)
+    return (sorted(by_dist.keys())[-1], lands, by_dist, all_dist, all_paths)
 
 
 def tryone_no_dist(lands: List[str]) -> Tuple[int, List[str]]:
-    score, lands, by_dist = tryone(lands)
+    score, lands, by_dist, all_dist, all_paths = tryone(lands)
     return score, lands
 
 
@@ -84,6 +92,12 @@ def main() -> None:
         help="Lands from which to measure distance",
     )
     parser.add_argument(
+        "--path-to",
+        nargs="*",
+        default=[],
+        help="Show path from source lands to target lands",
+    )
+    parser.add_argument(
         "--coastal",
         action="store_true",
         help="Only show coastal lands in output",
@@ -91,9 +105,19 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.lands:
-        _, _, by_dist = tryone(args.lands, filter_coastal=args.coastal)
-        for k2 in sorted(by_dist.keys()):
-            print(k2, by_dist[k2])
+        (
+            score,
+            lands,
+            by_dist,
+            all_dist,
+            all_paths,
+        ) = tryone(args.lands, filter_coastal=args.coastal)
+        if args.path_to:
+            for land in args.path_to:
+                print(all_dist[land], all_paths[land])
+        else:
+            for land in sorted(by_dist.keys()):
+                print(land, by_dist[land])
         return
 
     map = gen_144p.Map144P()

@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Callable, Dict, Protocol, Self, Set, Tuple
+from typing import Callable, Dict, List, Protocol, Self, Set, Tuple
 
 from .board_layout import Land
 
@@ -69,3 +69,11 @@ def distances_from(
             dist[key] = alt
             prev[key] = vertex.key
     return dist, prev
+
+
+def construct_path(prev: Dict[str, str], src: str, dst: str) -> List[str]:
+    path = [dst]
+    while dst != src:
+        dst = prev[dst]
+        path.append(dst)
+    return path[::-1]
