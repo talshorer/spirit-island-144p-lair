@@ -504,8 +504,14 @@ def parse_args() -> argparse.Namespace:
         "--force-line",
         nargs="+",
         default=[],
-        help="Force specicif line instead of calculating best line",
+        help="Force specific line instead of calculating best line",
         metavar="ACTION",
+    )
+    parser.add_argument(
+        "--turn",
+        type=int,
+        default=5,
+        help="Choose turn's config dir",
     )
     return parser.parse_args()
 
@@ -521,7 +527,8 @@ def lair_innate_conf(data: Optional[Dict[str, Any]]) -> lair.LairInnateConf:
 
 def main() -> None:
     args = parse_args()
-    with open("config/turn5/input.json", encoding="utf-8") as f:
+    config_dir = f"config/turn{args.turn}"
+    with open(os.path.join(config_dir, "input.json"), encoding="utf-8") as f:
         input = json.load(f)
     res: List[ActionSeqResult] = []
     if args.force_line:
@@ -541,7 +548,7 @@ def main() -> None:
         show_range=args.show_range,
     )
     parse_conf = parse.ParseConf(
-        directory="config/turn5",
+        directory=config_dir,
         server_emojis=server_emojis,
         log_prestart=log_prestart,
         ignore_lands=input.get("ignore_lands", []),
