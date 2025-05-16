@@ -541,15 +541,12 @@ def main() -> None:
         show_range=args.show_range,
     )
     parse_conf = parse.ParseConf(
+        directory="config/turn5",
         server_emojis=server_emojis,
         log_prestart=log_prestart,
         ignore_lands=input.get("ignore_lands", []),
     )
     parser = parse.Parser(
-        csvpath="config/turn5/start.csv",
-        jsonpath="config/turn5/initial_lair.json",
-        actionspath="config/turn5/actions.csv",
-        weaves="config/turn5/weaves.json",
         lair_conf=lair_conf,
         parse_conf=parse_conf,
     )

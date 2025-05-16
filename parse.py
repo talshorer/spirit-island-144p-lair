@@ -2,6 +2,8 @@ import collections
 import csv
 import dataclasses
 import json
+import os
+from io import TextIOWrapper
 from typing import Any, Dict, Iterator, List, Tuple, cast
 
 import action_log
@@ -18,6 +20,7 @@ def to_int(s: str) -> int:
 
 @dataclasses.dataclass
 class ParseConf:
+    directory: str
     server_emojis: bool
     log_prestart: bool
     ignore_lands: List[str]
@@ -167,27 +170,27 @@ class DelayedActions:
 
 
 class Parser:
+    START = "start.csv"
+    INITIAL_LAIR = "initial_lair.json"
+    ACTIONS = "actions.csv"
+    WEAVES = "weaves.json"
+
     def __init__(
         self,
-        csvpath: str,
-        jsonpath: str,
-        actionspath: str,
-        weaves: str,
         lair_conf: lair.LairConf,
         parse_conf: ParseConf,
     ):
-        self.csvpath = csvpath
-        self.jsonpath = jsonpath
-        self.actionspath = actionspath
-        self.weaves = weaves
         self.lair_conf = lair_conf
         self.parse_conf = parse_conf
+
+    def _open(self, basename: str) -> TextIOWrapper:
+        return open(os.path.join(self.parse_conf.directory, basename), encoding="utf-8")
 
     def match_piece(self, piece: lair.PieceType, name: str) -> bool:
         return piece.name(self.lair_conf.piece_names) == name
 
     def _parse_initial_lair(self) -> Tuple[lair.Land, str]:
-        with open(self.jsonpath) as f:
+        with self._open(self.INITIAL_LAIR) as f:
             initial = json.load(f)
         if self.parse_conf.server_emojis:
             r0_key = ":IncarnaAspectLair:"
@@ -212,7 +215,7 @@ class Parser:
         return land
 
     def read_actions_csv(self) -> Iterator[CsvAction]:
-        with open(self.actionspath, encoding="utf-8") as f:
+        with self._open(self.ACTIONS) as f:
             it = iter(csv.reader(f))
             next(it)  # throw away header row
             yield from (CsvAction(*cast(Any, row)) for row in it)
@@ -227,7 +230,7 @@ class Parser:
         ignored: List[lair.Land] = []
 
         map = Map144P()
-        with open(self.weaves) as f:
+        with self._open(self.WEAVES) as f:
             weaves = json.load(f)
         for weave in weaves:
             first, second = weave.split(",")
@@ -236,7 +239,7 @@ class Parser:
             except KeyError:
                 pass
 
-        with open(self.csvpath, encoding="utf-8") as f:
+        with self._open(self.START) as f:
             it = iter(csv.reader(f))
             next(it)  # throw away header row
             for row in it:
