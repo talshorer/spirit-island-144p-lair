@@ -21,6 +21,7 @@ def ensure_map() -> None:
 def tryone(
     lands: List[str],
     filter_coastal: bool = True,
+    construct_paths: bool = False,
 ) -> Tuple[
     int,
     List[str],
@@ -42,7 +43,8 @@ def tryone(
             best = all_dist.get(k)
             if best is None or best > v:
                 all_dist[k] = v
-                all_paths[k] = dijkstra.construct_path(prev, src, k)
+                if construct_paths:
+                    all_paths[k] = dijkstra.construct_path(prev, src, k)
     by_dist: Dict[int, List[str]] = collections.defaultdict(list)
     for k, v in all_dist.items():
         land = map.land(k)
@@ -123,7 +125,7 @@ def main() -> None:
             by_dist,
             all_dist,
             all_paths,
-        ) = tryone(args.lands, filter_coastal=args.coastal)
+        ) = tryone(args.lands, filter_coastal=args.coastal, construct_paths=True)
         if args.path_to:
             for land in args.path_to:
                 print(all_dist[land], all_paths[land])
