@@ -74,21 +74,6 @@ def score(lair_conf: lair.LairConf, thelair: lair.LairState) -> Comparable:
     return (cleared_lands, thelair.r0.total_invaders())
 
 
-piece_names_text = lair.PieceNames(
-    explorer="explorer",
-    town="town",
-    city="city",
-    dahan="dahan",
-)
-
-piece_names_emoji = lair.PieceNames(
-    explorer=":InvaderExplorer:",
-    town=":InvaderTown:",
-    city=":InvaderCity:",
-    dahan=":Dahan:",
-)
-
-
 def log_entry_tgt_pieces_to_text(entry: action_log.LogEntry) -> str:
     return " ".join(f"{cnt} {tgt}" for _, tgt, cnt in entry.pieces() if cnt)
 
@@ -544,7 +529,9 @@ def main() -> None:
         blue=lair_innate_conf(input.get("blue_lair")),
         orange=lair_innate_conf(input.get("orange_lair")),
         reckless_offensive=input.get("reckless_offensive", []),
-        piece_names=piece_names_emoji if server_emojis else piece_names_text,
+        piece_names=(
+            parse.piece_names_emoji if server_emojis else parse.piece_names_text
+        ),
         show_range=args.show_range,
     )
     parse_conf = parse.ParseConf(

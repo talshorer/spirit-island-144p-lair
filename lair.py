@@ -51,21 +51,6 @@ class Land:
             tipe.select(self).cnt += mr.cnt
             mr.cnt = 0
 
-    def add_pieces(
-        self,
-        explorers: int,
-        towns: int,
-        cities: int,
-        dahan: int,
-        allow_negative: bool = False,
-    ) -> None:
-        for piece, added in zip(
-            (self.explorers, self.towns, self.cities, self.dahan),
-            (explorers, towns, cities, dahan),
-        ):
-            piece.cnt += added
-            assert allow_negative or piece.cnt >= 0, f"land {self.key}"
-
     def total_invaders(self) -> int:
         return self.explorers.cnt + self.towns.cnt + self.cities.cnt
 

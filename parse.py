@@ -11,6 +11,20 @@ import lair
 from adjacency.board_layout import Terrain
 from adjacency.gen_144p import Map144P
 
+piece_names_text = lair.PieceNames(
+    explorer="explorer",
+    town="town",
+    city="city",
+    dahan="dahan",
+)
+
+piece_names_emoji = lair.PieceNames(
+    explorer=":InvaderExplorer:",
+    town=":InvaderTown:",
+    city=":InvaderCity:",
+    dahan=":Dahan:",
+)
+
 
 def to_int(s: str) -> int:
     if s == "":
@@ -83,13 +97,19 @@ class CsvAction:
                         conf=lands.lair_conf,
                     )
                     lands.distant[key] = land
-            land.add_pieces(
-                mult * to_int(self.explorers),
-                mult * to_int(self.towns),
-                mult * to_int(self.cities),
-                mult * to_int(self.dahan),
-                allow_negative,
-            )
+            for piece, added in zip(
+                (land.explorers, land.towns, land.cities, land.dahan),
+                (self.explorers, self.towns, self.cities, self.dahan),
+            ):
+                delta = mult * to_int(added)
+                piece.cnt += delta
+                if not allow_negative and piece.cnt < 0:
+                    piece_name = piece.tipe.name(piece_names_text)
+                    orig = piece.cnt - delta
+                    raise ValueError(
+                        f"action {self.action_id} ({self.action_name}) is trying to substract {added} {piece_name} from {land.key}, but there are only {orig}"
+                    )
+                assert allow_negative or piece.cnt >= 0, f"land {land.key}"
 
 
 class DelayedActions:
