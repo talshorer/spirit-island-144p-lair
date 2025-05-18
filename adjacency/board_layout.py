@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import dataclasses
 import enum
-import json
 from typing import Any, Callable, Dict, Optional, Self, Set, cast
+
+import json5
 
 """
 For a given list of boards (in the specified format) -
@@ -201,8 +202,8 @@ class Terrain(enum.Enum):
     Wetlands = "W"
 
 
-with open("config/board_layout.json", encoding="utf-8") as f:
-    _layout_data = json.load(f)
+with open("config/board_layout.json5", encoding="utf-8") as f:
+    _layout_data = json5.load(f)
 
 
 class Layout(enum.Enum):

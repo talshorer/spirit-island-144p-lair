@@ -1,10 +1,11 @@
 import argparse
 import collections
-import json
 import multiprocessing
 import sys
 import time
 from typing import Any, Dict, Iterator, List, Optional, Tuple
+
+import json5
 
 from . import dijkstra, gen_144p
 
@@ -169,7 +170,7 @@ def main() -> None:
             for score, lands in res
             if score is not None
         ]
-        json.dump(out, sys.stdout, ensure_ascii=False, indent=2)
+        json5.dump(out, sys.stdout, ensure_ascii=False, indent=2)
 
 
 if __name__ == "__main__":

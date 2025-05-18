@@ -1,17 +1,17 @@
 {
-  "actions": [
-    "blur"
+  actions: [
+    "blur",
   ],
-  "land_priority": "WC",
-  "blue_lair": {
-    "reserve_gathers": 19,
-    "max_range": 3
+  land_priority: "WC",
+  blue_lair: {
+    reserve_gathers: 19,
+    max_range: 3,
   },
-  "orange_lair": {
-    "max_range": 3
+  orange_lair: {
+    max_range: 3,
   },
-  "ignore_lands": [
-    "🐑P6",
+  ignore_lands: [
+    "🐑P6", // you can totally comment here and explain why we ignore this
     "🐑P7",
     "🤖U1",
     "🤖U2",
@@ -29,6 +29,6 @@
     "🤖P1",
     "🐑Q5",
     "🍌Q6",
-    "🍌Q7"
-  ]
+    "🍌Q7",
+  ],
 }

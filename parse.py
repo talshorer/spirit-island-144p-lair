@@ -1,10 +1,11 @@
 import collections
 import csv
 import dataclasses
-import json
 import os
 from io import TextIOWrapper
 from typing import Any, Dict, Iterator, List, Tuple, cast
+
+import json5
 
 import action_log
 import lair
@@ -191,9 +192,9 @@ class DelayedActions:
 
 class Parser:
     START = "start.csv"
-    INITIAL_LAIR = "initial_lair.json"
+    INITIAL_LAIR = "initial_lair.json5"
     ACTIONS = "actions.csv"
-    WEAVES = "weaves.json"
+    WEAVES = "weaves.json5"
 
     def __init__(
         self,
@@ -211,7 +212,7 @@ class Parser:
 
     def _parse_initial_lair(self) -> Tuple[lair.Land, str]:
         with self._open(self.INITIAL_LAIR) as f:
-            initial = json.load(f)
+            initial = json5.load(f)
         if self.parse_conf.server_emojis:
             r0_key = ":IncarnaAspectLair:"
         else:
@@ -251,7 +252,7 @@ class Parser:
 
         map = Map144P()
         with self._open(self.WEAVES) as f:
-            weaves = json.load(f)
+            weaves = json5.load(f)
         for weave in weaves:
             first, second = weave.split(",")
             try:

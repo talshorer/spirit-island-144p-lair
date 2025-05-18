@@ -4,13 +4,14 @@ import csv
 import dataclasses
 import enum
 import itertools
-import json
 import multiprocessing
 import os
 import shutil
 import sys
 import traceback
 from typing import Any, Dict, List, Optional, Protocol, Self, Tuple, TypeVar
+
+import json5
 
 import action_log
 import lair
@@ -513,8 +514,8 @@ def lair_innate_conf(data: Optional[Dict[str, Any]]) -> lair.LairInnateConf:
 def main() -> None:
     args = parse_args()
     config_dir = f"config/turn{args.turn}"
-    with open(os.path.join(config_dir, "input.json"), encoding="utf-8") as f:
-        input = json.load(f)
+    with open(os.path.join(config_dir, "input.json5"), encoding="utf-8") as f:
+        input = json5.load(f)
     res: List[ActionSeqResult] = []
     if args.force_line:
         action_seqs = set([tuple(args.force_line)])
