@@ -21,9 +21,11 @@ class LogEntry:
     text: Optional[str] = None
     src_land: Optional[str] = None
     tgt_land: Optional[str] = None
+    intermediate_lands: Optional[List[str]] = None
     src_piece: Union[str | List[str]] = ""
     tgt_piece: Union[str | List[str]] = ""
     count: Union[int | List[int]] = 0
+    mult: int = 1
 
     @staticmethod
     def _listify_one(v: Union[T | List[T]]) -> List[T]:
@@ -50,8 +52,8 @@ class LogEntry:
 
     def total_count(self) -> int:
         if isinstance(self.count, int):
-            return self.count
-        return sum(self.count)
+            return self.count * self.mult
+        return sum(self.count) * self.mult
 
 
 class Actionlog:
@@ -77,6 +79,8 @@ class Actionlog:
             and entry.text == last_entry.text
             and entry.src_land == last_entry.src_land
             and entry.tgt_land == last_entry.tgt_land
+            and entry.intermediate_lands == last_entry.intermediate_lands
+            and entry.mult == last_entry.mult
         )
 
     def entry(self, entry: LogEntry) -> None:

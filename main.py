@@ -89,7 +89,10 @@ def log_entry_to_text(entry: action_log.LogEntry) -> str:
             assert entry.text
             return entry.text
         case action_log.Action.GATHER:
-            return f"gather {log_entry_src_pieces_to_text(entry)} from {entry.src_land} to {entry.tgt_land} (total {entry.total_count()})"
+            intermediate = "".join(
+                f" to {land}" for land in (entry.intermediate_lands or [])
+            )
+            return f"gather {log_entry_src_pieces_to_text(entry)} from {entry.src_land}{intermediate} to {entry.tgt_land} (total {entry.total_count()})"
         case action_log.Action.ADD:
             return f"add {log_entry_tgt_pieces_to_text(entry)} in {entry.tgt_land} (total {entry.total_count()})"
         case action_log.Action.DESTROY:
@@ -247,7 +250,7 @@ def process_diffview(
     for a, b in itertools.chain(
         zip(orig_lair.state.r1, thelair.r1),
         zip(orig_lair.state.r2, thelair.r2),
-        zip(orig_lair.state.ignored, thelair.ignored),
+        zip(orig_lair.state.unpathable, thelair.unpathable),
     ):
         all_diff.append(landdiff(thelair.dist[a.key], a, b, args))
     all_diff.sort()
@@ -534,12 +537,12 @@ def main() -> None:
             parse.piece_names_emoji if server_emojis else parse.piece_names_text
         ),
         show_range=args.show_range,
+        ignore_lands=input.get("ignore_lands", []),
     )
     parse_conf = parse.ParseConf(
         directory=config_dir,
         server_emojis=server_emojis,
         log_prestart=log_prestart,
-        ignore_lands=input.get("ignore_lands", []),
     )
     parser = parse.Parser(
         lair_conf=lair_conf,

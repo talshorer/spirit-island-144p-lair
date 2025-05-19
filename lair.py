@@ -209,6 +209,7 @@ class LairConf:
     reckless_offensive: List[str]
     piece_names: PieceNames
     show_range: bool
+    ignore_lands: List[str]
 
     def _land_type_priority(self, land_type: str) -> int:
         try:
@@ -231,7 +232,7 @@ class LairState:
     r0: Land
     r1: List[Land]
     r2: List[Land]
-    ignored: List[Land]
+    unpathable: List[Land]
     log: Actionlog
     dist: Dict[str, int]
     total_gathers: int = 0
@@ -265,7 +266,7 @@ def construct_distance_map(
         prev_land = land.key
         ignored = False
         while prev_land != src:
-            if prev_land not in lands:
+            if prev_land in conf.ignore_lands:
                 ignored = True
                 break
             prev_land = prev[prev_land]
@@ -279,7 +280,6 @@ class Lair:
     def __init__(
         self,
         lands: Dict[str, Land],
-        ignored: List[Land],
         src: str,
         conf: LairConf,
         log: Actionlog,
@@ -298,6 +298,7 @@ class Lair:
         r0 = lands[LAIR_KEY]
         r1 = []
         r2 = []
+        unpathable = []
         for key, land in lands.items():
             if key == LAIR_KEY or key not in prev or dist[key] == 0:
                 continue
@@ -309,16 +310,36 @@ class Lair:
             elif self._r1_gathers_to(land, dist) is not None:
                 r2.append(land)
             else:
-                ignored.append(land)
+                unpathable.append(land)
 
         self.state = LairState(
             r0=r0,
             r1=r1,
             r2=r2,
-            ignored=ignored,
+            unpathable=unpathable,
             log=log,
             dist=dist,
         )
+        self.gather_cost = {
+            key: self._calc_gather_cost(lands[key]) for key in self.gathers_to.keys()
+        }
+
+    def _calc_gather_cost(self, land: Land) -> int:
+        cost = 0
+        while True:
+            cost += 1
+            prev = self.gathers_to.get(land.key)
+            if prev is self.state.r0 or not prev:
+                return cost
+            land = prev
+            if prev.key in self.conf.ignore_lands:
+                continue
+            coastal = self.map.land(land.key).coastal
+            if self.conf.land_type_priority(prev.land_type, coastal) < len(
+                self.conf.land_priority
+            ):
+                continue
+            return cost
 
     def _r1_gathers_to(
         self,
@@ -361,9 +382,19 @@ class Lair:
         return actual
 
     def _gather(self, tipe: PieceType, land: Land, cnt: int) -> int:
-        gathers_to = self.gathers_to[land.key]
+        if land.key in self.conf.ignore_lands:
+            return 0
+        cost = self.gather_cost[land.key]
+        intermediate_lands: List[str] = []
+        last: Optional[Land] = land
+        assert last
+        for _ in range(cost - 1):
+            last = self.gathers_to[last.key]
+            assert last
+            intermediate_lands.append(last.display_name)
+        gathers_to = self.gathers_to[last.key]
         assert gathers_to
-        actual = self._xchg(land, tipe, tipe.select(gathers_to), cnt)
+        actual = self._xchg(land, tipe, tipe.select(gathers_to), cnt // cost)
         self.state.total_gathers += actual
         if actual:
             piece_name = tipe.name(self.conf.piece_names)
@@ -372,9 +403,11 @@ class Lair:
                     action=Action.GATHER,
                     src_land=land.display_name,
                     src_piece=piece_name,
+                    intermediate_lands=intermediate_lands,
                     tgt_land=gathers_to.display_name,
                     tgt_piece=piece_name,
                     count=actual,
+                    mult=cost,
                 )
             )
         return actual
@@ -431,7 +464,7 @@ class Lair:
     def _least_r1_dahan_land_priority_key(
         self,
         land: Land,
-    ) -> Tuple[int, int, int]:
+    ) -> Tuple[int, int, int, int]:
         try:
             coastal = self.map.land(land.key).coastal
         except KeyError:
@@ -442,7 +475,9 @@ class Lair:
         r1_land = self._r1_gathers_to(land, self.state.dist)
         assert r1_land
 
-        return (land_priority, dist, r1_land.dahan.cnt)
+        ignored = land.key in self.conf.ignore_lands
+
+        return (ignored, land_priority, dist, r1_land.dahan.cnt)
 
     def _lair3(self, conf: LairInnateConf) -> None:
         r0 = self.state.r0

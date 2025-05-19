@@ -38,7 +38,6 @@ class ParseConf:
     directory: str
     server_emojis: bool
     log_prestart: bool
-    ignore_lands: List[str]
 
     def land_display_name(self, key: str, land_type: str) -> str:
         if self.server_emojis:
@@ -248,7 +247,6 @@ class Parser:
         lands: Dict[str, lair.Land] = {}
 
         lands[lair.LAIR_KEY], src = self._parse_initial_lair()
-        ignored: List[lair.Land] = []
 
         map = Map144P()
         with self._open(self.WEAVES) as f:
@@ -286,10 +284,7 @@ class Parser:
                     dahan=to_int(dahan),
                     conf=self.lair_conf,
                 )
-                if key in self.parse_conf.ignore_lands:
-                    ignored.append(land)
-                else:
-                    lands[key] = land
+                lands[key] = land
 
         log = action_log.Actionlog()
         csv_actions = DelayedActions(lands, self.lair_conf, self.parse_conf, log)
@@ -300,7 +295,6 @@ class Parser:
         return (
             lair.Lair(
                 lands=lands,
-                ignored=ignored,
                 src=src,
                 conf=self.lair_conf,
                 log=log,
