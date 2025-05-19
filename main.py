@@ -472,11 +472,6 @@ def parse_args() -> argparse.Namespace:
         help="Display postravage results instead of preravage",
     )
     parser.add_argument(
-        "--show-range",
-        action="store_true",
-        help="Show range in each land's display name",
-    )
-    parser.add_argument(
         "--best",
         type=int,
         default=1,
@@ -536,7 +531,6 @@ def main() -> None:
         piece_names=(
             parse.piece_names_emoji if server_emojis else parse.piece_names_text
         ),
-        show_range=args.show_range,
         ignore_lands=input.get("ignore_lands", []),
     )
     parse_conf = parse.ParseConf(

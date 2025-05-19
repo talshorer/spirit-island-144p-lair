@@ -208,7 +208,6 @@ class LairConf:
     orange: LairInnateConf
     reckless_offensive: List[str]
     piece_names: PieceNames
-    show_range: bool
     ignore_lands: List[str]
 
     def _land_type_priority(self, land_type: str) -> int:
@@ -302,8 +301,7 @@ class Lair:
         for key, land in lands.items():
             if key == LAIR_KEY or key not in prev or dist[key] == 0:
                 continue
-            if conf.show_range:
-                land.display_name += f" ({dist[key]})"
+            land.display_name += f" [{dist[key]}]"
             if dist[key] == 1:
                 self.gathers_to[key] = r0
                 r1.append(land)
