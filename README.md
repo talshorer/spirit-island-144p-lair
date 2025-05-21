@@ -16,7 +16,7 @@ LRLR optimization takes its input in the form of four files:
   - `actions`: Array of actions that are available to Lair on top of the Lair innates themselves (which don't need to be specified). An action that is available multiple times should be specified multiple times.
   - `land_priority`: terrain priority to clear first when considering how to distribute Lair actions. It's recommended to set ravaging terrains first, then building terrains.
   - `ignore_lands`: Array of lands to be ignored by Lair actions. These lands will not be gathered from, and gathering into an ignored land will cause an additional gather to bypass it.
-  - `reckless_offensive`: Array of lands to reserve for the "Reckless Offensive" event, such that they're eligible to receive blight instead of the Lair. Note that setting a range-1 land here currently may lead to illegal ravage results when there's excess damage.
+  - `leave_behind`: Object representing lands in which some pieces should be left behind by lair actions. Each key in this object should be a land key, and the value should be an object with optional keys `explorer`/`town`/`city`/`dahan` and integer values representing how many invaders should be left behind. Note that setting a range-1 land here currently may lead to illegal ravage results when there's excess damage.
   - `blue_lair`/`orange_lair`: Configuration for each Lair's innate. An Object with the following keys:
     - `reserve_gathers`: Amount of gathers to be manually reserved from the innate's third threshold. This many gathers will not be performed, allowing players to instead gather through Finder adjacency for other purposes.
     - `max_range`: Maximum range to perform gathers. Matches the Lair's Air element.

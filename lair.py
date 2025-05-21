@@ -77,6 +77,21 @@ class PieceNames:
     dahan: str
 
 
+piece_names_text = PieceNames(
+    explorer="explorer",
+    town="town",
+    city="city",
+    dahan="dahan",
+)
+
+piece_names_emoji = PieceNames(
+    explorer=":InvaderExplorer:",
+    town=":InvaderTown:",
+    city=":InvaderCity:",
+    dahan=":Dahan:",
+)
+
+
 class _PieceType(abc.ABC):
     @classmethod
     def new(cls, cnt: int = 0) -> Pieces:
@@ -206,7 +221,7 @@ class LairConf:
     land_priority: str
     blue: LairInnateConf
     orange: LairInnateConf
-    reckless_offensive: List[str]
+    leave_behind: Dict[str, Dict[str, int]]
     piece_names: PieceNames
     ignore_lands: List[str]
 
@@ -367,12 +382,9 @@ class Lair:
         tgt: Pieces,
         cnt: int,
     ) -> int:
-        if any(
-            land_key in src_land.key for land_key in self.conf.reckless_offensive
-        ) and src_tipe in (Town, Dahan):
-            leave = 2
-        else:
-            leave = 0
+        leave = self.conf.leave_behind.get(src_land.key, {}).get(
+            src_tipe.name(piece_names_text), 0
+        )
         src = src_tipe.select(src_land)
         actual = min(max(src.cnt - leave, 0), cnt)
         src.cnt -= actual

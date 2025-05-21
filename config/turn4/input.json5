@@ -16,10 +16,22 @@
   ignore_lands: [
     "🇲🇺R2",
   ],
-  reckless_offensive: [
-    "⚡S1",
-    "🇲🇺R7",
-    "🍪S8",
-    "💖S8",
-  ],
+  leave_behind: {
+    "⚡S1": {
+      dahan: 2,
+      town: 2,
+    },
+    "🇲🇺R7": {
+      dahan: 2,
+      town: 2,
+    },
+    "🍪S8": {
+      dahan: 2,
+      town: 2,
+    },
+    "💖S8": {
+      dahan: 2,
+      town: 2,
+    },
+  },
 }

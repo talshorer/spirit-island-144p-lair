@@ -527,9 +527,9 @@ def main() -> None:
         land_priority=input.get("land_priority", ""),
         blue=lair_innate_conf(input.get("blue_lair")),
         orange=lair_innate_conf(input.get("orange_lair")),
-        reckless_offensive=input.get("reckless_offensive", []),
+        leave_behind=input.get("leave_behind", {}),
         piece_names=(
-            parse.piece_names_emoji if server_emojis else parse.piece_names_text
+            lair.piece_names_emoji if server_emojis else lair.piece_names_text
         ),
         ignore_lands=input.get("ignore_lands", []),
     )

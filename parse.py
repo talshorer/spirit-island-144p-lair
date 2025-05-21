@@ -12,20 +12,6 @@ import lair
 from adjacency.board_layout import Terrain
 from adjacency.gen_144p import Map144P
 
-piece_names_text = lair.PieceNames(
-    explorer="explorer",
-    town="town",
-    city="city",
-    dahan="dahan",
-)
-
-piece_names_emoji = lair.PieceNames(
-    explorer=":InvaderExplorer:",
-    town=":InvaderTown:",
-    city=":InvaderCity:",
-    dahan=":Dahan:",
-)
-
 
 def to_int(s: str) -> int:
     if s == "":
@@ -104,7 +90,7 @@ class CsvAction:
                 delta = mult * to_int(added)
                 piece.cnt += delta
                 if not allow_negative and piece.cnt < 0:
-                    piece_name = piece.tipe.name(piece_names_text)
+                    piece_name = piece.tipe.name(lair.piece_names_text)
                     orig = piece.cnt - delta
                     raise ValueError(
                         f"action {self.action_id} ({self.action_name}) is trying to substract {added} {piece_name} from {land.key}, but there are only {orig}"
