@@ -176,6 +176,12 @@ class Map144P:
     def land(self, key: str) -> Land:
         return self.boards[key[:-1]].lands[int(key[-1])]
 
+    def weave(self, key1: str, key2: str) -> None:
+        try:
+            self.land(key1).link(self.land(key2), 0)
+        except KeyError:
+            pass
+
 
 def main() -> None:
     map = Map144P()

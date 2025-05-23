@@ -238,11 +238,7 @@ class Parser:
         with self._open(self.WEAVES) as f:
             weaves = json5.load(f)
         for weave in weaves:
-            first, second = weave.split(",")
-            try:
-                map.land(first).link(map.land(second), 0)
-            except KeyError:
-                pass
+            map.weave(*weave.split(","))
 
         with self._open(self.START) as f:
             it = iter(csv.reader(f))

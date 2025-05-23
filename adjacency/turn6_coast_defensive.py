@@ -13,14 +13,20 @@ map: Optional[gen_144p.Map144P] = None
 dijstra_cache: Dict[str, Tuple[Dict[str, int], Dict[str, str]]] = {}
 
 
-def ensure_map() -> None:
+def ensure_map(weaves: Optional[str]) -> None:
     global map
     if map is None:
         map = gen_144p.Map144P()
+        if weaves:
+            with open(weaves, encoding="utf-8") as f:
+                data = json5.load(f)
+            for weave in data:
+                map.weave(*weave.split(","))
 
 
 def tryone(
     lands: List[str],
+    weaves: Optional[str] = None,
     filter_coastal: bool = True,
     construct_paths: bool = False,
 ) -> Tuple[
@@ -30,7 +36,7 @@ def tryone(
     Dict[str, int],
     Dict[str, List[str]],
 ]:
-    ensure_map()
+    ensure_map(weaves)
     assert map
     all_dist: Dict[str, int] = {}
     all_paths: Dict[str, List[str]] = {}
@@ -56,7 +62,7 @@ def tryone(
 
 
 def tryone_no_dist(lands: List[str]) -> Tuple[Optional[int], List[str]]:
-    ensure_map()
+    ensure_map(None)
     assert map
     try:
         for land in lands:
@@ -107,6 +113,10 @@ def main() -> None:
         help="Lands from which to measure distance",
     )
     parser.add_argument(
+        "--weaves",
+        help="Path to weaves file",
+    )
+    parser.add_argument(
         "--path-to",
         nargs="*",
         default=[],
@@ -126,7 +136,12 @@ def main() -> None:
             by_dist,
             all_dist,
             all_paths,
-        ) = tryone(args.lands, filter_coastal=args.coastal, construct_paths=True)
+        ) = tryone(
+            args.lands,
+            args.weaves,
+            filter_coastal=args.coastal,
+            construct_paths=True,
+        )
         if args.path_to:
             for land in args.path_to:
                 print(all_dist[land], all_paths[land])
