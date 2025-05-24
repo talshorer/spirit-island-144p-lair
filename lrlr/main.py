@@ -530,6 +530,7 @@ def main() -> None:
             lair.piece_names_emoji if server_emojis else lair.piece_names_text
         ),
         ignore_lands=input.get("ignore_lands", []),
+        priority_lands=input.get("priority_lands", []),
     )
     parse_conf = parse.ParseConf(
         directory=config_dir,

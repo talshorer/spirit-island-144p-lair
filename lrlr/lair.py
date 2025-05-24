@@ -227,6 +227,7 @@ class LairConf:
         default_factory=lambda: piece_names_text
     )
     ignore_lands: List[str] = dataclasses.field(default_factory=list)
+    priority_lands: List[str] = dataclasses.field(default_factory=list)
 
     def _terrain_priority(self, land_type: str) -> int:
         try:
@@ -234,8 +235,11 @@ class LairConf:
         except ValueError:
             return len(self.terrain_priority)
 
-    def land_priority(self, land_type: str, coastal: bool) -> int:
-        priority = self._terrain_priority(land_type)
+    def land_priority(self, land: Optional[Land], terrain: str, coastal: bool) -> int:
+        if land and land.key in self.priority_lands:
+            return -1
+
+        priority = self._terrain_priority(terrain)
         if coastal:
             priority = min(priority, self._terrain_priority("C"))
         return priority
@@ -271,7 +275,7 @@ def construct_distance_map(
         dist: Dict[str, int],
         prev: Dict[str, str],
     ) -> dijkstra.Comparable:
-        priority = conf.land_priority(land.terrain.value, land.coastal)
+        priority = conf.land_priority(None, land.terrain.value, land.coastal)
         key = land.key
         while dist[key] > 1 and key in prev:
             key = prev[key]
@@ -351,7 +355,7 @@ class Lair:
             if prev.key in self.conf.ignore_lands:
                 continue
             coastal = self.map.land(land.key).coastal
-            if self.conf.land_priority(prev.land_type, coastal) < len(
+            if self.conf.land_priority(prev, prev.land_type, coastal) < len(
                 self.conf.terrain_priority
             ):
                 continue
@@ -482,7 +486,7 @@ class Lair:
             coastal = self.map.land(land.key).coastal
         except KeyError:
             coastal = False
-        land_priority = self.conf.land_priority(land.land_type, coastal)
+        land_priority = self.conf.land_priority(land, land.land_type, coastal)
 
         dist = self.state.dist[land.key]
         r1_land = self._r1_gathers_to(land, self.state.dist)
