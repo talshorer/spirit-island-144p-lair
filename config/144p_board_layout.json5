@@ -38,6 +38,27 @@
       power: "cast_down",
       board: "🇲🇺P",
     },
+    {
+      power: "dream",
+      board: "🇲🇺V",
+      layout: "A", // TODO change this to the real layout once it's known
+      edges: {
+        clock3: {
+          board: "👻T",
+          edge: "clock6",
+        },
+        clock6: {
+          board: "🇲🇺U",
+          edge: "clock6",
+        }, // clock9 not connected
+      },
+      corners: {
+        clock11: {
+          board: "🇲🇺Q",
+          corner: "clock7",
+        }, // other corners are implicit from edges
+      },
+    },
   ],
   blue: {
     rim: [

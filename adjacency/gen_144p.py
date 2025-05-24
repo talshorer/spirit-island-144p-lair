@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, List
 import json5
 
 from . import dijkstra
-from .board_layout import Board, Edge, Land, Layout
+from .board_layout import Board, BoardEdge, Corner, Edge, Land, Layout
 
 """
 For the 144p game specifically -
@@ -167,6 +167,8 @@ class Map144P:
                     self._cast_down(mod)
                 case "deeps":
                     self._deeps(mod)
+                case "dream":
+                    self._dream(mod)
                 case unknown:
                     raise ValueError(f"Unknown modification type {unknown}")
 
@@ -179,6 +181,43 @@ class Map144P:
 
     def _deeps(self, data: Dict[str, Any]) -> None:
         self.land(data["land"]).sink(deeps=True)
+
+    @staticmethod
+    def get_dream_edge(board: Board, edge_key: str) -> BoardEdge:
+        assert edge_key.islower()
+        edge = getattr(Edge, edge_key.upper())
+        return board.edges[edge]
+
+    @staticmethod
+    def get_dream_corner(board: Board, corner_key: str) -> Land:
+        assert corner_key.islower()
+        corner = getattr(Corner, corner_key.upper())
+        land_number = board.layout.get_corner(corner)
+        return board.lands[land_number]
+
+    def _dream(self, data: Dict[str, Any]) -> None:
+
+        layout = getattr(Layout, data["layout"])
+        board = Board(data["board"], layout)
+        self.boards[board.name] = board
+
+        for edge_key, edge_value in data["edges"].items():
+            assert edge_key.islower()
+            edge = self.get_dream_edge(board, edge_key)
+            other_edge = self.get_dream_edge(
+                self.boards[edge_value["board"]],
+                edge_value["edge"],
+            )
+            edge.link(other_edge)
+
+        for corner_key, corner_value in data["corners"].items():
+            assert corner_key.islower()
+            corner = self.get_dream_corner(board, corner_key)
+            other_corner = self.get_dream_corner(
+                self.boards[corner_value["board"]],
+                corner_value["corner"],
+            )
+            corner.link(other_corner)
 
     def land(self, key: str) -> Land:
         return self.boards[key[:-1]].lands[int(key[-1])]
