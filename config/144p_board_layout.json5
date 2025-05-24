@@ -1,21 +1,43 @@
 {
-  cast_down: {
-    boards: [
-      "🍪P",
-      "🍪U",
-      "🐀U",
-      "♾️U",
-      "🇲🇺P",
-    ],
-    lands: [
-      "🍪Q8",
-      "🐀T2",
-    ],
-  },
-  deeps: [
-    "⛰️R1",
-    "⛰️R2",
-    "⛰️R3",
+  modifications: [
+    {
+      power: "cast_down",
+      board: "🍪P",
+      weave: [
+        "🍪Q8",
+      ],
+    },
+    {
+      power: "cast_down",
+      board: "♾️U",
+    },
+    {
+      power: "deeps",
+      land: "⛰️R1",
+    },
+    {
+      power: "deeps",
+      land: "⛰️R3",
+    },
+    {
+      power: "deeps",
+      land: "⛰️R2",
+    },
+    {
+      power: "cast_down",
+      board: "🍪U",
+    },
+    {
+      power: "cast_down",
+      board: "🐀U",
+      weave: [
+        "🐀T2",
+      ],
+    },
+    {
+      power: "cast_down",
+      board: "🇲🇺P",
+    },
   ],
   blue: {
     rim: [

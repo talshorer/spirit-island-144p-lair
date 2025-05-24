@@ -1,6 +1,6 @@
 import collections
 import itertools
-from typing import Callable, Dict, List
+from typing import Any, Callable, Dict, List
 
 import json5
 
@@ -54,8 +54,7 @@ class Map144P:
         self._load_continent("blue")
         self._load_continent("orange")
         self._connect_continents()
-        self._cast_down()
-        self._deeps()
+        self._run_modifications()
 
     def _load_continent(self, name: str) -> None:
         data = self.data[name]
@@ -161,17 +160,25 @@ class Map144P:
                 rim2_board = self.boards[f"{rim2}{letter}"]
                 rim1_board.link_archipelago(rim2_board)
 
-    def _cast_down(self) -> None:
-        data = self.data["cast_down"]
-        for board in data["boards"]:
-            self.boards[board].cast_down()
-            del self.boards[board]
-        for land in data["lands"]:
+    def _run_modifications(self) -> None:
+        for mod in self.data["modifications"]:
+            match mod["power"]:
+                case "cast_down":
+                    self._cast_down(mod)
+                case "deeps":
+                    self._deeps(mod)
+                case unknown:
+                    raise ValueError(f"Unknown modification type {unknown}")
+
+    def _cast_down(self, data: Dict[str, Any]) -> None:
+        board = data["board"]
+        self.boards[board].cast_down()
+        del self.boards[board]
+        for land in data.get("weave", ()):
             self.land(land).sink(deeps=False)
 
-    def _deeps(self) -> None:
-        for land in self.data["deeps"]:
-            self.land(land).sink(deeps=True)
+    def _deeps(self, data: Dict[str, Any]) -> None:
+        self.land(data["land"]).sink(deeps=True)
 
     def land(self, key: str) -> Land:
         return self.boards[key[:-1]].lands[int(key[-1])]
