@@ -68,7 +68,7 @@ def score(lair_conf: lair.LairConf, thelair: lair.LairState) -> Comparable:
     cleared_lands = sum(
         int(land.total_invaders() == 0)
         for land in thelair.r2
-        if land.land_type in lair_conf.land_priority
+        if land.land_type in lair_conf.terrain_priority
     )
     return (cleared_lands, thelair.r0.total_invaders())
 
@@ -522,7 +522,7 @@ def main() -> None:
     server_emojis = args.split
     log_prestart = args.output is Output.CAT_CAFE
     lair_conf = lair.LairConf(
-        land_priority=input.get("land_priority", ""),
+        terrain_priority=input.get("terrain_priority", ""),
         blue=lair_innate_conf(input.get("blue_lair")),
         orange=lair_innate_conf(input.get("orange_lair")),
         leave_behind=input.get("leave_behind", {}),

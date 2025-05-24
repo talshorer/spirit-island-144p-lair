@@ -2,7 +2,7 @@
   actions: [
     "blur",
   ],
-  land_priority: "WC",
+  terrain_priority: "WC",
   blue_lair: {
     reserve_gathers: 19,
     max_range: 3,

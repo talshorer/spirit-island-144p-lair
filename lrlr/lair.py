@@ -219,7 +219,7 @@ class LairInnateConf:
 
 @dataclasses.dataclass
 class LairConf:
-    land_priority: str = ""
+    terrain_priority: str = ""
     blue: LairInnateConf = dataclasses.field(default_factory=LairInnateConf)
     orange: LairInnateConf = dataclasses.field(default_factory=LairInnateConf)
     leave_behind: Dict[str, Dict[str, int]] = dataclasses.field(default_factory=dict)
@@ -228,16 +228,16 @@ class LairConf:
     )
     ignore_lands: List[str] = dataclasses.field(default_factory=list)
 
-    def _land_type_priority(self, land_type: str) -> int:
+    def _terrain_priority(self, land_type: str) -> int:
         try:
-            return self.land_priority.index(land_type)
+            return self.terrain_priority.index(land_type)
         except ValueError:
-            return len(self.land_priority)
+            return len(self.terrain_priority)
 
-    def land_type_priority(self, land_type: str, coastal: bool) -> int:
-        priority = self._land_type_priority(land_type)
+    def land_priority(self, land_type: str, coastal: bool) -> int:
+        priority = self._terrain_priority(land_type)
         if coastal:
-            priority = min(priority, self._land_type_priority("C"))
+            priority = min(priority, self._terrain_priority("C"))
         return priority
 
 
@@ -271,7 +271,7 @@ def construct_distance_map(
         dist: Dict[str, int],
         prev: Dict[str, str],
     ) -> dijkstra.Comparable:
-        priority = conf.land_type_priority(land.terrain.value, land.coastal)
+        priority = conf.land_priority(land.terrain.value, land.coastal)
         key = land.key
         while dist[key] > 1 and key in prev:
             key = prev[key]
@@ -351,8 +351,8 @@ class Lair:
             if prev.key in self.conf.ignore_lands:
                 continue
             coastal = self.map.land(land.key).coastal
-            if self.conf.land_type_priority(prev.land_type, coastal) < len(
-                self.conf.land_priority
+            if self.conf.land_priority(prev.land_type, coastal) < len(
+                self.conf.terrain_priority
             ):
                 continue
             return cost
@@ -482,7 +482,7 @@ class Lair:
             coastal = self.map.land(land.key).coastal
         except KeyError:
             coastal = False
-        land_priority = self.conf.land_type_priority(land.land_type, coastal)
+        land_priority = self.conf.land_priority(land.land_type, coastal)
 
         dist = self.state.dist[land.key]
         r1_land = self._r1_gathers_to(land, self.state.dist)

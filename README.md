@@ -14,7 +14,7 @@ LRLR optimization takes its input in the form of four files:
   - Actions here _may_ have dependencies on Lair-related actions, and be executed after the Lair has reached some point in its execution. This can be achieved by setting a value in the `After Toplevel` column.
 - `config/turnX/input.json5` - additional configuration options to control what we want the Lair to do this turn. Options include:
   - `actions`: Array of actions that are available to Lair on top of the Lair innates themselves (which don't need to be specified). An action that is available multiple times should be specified multiple times.
-  - `land_priority`: terrain priority to clear first when considering how to distribute Lair actions. It's recommended to set ravaging terrains first, then building terrains.
+  - `terrain_priority`: terrain priority to clear first when considering how to distribute Lair actions. It's recommended to set ravaging terrains first, then building terrains.
   - `ignore_lands`: Array of lands to be ignored by Lair actions. These lands will not be gathered from, and gathering into an ignored land will cause an additional gather to bypass it.
   - `leave_behind`: Object representing lands in which some pieces should be left behind by lair actions. Each key in this object should be a land key, and the value should be an object with optional keys `explorer`/`town`/`city`/`dahan` and integer values representing how many invaders should be left behind. Note that setting a range-1 land here currently may lead to illegal ravage results when there's excess damage.
   - `blue_lair`/`orange_lair`: Configuration for each Lair's innate. An Object with the following keys:

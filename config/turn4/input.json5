@@ -5,7 +5,7 @@
     "call",
     "call",
   ],
-  land_priority: "MW",
+  terrain_priority: "MW",
   blue_lair: {
     reserve_gathers: 53,
     max_range: 2,
