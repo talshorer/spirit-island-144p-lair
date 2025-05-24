@@ -228,6 +228,7 @@ class LairConf:
     )
     ignore_lands: List[str] = dataclasses.field(default_factory=list)
     priority_lands: List[str] = dataclasses.field(default_factory=list)
+    slurp_to_lair: bool = False
 
     def _terrain_priority(self, land_type: str) -> int:
         try:
@@ -345,6 +346,11 @@ class Lair:
         }
 
     def _calc_gather_cost(self, land: Land) -> int:
+        if self.conf.slurp_to_lair:
+            dist = self.state.dist[land.key]
+            if dist == 1:
+                return 1
+            return self.state.dist[land.key] - 1
         cost = 0
         while True:
             cost += 1
@@ -403,6 +409,7 @@ class Lair:
             return 0
         cost = self.gather_cost[land.key]
         intermediate_lands: List[str] = []
+
         last: Optional[Land] = land
         assert last
         for _ in range(cost - 1):
@@ -411,6 +418,13 @@ class Lair:
             intermediate_lands.append(last.display_name)
         gathers_to = self.gathers_to[last.key]
         assert gathers_to
+
+        if self.state.dist.get(gathers_to.key) == 1 and gathers_to.dahan.cnt > 0:
+            intermediate_lands.append(gathers_to.display_name)
+            cost += 1
+            gathers_to = self.gathers_to[gathers_to.key]
+            assert gathers_to
+
         actual = self._xchg(land, tipe, tipe.select(gathers_to), cnt // cost)
         self.state.total_gathers += actual
         if actual:

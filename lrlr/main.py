@@ -505,6 +505,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Sort diffview by range rather than by island",
     )
+    parser.add_argument(
+        "--slurp-to-lair",
+        action="store_true",
+        help="Gather from any range all the way to lair with lair innate third threshold",
+    )
     return parser.parse_args()
 
 
@@ -541,6 +546,7 @@ def main() -> None:
         ),
         ignore_lands=input.get("ignore_lands", []),
         priority_lands=input.get("priority_lands", []),
+        slurp_to_lair=args.slurp_to_lair,
     )
     parse_conf = parse.ParseConf(
         directory=config_dir,
