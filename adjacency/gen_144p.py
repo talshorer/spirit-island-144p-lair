@@ -48,7 +48,7 @@ def link_rim(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None
 
 class Map144P:
     def __init__(self) -> None:
-        with open("config/144p_board_layout.json5") as f:
+        with open("config/144p_board_layout.json5", encoding="utf-8") as f:
             self.data = json5.load(f)
         self.boards: Dict[str, Board] = {}
         self._load_continent("blue")
