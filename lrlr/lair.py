@@ -213,18 +213,20 @@ class Dahan(_PieceType):
 
 @dataclasses.dataclass
 class LairInnateConf:
-    reserve_gathers: int
-    max_range: int
+    reserve_gathers: int = 0
+    max_range: int = 0
 
 
 @dataclasses.dataclass
 class LairConf:
-    land_priority: str
-    blue: LairInnateConf
-    orange: LairInnateConf
-    leave_behind: Dict[str, Dict[str, int]]
-    piece_names: PieceNames
-    ignore_lands: List[str]
+    land_priority: str = ""
+    blue: LairInnateConf = dataclasses.field(default_factory=LairInnateConf)
+    orange: LairInnateConf = dataclasses.field(default_factory=LairInnateConf)
+    leave_behind: Dict[str, Dict[str, int]] = dataclasses.field(default_factory=dict)
+    piece_names: PieceNames = dataclasses.field(
+        default_factory=lambda: piece_names_text
+    )
+    ignore_lands: List[str] = dataclasses.field(default_factory=list)
 
     def _land_type_priority(self, land_type: str) -> int:
         try:

@@ -22,8 +22,8 @@ def to_int(s: str) -> int:
 @dataclasses.dataclass
 class ParseConf:
     directory: str
-    server_emojis: bool
-    log_prestart: bool
+    server_emojis: bool = False
+    log_prestart: bool = False
 
     def land_display_name(self, key: str, land_type: str) -> str:
         if self.server_emojis:

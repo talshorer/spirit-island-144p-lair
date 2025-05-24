@@ -40,3 +40,11 @@ For a full list of commandline arguments, run
 ```
 python3 -m lrlr.main --help
 ```
+
+### Missing Start Data
+
+Run
+```
+python3 -m lrlr.missing_start_data --turn T --range R
+```
+to get a list of all lands in range `R` that are missing data in `config/turn{T}/start.csv`. This is useful during data collection for a for a specific turn.
