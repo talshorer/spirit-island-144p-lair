@@ -229,6 +229,7 @@ class LairConf:
     ignore_lands: List[str] = dataclasses.field(default_factory=list)
     priority_lands: List[str] = dataclasses.field(default_factory=list)
     slurp_to_lair: bool = False
+    display_name_range: bool = False
 
     def _terrain_priority(self, land_type: str) -> int:
         try:
@@ -324,7 +325,8 @@ class Lair:
         for key, land in lands.items():
             if key == LAIR_KEY or key not in prev or dist[key] == 0:
                 continue
-            land.display_name += f" [{dist[key]}]"
+            if conf.display_name_range:
+                land.display_name += f" [{dist[key]}]"
             if dist[key] == 1:
                 self.gathers_to[key] = r0
                 r1.append(land)

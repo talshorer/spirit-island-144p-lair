@@ -97,6 +97,9 @@ class CsvAction:
                     )
                 assert allow_negative or piece.cnt >= 0, f"land {land.key}"
 
+    def csv_data(self) -> Tuple[str, ...]:
+        return dataclasses.astuple(self)
+
 
 class DelayedActions:
     def __init__(
@@ -112,9 +115,11 @@ class DelayedActions:
         self.parse_conf = parse_conf
         self.lands = ActionCsvLands(near=near, distant={}, lair_conf=lair_conf)
         self.log = log
+        self.max_action_id = -1
 
     def push(self, action: CsvAction) -> None:
         self.actions[action.after_toplevel].append(action)
+        self.max_action_id = max(self.max_action_id, int(action.action_id))
         # when an action is split into multiple rows, we only want the first
         if action.action_id not in self.by_id:
             self.by_id[action.action_id] = action
@@ -150,6 +155,7 @@ class DelayedActions:
                 sublog.entry(
                     action_log.LogEntry(
                         action=action_log.Action.MANUAL,
+                        csv_data=action.csv_data(),
                         text=self.construct_action_text(action),
                         src_land=self.land_display_name(action.source_key),
                         tgt_land=self.land_display_name(action.destination_key),

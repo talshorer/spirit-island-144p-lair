@@ -19,6 +19,7 @@ class Action(enum.Enum):
 class LogEntry:
     action: Action = Action.COMMENT
     text: Optional[str] = None
+    csv_data: Optional[Tuple[str, ...]] = None
     src_land: Optional[str] = None
     tgt_land: Optional[str] = None
     intermediate_lands: Optional[List[str]] = None
