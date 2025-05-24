@@ -13,9 +13,7 @@ from typing import Any, Dict, List, Optional, Protocol, Self, Tuple, TypeVar
 
 import json5
 
-import action_log
-import lair
-import parse
+from . import action_log, lair, parse
 
 DISCORD_MESSAGE_LIMIT = 1900  # actually 2000, but we leave some space for a header
 DISCORD_EMOJI_COST = 21

@@ -4,7 +4,7 @@ This project aims to assist players of the Spirit Island 144p game in their gran
 
 ## LRLR optimization
 
-The Lair-Lair (LRLR) is able to gather and damage hundreds of invaders and affect doznes of lands every turn. `main.py` calculates turns for LRLR in a (somewhat) optimal manner, to ease the burden on players from manually finding optimal lines.
+The Lair-Lair (LRLR) is able to gather and damage hundreds of invaders and affect doznes of lands every turn. `lrlr/main.py` calculates turns for LRLR in a (somewhat) optimal manner, to ease the burden on players from manually finding optimal lines.
 
 LRLR optimization takes its input in the form of four files:
 - `config/turnX/initial_lair.json5` - initial number of invaders in the Lair.
@@ -23,7 +23,7 @@ LRLR optimization takes its input in the form of four files:
 
 The LRLR optimization tool can be run like
 ```
-python3 -m main --output log
+python3 -m lrlr.main --output log
 ```
 
 The possible output types are:
@@ -38,5 +38,5 @@ Additional useful arguments include:
 
 For a full list of commandline arguments, run
 ```
-python3 -m main --help
+python3 -m lrlr.main --help
 ```

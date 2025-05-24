@@ -6,8 +6,9 @@ import dataclasses
 import itertools
 from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type
 
-from action_log import Action, Actionlog, LogEntry
 from adjacency import board_layout, dijkstra, gen_144p
+
+from .action_log import Action, Actionlog, LogEntry
 
 
 @dataclasses.dataclass

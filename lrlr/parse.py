@@ -7,10 +7,10 @@ from typing import Any, Dict, Iterator, List, Tuple, cast
 
 import json5
 
-import action_log
-import lair
 from adjacency.board_layout import Terrain
 from adjacency.gen_144p import Map144P
+
+from . import action_log, lair
 
 
 def to_int(s: str) -> int:
