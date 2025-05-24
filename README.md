@@ -35,6 +35,7 @@ Additional useful arguments include:
 - `--split $DIRECTORY`: Split log/diff output into files of the correct size to be sent as discord messages. Those files will use server emojis from the _Spirit Island - Second Wave_ discord server.
 - `--split-header $HEADER` - append a string to the first line of each discord message. This is useful to indicate the finality state of the turn by appending one of ❌, ☑️, or ✅.
 - `--filter $EMOJI`: Filter log/diff output to only show information relevant to a specific islet, chosen by its emoji (e.g. `--filter 🍪`).
+- `--diff-sort-range`: Sort diff output by range rather than by islet.
 
 For a full list of commandline arguments, run
 ```

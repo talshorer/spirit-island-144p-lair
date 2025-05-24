@@ -9,7 +9,7 @@ import os
 import shutil
 import sys
 import traceback
-from typing import Any, Dict, List, Optional, Protocol, Self, Tuple, TypeVar
+from typing import Any, Dict, List, Optional, Protocol, Self, Tuple, TypeVar, Union
 
 import json5
 
@@ -244,25 +244,30 @@ def process_diffview(
 ) -> None:
     all_diff = []
     orig_lair, _ = parser.parse_all()
-    all_diff.append(landdiff(0, orig_lair.state.r0, thelair.r0, args))
+    all_diff.append((landdiff(0, orig_lair.state.r0, thelair.r0, args), 0))
     for a, b in itertools.chain(
         zip(orig_lair.state.r1, thelair.r1),
         zip(orig_lair.state.r2, thelair.r2),
         zip(orig_lair.state.unpathable, thelair.unpathable),
     ):
-        all_diff.append(landdiff(thelair.dist[a.key], a, b, args))
-    all_diff.sort()
+        dist = thelair.dist[a.key]
+        all_diff.append((landdiff(dist, a, b, args), dist))
+    all_diff.sort(key=lambda tup: tup[args.diff_sort_range])
     all_diff_md = []
-    last_islet = ""
-    for line in all_diff:
+    last_toplevel: Union[None, str, int] = None
+    toplevel: Union[str, int]
+    for line, dist in all_diff:
         if not line:
             continue
         if args.filter not in line:
             continue
-        islet = line[0]
-        if islet != last_islet:
-            all_diff_md.append(f"- {thelair.r0.key} diff: {islet}")
-            last_islet = islet
+        if args.diff_sort_range:
+            toplevel = dist
+        else:
+            toplevel = line[0]
+        if toplevel != last_toplevel:
+            all_diff_md.append(f"- {thelair.r0.key} diff: {toplevel}")
+            last_toplevel = toplevel
         all_diff_md.append(f"  - {line}")
     diffview = "\n".join(all_diff_md)
     print_or_split(
@@ -494,6 +499,11 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=5,
         help="Choose turn's config dir",
+    )
+    parser.add_argument(
+        "--diff-sort-range",
+        action="store_true",
+        help="Sort diffview by range rather than by island",
     )
     return parser.parse_args()
 
