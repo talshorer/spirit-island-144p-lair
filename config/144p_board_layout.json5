@@ -30,9 +30,10 @@
     {
       power: "cast_down",
       board: "🐀U",
-      weave: [
-        "🐀T2",
-      ],
+    },
+    {
+      power: "deeps",
+      land: "🐀T2",
     },
     {
       power: "cast_down",
