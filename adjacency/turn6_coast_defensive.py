@@ -18,10 +18,7 @@ def ensure_map(weaves: Optional[str]) -> None:
     if map is None:
         map = gen_144p.Map144P()
         if weaves:
-            with open(weaves, encoding="utf-8") as f:
-                data = json5.load(f)
-            for weave in data:
-                map.weave(*weave.split(","))
+            map.weave_from_file(weaves)
 
 
 def tryone(

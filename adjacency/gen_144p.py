@@ -228,6 +228,12 @@ class Map144P:
         except KeyError:
             pass
 
+    def weave_from_file(self, path: str) -> None:
+        with open(path, encoding="utf-8") as f:
+            data = json5.load(f)
+        for weave in data:
+            self.weave(*weave.split(","))
+
 
 def main() -> None:
     map = Map144P()

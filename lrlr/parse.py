@@ -189,8 +189,11 @@ class Parser:
         self.lair_conf = lair_conf
         self.parse_conf = parse_conf
 
+    def _path(self, basename: str) -> str:
+        return os.path.join(self.parse_conf.directory, basename)
+
     def _open(self, basename: str) -> TextIOWrapper:
-        return open(os.path.join(self.parse_conf.directory, basename), encoding="utf-8")
+        return open(self._path(basename), encoding="utf-8")
 
     def match_piece(self, piece: lair.PieceType, name: str) -> bool:
         return piece.name(self.lair_conf.piece_names) == name
@@ -235,10 +238,7 @@ class Parser:
         lands[lair.LAIR_KEY], src = self._parse_initial_lair()
 
         map = Map144P()
-        with self._open(self.WEAVES) as f:
-            weaves = json5.load(f)
-        for weave in weaves:
-            map.weave(*weave.split(","))
+        map.weave_from_file(self._path(self.WEAVES))
 
         with self._open(self.START) as f:
             it = iter(csv.reader(f))
