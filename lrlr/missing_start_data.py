@@ -20,7 +20,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    lair_conf = lair.LairConf()
+    lair_conf = lair.LairConf(
+        allow_missing_r1=True,
+    )
     parse_conf = parse.ParseConf(
         directory=f"config/turn{args.turn}",
     )

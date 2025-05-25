@@ -230,6 +230,7 @@ class LairConf:
     priority_lands: List[str] = dataclasses.field(default_factory=list)
     slurp_to_lair: bool = False
     display_name_range: bool = False
+    allow_missing_r1: bool = False
 
     def _terrain_priority(self, land_type: str) -> int:
         try:
@@ -282,7 +283,11 @@ def construct_distance_map(
         while dist[key] > 1 and key in prev:
             key = prev[key]
         if dist[key] == 1:
-            r1_dahan = lands[key].dahan.cnt
+            if key not in lands:
+                assert conf.allow_missing_r1
+                r1_dahan = 0
+            else:
+                r1_dahan = lands[key].dahan.cnt
         else:
             r1_dahan = 0  # it's the lair..
 
