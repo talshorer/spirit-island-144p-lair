@@ -311,6 +311,7 @@ class Lair:
         self.map = map
         self.conf = conf
         self.uncommitted: List[LogEntry] = []
+        self.expected_ravages_left = 0
 
         dist, prev = construct_distance_map(conf, lands, map, src)
         self.gathers_to = {
@@ -346,6 +347,9 @@ class Lair:
         self.gather_cost = {
             key: self._calc_gather_cost(lands[key]) for key in self.gathers_to.keys()
         }
+
+    def set_expected_ravages(self, ravages: int) -> None:
+        self.expected_ravages_left = ravages
 
     def _calc_gather_cost(self, land: Land) -> int:
         if self.conf.slurp_to_lair:
@@ -421,7 +425,11 @@ class Lair:
         gathers_to = self.gathers_to[last.key]
         assert gathers_to
 
-        if self.state.dist.get(gathers_to.key) == 1 and gathers_to.dahan.cnt > 0:
+        if (
+            self.state.dist.get(gathers_to.key) == 1
+            and gathers_to.dahan.cnt > 0
+            and tipe.health > self.expected_ravages_left
+        ):
             intermediate_lands.append(gathers_to.display_name)
             cost += 1
             gathers_to = self.gathers_to[gathers_to.key]
@@ -525,8 +533,8 @@ class Lair:
         ):
             if self.state.dist[land.key] > conf.max_range:
                 continue
-            gathers -= self._gather(Town, land, gathers)
             gathers -= self._gather(City, land, gathers)
+            gathers -= self._gather(Town, land, gathers)
             gathers -= self._gather(Explorer, land, gathers)
 
         # TODO: loop again if we have gathers left and didn't clear r2,
@@ -627,6 +635,8 @@ class Lair:
         return kill * tipe.health
 
     def _ravage(self) -> None:
+        self.expected_ravages_left -= 1
+
         r0 = self.state.r0
         dmg = max(0, r0.explorers.cnt - 6) + r0.towns.cnt * 2 + r0.cities.cnt * 3
 

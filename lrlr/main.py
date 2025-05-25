@@ -469,6 +469,12 @@ def output_actions_csv(thelair: lair.LairState, parser: parse.Parser) -> None:
                 )
 
 
+_ravages_per_action = {
+    "blur": 1,
+    "blur2": 2,
+}
+
+
 ActionSeqResult = Tuple[Tuple[str, ...], lair.LairState, lair.LairState]
 
 
@@ -477,6 +483,9 @@ def run_action_seq(
     action_seq: Tuple[str, ...],
 ) -> ActionSeqResult:
     thelair, delayed = parser.parse_all()
+    thelair.set_expected_ravages(
+        1 + sum(_ravages_per_action.get(action, 0) for action in action_seq)
+    )
     delayed.run("start")
     for action in action_seq:
         getattr(thelair, action)()
