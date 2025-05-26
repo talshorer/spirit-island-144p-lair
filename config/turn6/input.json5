@@ -1,6 +1,9 @@
 {
   actions: [
     "blur",
+    "blur",
+    "call",
+    "call",
   ],
   terrain_priority: "CWM",
   blue_lair: {
