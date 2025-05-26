@@ -215,14 +215,15 @@ class Map144P:
             )
             edge.link(other_edge)
 
-        for corner_key, corner_value in data["corners"].items():
+        for corner_key, corner_values in data["corners"].items():
             assert corner_key.islower()
             corner = self.get_dream_corner(board, corner_key)
-            other_corner = self.get_dream_corner(
-                self.boards[corner_value["board"]],
-                corner_value["corner"],
-            )
-            corner.link(other_corner)
+            for corner_value in corner_values:
+                other_corner = self.get_dream_corner(
+                    self.boards[corner_value["board"]],
+                    corner_value["corner"],
+                )
+                corner.link(other_corner)
 
     def land(self, key: str) -> Land:
         return self.boards[key[:-1]].lands[int(key[-1])]

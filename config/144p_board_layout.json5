@@ -54,10 +54,16 @@
         }, // clock9 not connected
       },
       corners: {
-        clock11: {
-          board: "🇲🇺Q",
-          corner: "clock7",
-        }, // other corners are implicit from edges
+        clock11: [
+          {
+            board: "🇲🇺Q",
+            corner: "clock7",
+          },
+          {
+            board: "🇲🇺R",
+            corner: "clock5",
+          },
+        ], // other corners are implicit from edges
       },
     },
   ],
