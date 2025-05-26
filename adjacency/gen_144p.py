@@ -47,7 +47,8 @@ def link_rim(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None
 
 
 class Map144P:
-    def __init__(self) -> None:
+    def __init__(self, with_archipelago: bool = True) -> None:
+        self._with_archipelago = with_archipelago
         with open("config/144p_board_layout.json5", encoding="utf-8") as f:
             self.data = json5.load(f)
         self.boards: Dict[str, Board] = {}
@@ -111,14 +112,15 @@ class Map144P:
 
             hub1_letter = "U" if (i % 2 == 0) else "Q"
             hub1_board = self.boards[f"{hub1}{hub1_letter}"]
-            for spoke_letter in "PQR":
-                self.boards[f"{spoke}{spoke_letter}"].link_archipelago(hub1_board)
-            self.boards[f"{rim}Q"].link_archipelago(hub1_board)
+            if self._with_archipelago:
+                for spoke_letter in "PQR":
+                    self.boards[f"{spoke}{spoke_letter}"].link_archipelago(hub1_board)
+                self.boards[f"{rim}Q"].link_archipelago(hub1_board)
 
-            hub2_letter = "T" if (i % 2 == 0) else "P"
-            hub2_board = self.boards[f"{hub2}{hub2_letter}"]
-            for spoke_letter in "STU":
-                self.boards[f"{spoke}{spoke_letter}"].link_archipelago(hub2_board)
+                hub2_letter = "T" if (i % 2 == 0) else "P"
+                hub2_board = self.boards[f"{hub2}{hub2_letter}"]
+                for spoke_letter in "STU":
+                    self.boards[f"{spoke}{spoke_letter}"].link_archipelago(hub2_board)
 
     def _load_islet(
         self,
@@ -151,6 +153,9 @@ class Map144P:
         return board
 
     def _connect_continents(self) -> None:
+        if not self._with_archipelago:
+            return
+
         for rim1, rim2 in zip(
             self.data["blue"]["rim"],  # 🧀
             self.data["orange"]["rim"],  # 🍌

@@ -243,7 +243,7 @@ class Parser:
 
         lands[lair.LAIR_KEY], src = self._parse_initial_lair()
 
-        map = Map144P()
+        map = Map144P(with_archipelago=False)
         map.weave_from_file(self._path(self.WEAVES))
 
         with self._open(self.START) as f:
