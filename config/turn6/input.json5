@@ -4,12 +4,14 @@
   ],
   terrain_priority: "CWM",
   blue_lair: {
-    max_range: 5,
+    max_range: 4,
   },
   orange_lair: {
     max_range: 5,
   },
-  ignore_lands: [],
+  ignore_lands: [
+    
+  ],
   priority_lands: [
     "🧀Q7", // just an example, remove this and replace with real priority lands
   ],
