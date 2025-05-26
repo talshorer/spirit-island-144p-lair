@@ -66,6 +66,18 @@
         ], // other corners are implicit from edges
       },
     },
+    {
+      power: "dream",
+      board: "👻Y",
+      layout: "C",
+      edges: {
+        clock9: {
+          board: "👻P",
+          edge: "clock3",
+        }, // clock3/clock6 not connected
+      },
+      corners: {}, // all corners are implicit from edges
+    },
   ],
   blue: {
     rim: [
