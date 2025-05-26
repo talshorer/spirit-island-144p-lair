@@ -523,7 +523,11 @@ class Lair:
 
         ignored = land.key in self.conf.ignore_lands
 
-        return (ignored, land_priority, dist, r1_land.dahan.cnt)
+        #To sort by land type then land distance
+        #return (ignored, land_priority, dist, r1_land.dahan.cnt)
+
+        #To sort by land distance then land type
+        return (ignored, dist, land_priority, r1_land.dahan.cnt)
 
     def _lair3(self, conf: LairInnateConf) -> None:
         r0 = self.state.r0
