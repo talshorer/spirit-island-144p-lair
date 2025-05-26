@@ -82,19 +82,24 @@ class BoardEdge:
                 antirotate.to_corner(neighbor.position)
             )
             neighbor_corner_land = neighbor.parent.lands[neighbor_corner]
-            rotated_position = rotate.to_edge(self.position)
-            if rotated_position is None:
-                continue
-            other_neighbor = self.parent.edges[rotated_position].neighbor
-            if other_neighbor is None:
-                continue
-            other_neighbor_corner = other_neighbor.parent.layout.get_corner(
-                rotate.to_corner(other_neighbor.position)
-            )
-            other_neighbor_corner_land = other_neighbor.parent.lands[
-                other_neighbor_corner
-            ]
-            other_neighbor_corner_land.link(neighbor_corner_land)
+            cur: BoardEdge = self
+            while True:
+                rotated_position = rotate.to_edge(cur.position)
+                if rotated_position is None:
+                    break
+                other_neighbor = cur.parent.edges[rotated_position].neighbor
+                if other_neighbor is None:
+                    break
+                other_neighbor_corner = other_neighbor.parent.layout.get_corner(
+                    rotate.to_corner(other_neighbor.position)
+                )
+                other_neighbor_corner_land = other_neighbor.parent.lands[
+                    other_neighbor_corner
+                ]
+                if other_neighbor_corner_land is neighbor_corner_land:
+                    break
+                other_neighbor_corner_land.link(neighbor_corner_land)
+                cur = other_neighbor
 
     def link(self, neighbor: Self) -> None:
         assert self.neighbor is None
