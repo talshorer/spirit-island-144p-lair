@@ -125,7 +125,6 @@ def cut_toplevel_log(line: str) -> str:
 class Split:
     def __init__(
         self,
-        may_break_second_level: bool,
         force_commit_on_toplevel: bool,
     ) -> None:
         self.entries: List[bytes] = []
@@ -133,7 +132,6 @@ class Split:
         self.cur_length = 0
         self.count = 0
         self.files: List[bytes] = []
-        self.may_break_second_level = may_break_second_level
         self.force_commit_on_toplevel = force_commit_on_toplevel
 
     def commit(self, next_nest: int) -> None:
@@ -141,7 +139,7 @@ class Split:
             return
 
         upto = len(self.entries)
-        if next_nest > 0 and not self.may_break_second_level:
+        if next_nest > 1:
             # don't break a second-level bullet in the middle
             for i in range(len(self.entries) - 1, 0, -1):
                 if self.entries[i].startswith(b"  -"):
@@ -216,7 +214,6 @@ def print_or_split(
     raw: str,
     args: argparse.Namespace,
     thelair: lair.LairState,
-    may_break_second_level: bool = False,
     force_commit_on_toplevel: bool = False,
 ) -> None:
     if args.split:
@@ -225,7 +222,6 @@ def print_or_split(
         else:
             split_header = ""
         Split(
-            may_break_second_level=may_break_second_level,
             force_commit_on_toplevel=force_commit_on_toplevel,
         ).run(
             raw,
@@ -274,7 +270,6 @@ def process_diffview(
         raw=diffview,
         args=args,
         thelair=thelair,
-        may_break_second_level=True,
         force_commit_on_toplevel=True,
     )
 
