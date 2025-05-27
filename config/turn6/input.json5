@@ -10,7 +10,7 @@
   },
   orange_lair: {
     max_range: 5,
-    reserve_gathers: 10,
+    reserve_gathers: 43,
   },
   ignore_lands: [
     "🇲🇺U7",
@@ -55,6 +55,9 @@
       explorer: 2,
     },
     "🧀Q4": {
+      town: 1,
+    },
+    "🧀P3": {
       town: 1,
     },
     
