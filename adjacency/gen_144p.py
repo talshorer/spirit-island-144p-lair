@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict
 
 import json5
 
+from . import dijkstra
 from .board_layout import Board, BoardEdge, Corner, Edge, Land, Layout
 
 """
@@ -253,6 +254,9 @@ def main() -> None:
     )
     subparsers = parser.add_subparsers(dest="sub", required=True)
     subparsers.add_parser("json5")
+    path_subparser = subparsers.add_parser("path")
+    path_subparser.add_argument("src")
+    path_subparser.add_argument("dst")
     args = parser.parse_args()
 
     map = Map144P(with_archipelago=not args.no_archipelago)
@@ -268,6 +272,12 @@ def main() -> None:
             }
             json5.dump(adj, sys.stdout, indent=2, sort_keys=True, ensure_ascii=False)
             print()
+        case "path":
+            dist, prev = dijkstra.distances_from(map.land(args.src))
+            print(
+                dist[args.dst],
+                " ".join(dijkstra.construct_path(prev, args.src, args.dst)),
+            )
 
 
 if __name__ == "__main__":
