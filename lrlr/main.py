@@ -136,12 +136,12 @@ class Split:
         self.may_break_second_level = may_break_second_level
         self.force_commit_on_toplevel = force_commit_on_toplevel
 
-    def commit(self, needs_cont: bool) -> None:
+    def commit(self, next_nest: int) -> None:
         if not self.entries:
             return
 
         upto = len(self.entries)
-        if needs_cont and not self.may_break_second_level:
+        if next_nest > 0 and not self.may_break_second_level:
             # don't break a second-level bullet in the middle
             for i in range(len(self.entries) - 1, 0, -1):
                 if self.entries[i].startswith(b"  -"):
@@ -154,7 +154,7 @@ class Split:
         self.cur_length = 0
         self.entries = []
 
-        if needs_cont:
+        if next_nest > 0:
             self.append(f"{self.toplevel} - cont.".encode())
         for entry in leftover:
             self.append(entry)
@@ -179,7 +179,7 @@ class Split:
         line = self.space_emojis(line)
         real_length = len(line) + 1 + (line.count(b":") // 2 * DISCORD_EMOJI_COST)
         if self.cur_length + real_length > DISCORD_MESSAGE_LIMIT:
-            self.commit(not line.startswith(b"-"))
+            self.commit(line.index(b"-") // 2)
         self.cur_length += real_length
         self.entries.append(line)
 
@@ -197,9 +197,9 @@ class Split:
             if line.startswith("-"):
                 self.toplevel = cut_toplevel_log(line)
                 if self.force_commit_on_toplevel:
-                    self.commit(False)
+                    self.commit(0)
             self.append(line.encode())
-        self.commit(False)
+        self.commit(-1)
 
         for i, content in enumerate(self.files):
             with open(
