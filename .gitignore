@@ -178,5 +178,3 @@ msg*.md
 
 # editors
 .vscode/
-
-config/adjacency.json5
