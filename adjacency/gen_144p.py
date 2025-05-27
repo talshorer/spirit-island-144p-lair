@@ -1,10 +1,10 @@
-import collections
+import argparse
 import itertools
-from typing import Any, Callable, Dict, List
+import sys
+from typing import Any, Callable, Dict
 
 import json5
 
-from . import dijkstra
 from .board_layout import Board, BoardEdge, Corner, Edge, Land, Layout
 
 """
@@ -241,33 +241,33 @@ class Map144P:
 
 
 def main() -> None:
-    map = Map144P()
-    for islet in ["⛰️"]:
-        for letter in "PQRSTU":
-            name = f"{islet}{letter}"
-            if name not in map.boards:
-                continue
-            board = map.boards[name]
-            for i in range(1, 9):
-                if i not in board.lands:
-                    continue
-                adjacencies = ", ".join(
-                    f"{link.land.key}{link.land.terrain.value}{' (arc)' if link.distance == 2 else ''}"
-                    for link in board.lands[i].links.values()
-                )
-                print(
-                    f"Neighbors of {board.name}{i}{board.layout.terrains[i].value}: {adjacencies}"
-                )
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--no-archipelago",
+        action="store_true",
+        help="Don't link archipelagos for distance calculation",
+    )
+    parser.add_argument(
+        "--weaves",
+        help="Path to weaves file",
+    )
+    subparsers = parser.add_subparsers(dest="sub", required=True)
+    subparsers.add_parser("json5")
+    args = parser.parse_args()
 
-    src = "🌵Q4"
-    dist, prev = dijkstra.distances_from(map.land(src))
-    by_dist: Dict[int, List[str]] = collections.defaultdict(list)
-    for k, v in dist.items():
-        by_dist[v].append(k)
-    for k2 in sorted(by_dist.keys()):
-        print(k2, by_dist[k2])
-    dst = "🦋R4"
-    print(dijkstra.construct_path(prev, src, dst))
+    map = Map144P(with_archipelago=not args.no_archipelago)
+    if args.weaves:
+        map.weave_from_file(args.weaves)
+
+    match args.sub:
+        case "json5":
+            adj = {
+                land.key: list(land.links.keys())
+                for board in map.boards.values()
+                for land in board.lands.values()
+            }
+            json5.dump(adj, sys.stdout, indent=2, sort_keys=True, ensure_ascii=False)
+            print()
 
 
 if __name__ == "__main__":
