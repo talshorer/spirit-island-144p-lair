@@ -37,6 +37,7 @@ Additional useful arguments include:
 - `--filter $EMOJI`: Filter log/diff output to only show information relevant to a specific islet, chosen by its emoji (e.g. `--filter 🍪`).
 - `--diff-sort-range`: Sort diff output by range rather than by islet.
 - `--slurp-to-lair`: Gather from any range all the way to lair with lair innate third threshold.
+- `--diff-all`: Show for all lands in diff output even when they're unchanged.
 
 For a full list of commandline arguments, run
 ```

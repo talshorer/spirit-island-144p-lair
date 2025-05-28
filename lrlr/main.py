@@ -33,11 +33,9 @@ def perms(it: List[T]) -> List[List[T]]:
 
 
 def landdiff(
-    r: int | str,
     a: lair.Land,
     b: lair.Land,
     args: argparse.Namespace,
-    allow_clear: bool = True,
 ) -> str:
     assert a.key == b.key
     if (
@@ -46,16 +44,18 @@ def landdiff(
         and a.cities.cnt == b.cities.cnt
         and a.dahan.cnt == b.dahan.cnt
     ):
-        return ""
-    bstr = str(b)
-    if (
-        allow_clear
-        and b.cities.cnt == 0
+        if not args.diff_all:
+            return ""
+        bstr = "UNCHANGED"
+    elif (
+        b.cities.cnt == 0
         and b.towns.cnt == 0
         and b.explorers.cnt == 0
         and b.dahan.cnt == 0
     ):
         bstr = "CLEAR"
+    else:
+        bstr = str(b)
     return f"{a.display_name}: {a} => {bstr}"
 
 
@@ -240,14 +240,14 @@ def process_diffview(
 ) -> None:
     all_diff = []
     orig_lair, _ = parser.parse_all()
-    all_diff.append((landdiff(0, orig_lair.state.r0, thelair.r0, args), 0))
+    all_diff.append((landdiff(orig_lair.state.r0, thelair.r0, args), 0))
     for a, b in itertools.chain(
         zip(orig_lair.state.r1, thelair.r1),
         zip(orig_lair.state.r2, thelair.r2),
         zip(orig_lair.state.unpathable, thelair.unpathable),
     ):
         dist = thelair.dist[a.key]
-        all_diff.append((landdiff(dist, a, b, args), dist))
+        all_diff.append((landdiff(a, b, args), dist))
     all_diff.sort(key=lambda tup: tup[args.diff_sort_range])
     all_diff_md = []
     last_toplevel: Union[None, str, int] = None
@@ -546,6 +546,11 @@ def parse_args() -> argparse.Namespace:
         "--postravage",
         action="store_true",
         help="Display postravage results instead of preravage",
+    )
+    parser.add_argument(
+        "--diff-all",
+        action="store_true",
+        help="Show all lands in diffview even if they're unchanged",
     )
     parser.add_argument(
         "--best",
