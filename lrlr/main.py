@@ -119,7 +119,7 @@ def log_entry_to_text(entry: action_log.LogEntry) -> str:
 
 
 def cut_toplevel_log(line: str) -> str:
-    return line.split(": ")[0]
+    return line.split(": (")[0]
 
 
 class Split:
@@ -262,7 +262,7 @@ def process_diffview(
         else:
             toplevel = line[0]
         if toplevel != last_toplevel:
-            all_diff_md.append(f"- {thelair.r0.key} diff: {toplevel}")
+            all_diff_md.append(f"- {thelair.r0.key} {toplevel} diff")
             last_toplevel = toplevel
         all_diff_md.append(f"  - {line}")
     diffview = "\n".join(all_diff_md)
