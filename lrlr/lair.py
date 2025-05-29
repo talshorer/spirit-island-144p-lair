@@ -651,6 +651,7 @@ class Lair:
 
         r0 = self.state.r0
         dmg = max(0, r0.explorers.cnt - 6) + r0.towns.cnt * 2 + r0.cities.cnt * 3
+        fear_before = self.state.fear
 
         lands = sorted(
             self.state.r1,
@@ -665,6 +666,9 @@ class Lair:
         self._commit_log()
         self.state.log.entry(
             LogEntry(text=f"unused damage left at end of ravage: {dmg}")
+        )
+        self.state.log.entry(
+            LogEntry(text=f"fear caused by ravage: {self.state.fear - fear_before}")
         )
         self.state.wasted_damage += dmg
 
