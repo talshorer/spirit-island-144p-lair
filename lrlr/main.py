@@ -47,16 +47,9 @@ def landdiff(
         if not args.diff_all:
             return ""
         bstr = "UNCHANGED"
-    elif (
-        b.cities.cnt == 0
-        and b.towns.cnt == 0
-        and b.explorers.cnt == 0
-        and b.dahan.cnt == 0
-    ):
-        bstr = "CLEAR"
     else:
-        bstr = str(b)
-    return f"{a.display_name}: {a} => {bstr}"
+        bstr = b.stringify_pieces()
+    return f"{a.display_name}: ({a.stringify_pieces()}) => ({bstr})"
 
 
 class Comparable(Protocol):
@@ -74,11 +67,11 @@ def score(lair_conf: lair.LairConf, thelair: lair.LairState) -> Comparable:
 
 
 def log_entry_tgt_pieces_to_text(entry: action_log.LogEntry) -> str:
-    return " ".join(f"{cnt} {tgt}" for _, tgt, cnt in entry.pieces() if cnt)
+    return lair.stringify_pieces((tgt, cnt) for _, tgt, cnt in entry.pieces())
 
 
 def log_entry_src_pieces_to_text(entry: action_log.LogEntry) -> str:
-    return " ".join(f"{cnt} {src}" for src, _, cnt in entry.pieces() if cnt)
+    return lair.stringify_pieces((src, cnt) for src, _, cnt in entry.pieces())
 
 
 def log_entry_to_text(entry: action_log.LogEntry) -> str:
@@ -657,7 +650,7 @@ def main() -> None:
                 " ".join(
                     [
                         f"{str(action_seq):<{58}}",
-                        str(thelair.r0),
+                        f"({thelair.r0.stringify_pieces()})",
                         f"wasted_damage={thelair.wasted_damage}",
                         f"total_gathers={thelair.total_gathers}",
                         f"wasted_invader_gathers={thelair.wasted_invader_gathers}",

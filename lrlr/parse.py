@@ -148,7 +148,7 @@ class DelayedActions:
             self.lair_conf.piece_names.city,
             self.lair_conf.piece_names.dahan,
         ]
-        before = str(self.lands.near[lair.LAIR_KEY])
+        before = self.lands.near[lair.LAIR_KEY].stringify_pieces()
         with self.log.fork() as sublog:
             for action in self.actions[key]:
                 action.run(self.lands)
@@ -169,11 +169,11 @@ class DelayedActions:
                         ],
                     )
                 )
-            after = str(self.lands.near[lair.LAIR_KEY])
+            after = self.lands.near[lair.LAIR_KEY].stringify_pieces()
             if log:
                 self.log.entry(
                     action_log.LogEntry(
-                        text=f"execute delayed actions for {key}: {before} => {after}"
+                        text=f"execute delayed actions for {key}: ({before}) => ({after})"
                     )
                 )
             else:

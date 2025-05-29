@@ -23,6 +23,10 @@ class Pieces:
 LAIR_KEY = "LAIR"
 
 
+def stringify_pieces(it: Iterator[Tuple[str, int]]) -> str:
+    return " ".join(f"{cnt} {piece}" for piece, cnt in it if cnt) or "CLEAR"
+
+
 class Land:
     def __init__(
         self,
@@ -55,19 +59,16 @@ class Land:
     def total_invaders(self) -> int:
         return self.explorers.cnt + self.towns.cnt + self.cities.cnt
 
-    def __str__(self) -> str:
-        pieces = ", ".join(
-            [
-                f"{tipe.name(self.conf.piece_names)}={tipe.select(self).cnt}"
-                for tipe in (
-                    Explorer,
-                    Town,
-                    City,
-                    Dahan,
-                )
-            ]
+    def stringify_pieces(self) -> str:
+        return stringify_pieces(
+            (tipe.name(self.conf.piece_names), tipe.select(self).cnt)
+            for tipe in (
+                Explorer,
+                Town,
+                City,
+                Dahan,
+            )
         )
-        return f"({pieces})"
 
 
 @dataclasses.dataclass
@@ -567,13 +568,12 @@ class Lair:
         oldlog = self.state.log
         with self.state.log.fork() as newlog:
             self.state.log = newlog
-            before = str(self.state.r0)
+            before = self.state.r0.stringify_pieces()
             yield
             self._commit_log()
+            after = self.state.r0.stringify_pieces()
             oldlog.entry(
-                LogEntry(
-                    text=f"{what} in {self.state.r0.key}: {before} => {self.state.r0}"
-                )
+                LogEntry(text=f"{what} in {self.state.r0.key}: ({before}) => ({after})")
             )
         self.state.log = oldlog
 
