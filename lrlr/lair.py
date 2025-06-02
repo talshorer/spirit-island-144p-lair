@@ -229,7 +229,6 @@ class LairConf:
     )
     ignore_lands: List[str] = dataclasses.field(default_factory=list)
     priority_lands: List[str] = dataclasses.field(default_factory=list)
-    slurp_to_lair: bool = False
     display_name_range: bool = False
     allow_missing_r1: bool = False
 
@@ -358,26 +357,10 @@ class Lair:
         self.expected_ravages_left = ravages
 
     def _calc_gather_cost(self, land: Land) -> int:
-        if self.conf.slurp_to_lair:
-            dist = self.state.dist[land.key]
-            if dist == 1:
-                return 1
-            return self.state.dist[land.key] - 1
-        cost = 0
-        while True:
-            cost += 1
-            prev = self.gathers_to.get(land.key)
-            if prev is self.state.r0 or not prev:
-                return cost
-            land = prev
-            if prev.key in self.conf.ignore_lands:
-                continue
-            coastal = self.map.land(land.key).coastal
-            if self.conf.land_priority(prev, prev.land_type, coastal) < len(
-                self.conf.terrain_priority
-            ):
-                continue
-            return cost
+        dist = self.state.dist[land.key]
+        if dist == 1:
+            return 1
+        return self.state.dist[land.key] - 1
 
     def _r1_gathers_to(
         self,
