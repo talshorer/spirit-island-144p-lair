@@ -553,6 +553,8 @@ class Lair:
         # TODO: loop again if we have gathers left and didn't clear r2,
         #       but need to ensure resulting log doesn't break causality.
 
+        self._commit_log()
+
         for tipe in (Explorer, Town, City):
             for land in self._r1_most_dahan():
                 gathers -= self._gather(tipe, land, gathers)
