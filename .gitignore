@@ -178,3 +178,4 @@ msg*.md
 
 # editors
 .vscode/
+.~lock.*#
