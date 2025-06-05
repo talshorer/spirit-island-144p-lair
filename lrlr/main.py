@@ -60,7 +60,7 @@ class Comparable(Protocol):
 def score(lair_conf: lair.LairConf, thelair: lair.LairState) -> Comparable:
     cleared_lands = sum(
         int(land.total_invaders() == 0)
-        for land in thelair.r2
+        for land in thelair.lands
         if land.land_type in lair_conf.terrain_priority
     )
     return (cleared_lands, thelair.r0.total_invaders())
@@ -235,8 +235,7 @@ def process_diffview(
     orig_lair, _ = parser.parse_all()
     all_diff.append((landdiff(orig_lair.state.r0, thelair.r0, args), 0))
     for a, b in itertools.chain(
-        zip(orig_lair.state.r1, thelair.r1),
-        zip(orig_lair.state.r2, thelair.r2),
+        zip(orig_lair.state.lands, thelair.lands),
         zip(orig_lair.state.unpathable, thelair.unpathable),
     ):
         dist = thelair.dist[a.key]

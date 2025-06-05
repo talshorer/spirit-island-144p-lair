@@ -254,8 +254,7 @@ ConvertLand = Callable[[Land], Land]
 @dataclasses.dataclass
 class LairState:
     r0: Land
-    r1: List[Land]
-    r2: List[Land]
+    lands: List[Land]
     unpathable: List[Land]
     log: Actionlog
     dist: Dict[str, int]
@@ -325,7 +324,7 @@ class Lair:
             if key in prev and dist[key] != 0
         }
         r0 = lands[LAIR_KEY]
-        r1 = []
+        self.r1 = []
         r2 = []
         unpathable = []
         for key, land in lands.items():
@@ -334,8 +333,10 @@ class Lair:
             if conf.display_name_range:
                 land.display_name += f" [{dist[key]}]"
             if dist[key] == 1:
-                self.gathers_to[key] = r0
-                r1.append(land)
+                # gathers_to itself, only let pieces that wouldn't die to ravage through
+                self.gathers_to[key] = land
+                self.r1.append(land)
+                r2.append(land)
             elif self._r1_gathers_to(land, dist) is not None:
                 r2.append(land)
             else:
@@ -343,8 +344,7 @@ class Lair:
 
         self.state = LairState(
             r0=r0,
-            r1=r1,
-            r2=r2,
+            lands=r2,
             unpathable=unpathable,
             log=log,
             dist=dist,
@@ -357,9 +357,6 @@ class Lair:
         self.expected_ravages_left = ravages
 
     def _calc_gather_cost(self, land: Land) -> int:
-        dist = self.state.dist[land.key]
-        if dist == 1:
-            return 1
         return self.state.dist[land.key] - 1
 
     def _r1_gathers_to(
@@ -399,7 +396,7 @@ class Lair:
         tgt.cnt += actual
         return actual
 
-    def _gather(self, tipe: PieceType, land: Land, cnt: int) -> int:
+    def _gather(self, tipe: PieceType, land: Land, cnt: int, force: bool = True) -> int:
         if land.key in self.conf.ignore_lands:
             return 0
         cost = self.gather_cost[land.key]
@@ -414,15 +411,21 @@ class Lair:
         gathers_to = self.gathers_to[last.key]
         assert gathers_to
 
-        if (
+        if force or (
             self.state.dist.get(gathers_to.key) == 1
             and gathers_to.dahan.cnt > 0
             and tipe.health > self.expected_ravages_left
         ):
-            intermediate_lands.append(gathers_to.display_name)
+            if cost:
+                intermediate_lands.append(gathers_to.display_name)
+                gathers_to = self.gathers_to[gathers_to.key]
+            else:
+                gathers_to = self.state.r0
             cost += 1
-            gathers_to = self.gathers_to[gathers_to.key]
             assert gathers_to
+
+        if cost == 0:
+            return 0
 
         gathered = self._xchg(land, tipe, tipe.select(gathers_to), cnt // cost)
         actual = gathered * cost
@@ -442,6 +445,9 @@ class Lair:
                 )
             )
         return actual
+
+    def _slurp(self, tipe: PieceType, land: Land, cnt: int) -> int:
+        return self._gather(tipe, land, cnt, force=False)
 
     def _downgrade(self, tipe: PieceType, land: Land, cnt: int) -> int:
         assert tipe.response
@@ -468,10 +474,10 @@ class Lair:
         self.state.wasted_downgrades += downgrades
 
     def _r1_least_dahan(self) -> List[Land]:
-        return sorted(self.state.r1, key=lambda land: land.dahan.cnt)
+        return sorted(self.r1, key=lambda land: land.dahan.cnt)
 
     def _r1_most_dahan(self) -> List[Land]:
-        return sorted(self.state.r1, key=lambda land: -land.dahan.cnt)
+        return sorted(self.r1, key=lambda land: -land.dahan.cnt)
 
     def _lair2(self) -> None:
         gathers = 1
@@ -525,25 +531,20 @@ class Lair:
             gathers -= self._reserve(conf.reserve_gathers, "gathers", gathers)
 
         for land in sorted(
-            self.state.r2,
+            self.state.lands,
             key=self._least_r1_dahan_land_priority_key,
         ):
             if self.state.dist[land.key] > conf.max_range:
                 continue
-            gathers -= self._gather(City, land, gathers)
-            gathers -= self._gather(Town, land, gathers)
-            gathers -= self._gather(Explorer, land, gathers)
+            gathers -= self._slurp(City, land, gathers)
+            gathers -= self._slurp(Town, land, gathers)
+            gathers -= self._slurp(Explorer, land, gathers)
+
+        self._commit_log()
 
         # TODO: loop again if we have gathers left and didn't clear r2,
         #       but need to ensure resulting log doesn't break causality.
 
-        self._commit_log()
-
-        for tipe in (Explorer, Town, City):
-            for land in self._r1_most_dahan():
-                gathers -= self._gather(tipe, land, gathers)
-
-        self._commit_log()
         self.state.log.entry(
             LogEntry(text=f"unused gathers left at end of slurp: {gathers}")
         )
@@ -640,7 +641,7 @@ class Lair:
         fear_before = self.state.fear
 
         lands = sorted(
-            self.state.r1,
+            self.r1,
             key=self._least_r1_dahan_land_priority_key,
         )
         for land in lands:
@@ -658,7 +659,7 @@ class Lair:
         )
         self.state.wasted_damage += dmg
 
-        for land in itertools.chain([self.state.r0], self.state.r1):
+        for land in itertools.chain([self.state.r0], self.r1):
             land.mr()
 
     def ravage(self) -> None:
