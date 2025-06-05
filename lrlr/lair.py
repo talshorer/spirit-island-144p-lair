@@ -440,7 +440,8 @@ class Lair:
             gathers_to = self.gathers_to[gathers_to.key]
             assert gathers_to
 
-        actual = self._xchg(land, tipe, tipe.select(gathers_to), cnt // cost)
+        gathered = self._xchg(land, tipe, tipe.select(gathers_to), cnt // cost)
+        actual = gathered * cost
         self.state.total_gathers += actual
         if actual:
             piece_name = tipe.name(self.conf.piece_names)
@@ -452,7 +453,7 @@ class Lair:
                     intermediate_lands=intermediate_lands,
                     tgt_land=gathers_to.display_name,
                     tgt_piece=piece_name,
-                    count=actual,
+                    count=gathered,
                     mult=cost,
                 )
             )

@@ -10,7 +10,7 @@
   },
   orange_lair: {
     max_range: 5,
-    reserve_gathers: 43,
+    reserve_gathers: 38,
   },
   ignore_lands: [
     "🇲🇺U7",
