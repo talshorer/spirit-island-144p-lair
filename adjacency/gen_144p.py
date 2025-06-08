@@ -48,8 +48,8 @@ def link_rim(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None
 
 
 class Map144P:
-    def __init__(self, with_archipelago: bool = True) -> None:
-        self._with_archipelago = with_archipelago
+    def __init__(self, with_ocean: bool = True) -> None:
+        self._with_ocean = with_ocean
         with open("config/144p_board_layout.json5", encoding="utf-8") as f:
             self.data = json5.load(f)
         self.boards: Dict[str, Board] = {}
@@ -113,7 +113,7 @@ class Map144P:
 
             hub1_letter = "U" if (i % 2 == 0) else "Q"
             hub1_board = self.boards[f"{hub1}{hub1_letter}"]
-            if self._with_archipelago:
+            if self._with_ocean:
                 for spoke_letter in "PQR":
                     self.boards[f"{spoke}{spoke_letter}"].link_archipelago(hub1_board)
                 self.boards[f"{rim}Q"].link_archipelago(hub1_board)
@@ -149,12 +149,12 @@ class Map144P:
     def _load_board(self, islet: str, letter: str) -> Board:
         name = f"{islet}{letter}"
         layout = getattr(Layout, self.data["boards"][name])
-        board = Board(name, layout)
+        board = Board(name, layout, with_ocean=self._with_ocean)
         self.boards[name] = board
         return board
 
     def _connect_continents(self) -> None:
-        if not self._with_archipelago:
+        if not self._with_ocean:
             return
 
         for rim1, rim2 in zip(
@@ -203,7 +203,7 @@ class Map144P:
 
     def _dream(self, data: Dict[str, Any]) -> None:
         layout = getattr(Layout, data["layout"])
-        board = Board(data["board"], layout)
+        board = Board(data["board"], layout, with_ocean=self._with_ocean)
         self.boards[board.name] = board
 
         for edge_key, edge_value in data["edges"].items():
@@ -259,7 +259,7 @@ def main() -> None:
     path_subparser.add_argument("dst")
     args = parser.parse_args()
 
-    map = Map144P(with_archipelago=not args.no_archipelago)
+    map = Map144P(with_ocean=not args.no_archipelago)
     if args.weaves:
         map.weave_from_file(args.weaves)
 

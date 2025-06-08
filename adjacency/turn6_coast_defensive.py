@@ -15,11 +15,11 @@ dijstra_cache: Dict[str, Tuple[Dict[str, int], Dict[str, str]]] = {}
 
 def ensure_map(
     weaves: Optional[str] = None,
-    with_archipelago: bool = True,
+    with_ocean: bool = True,
 ) -> None:
     global map
     if map is None:
-        map = gen_144p.Map144P(with_archipelago=with_archipelago)
+        map = gen_144p.Map144P(with_ocean=with_ocean)
         if weaves:
             map.weave_from_file(weaves)
 
@@ -29,7 +29,7 @@ def tryone(
     weaves: Optional[str] = None,
     filter_coastal: bool = True,
     construct_paths: bool = False,
-    with_archipelago: bool = True,
+    with_ocean: bool = True,
 ) -> Tuple[
     int,
     List[str],
@@ -37,7 +37,7 @@ def tryone(
     Dict[str, int],
     Dict[str, List[str]],
 ]:
-    ensure_map(weaves, with_archipelago)
+    ensure_map(weaves, with_ocean)
     assert map
     all_dist: Dict[str, int] = {}
     all_paths: Dict[str, List[str]] = {}
@@ -147,7 +147,7 @@ def main() -> None:
             weaves=args.weaves,
             filter_coastal=args.coastal,
             construct_paths=True,
-            with_archipelago=not args.no_archipelago,
+            with_ocean=not args.no_archipelago,
         )
         if args.path_to:
             for land in args.path_to:

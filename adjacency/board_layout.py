@@ -26,15 +26,20 @@ class LandLink:
 
 
 class Land:
-    def __init__(self, board: Board, num: int, coastal: bool) -> None:
+    def __init__(self, board: Board, num: int) -> None:
         self.board = board
         self.num = num
         self.key = f"{board.name}{num}"
         self.links: Dict[str, LandLink] = {}
-        self.terrain = board.layout.terrains[num]
-        self.coastal = coastal
+        self.terrain = board.layout.terrains[num] if num else Terrain.Ocean
+        self.coastal = self._is_ocean()
+
+    def _is_ocean(self) -> bool:
+        return self.terrain is Terrain.Ocean
 
     def _link_one_way(self, other: Self, distance: int) -> None:
+        if other._is_ocean():
+            self.coastal = True
         if (link := self.links.get(other.key)) is not None:
             if distance == 0:
                 link.distance = 0  # force a weave
@@ -48,11 +53,14 @@ class Land:
         other._link_one_way(self, distance)
 
     def sink(self, deeps: bool) -> None:
-        for link in list(self.links.values()):
-            if deeps:
-                link.land.coastal = True
+        for link in self.links.values():
+            if deeps and link.distance == 1:
+                if (ocean := self.board.lands.get(0)) is not None:
+                    link.land.link(ocean)
+                else:
+                    link.land.coastal = True
                 # we're coastal now, link archipelago!
-                for board in link.land.board.archipelago_links.values():
+                for board in self.board.archipelago_links.values():
                     for other in board.lands.values():
                         if other.coastal:
                             link.land.link(other, distance=2)
@@ -205,6 +213,7 @@ class Terrain(enum.Enum):
     Mountain = "M"
     Sands = "S"
     Wetlands = "W"
+    Ocean = "O"
 
 
 with open("config/board_layout.json5", encoding="utf-8") as f:
@@ -257,16 +266,24 @@ class Board:
         self,
         name: str,
         layout: Layout,
+        with_ocean: bool = True,
     ):
         self.name = name
         self.layout = layout
         self.edges = {
             pos: BoardEdge(edge, pos, self) for pos, edge in layout.edges.items()
         }
-        self.lands = {i: Land(board=self, num=i, coastal=(i <= 3)) for i in range(1, 9)}
+        first = 0 if with_ocean else 1
+        self.lands = {i: Land(board=self, num=i) for i in range(first, 8 + 1)}
         for n, adj_set in self.layout.internal_adjacencies.items():
             for neigh in adj_set:
                 self.lands[n]._link_one_way(self.lands[neigh], 1)
+        for n in range(1, 3 + 1):
+            land = self.lands[n]
+            if with_ocean:
+                land.link(self.lands[0])
+            else:
+                land.coastal = True
         self.archipelago_links: Dict[str, Self] = {}
 
     def _link_archipelago_one_way(self, other: Self) -> None:
