@@ -78,6 +78,29 @@
       },
       corners: {}, // all corners are implicit from edges
     },
+    {
+      power: "cast_down",
+      board: "🤖U",
+    },
+    {
+      power: "cast_down",
+      board: "🤖P",
+      weave: [
+        "🍪S1",
+      ],
+    },
+    {
+      power: "cast_down",
+      board: "🤖T",
+    },
+    {
+      power: "deeps",
+      land: "⛰️R4",
+    },
+    {
+      power: "deeps",
+      land: "⛰️S7",
+    },
   ],
   blue: {
     rim: [
