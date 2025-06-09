@@ -1,6 +1,6 @@
 {
   actions: [],
-  terrain_priority: "WM",
+  terrain_priority: "WMS",
   blue_lair: {
     max_range: 2,
   },
