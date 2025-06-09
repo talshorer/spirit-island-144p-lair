@@ -101,6 +101,10 @@
       power: "deeps",
       land: "⛰️S7",
     },
+    {
+      power: "deeps",
+      land: "🐀T3",
+    },
   ],
   blue: {
     rim: [
