@@ -541,10 +541,6 @@ class Lair:
             gathers -= self._slurp(Explorer, land, gathers)
 
         self._commit_log()
-
-        # TODO: loop again if we have gathers left and didn't clear r2,
-        #       but need to ensure resulting log doesn't break causality.
-
         self.state.log.entry(
             LogEntry(text=f"unused gathers left at end of slurp: {gathers}")
         )
