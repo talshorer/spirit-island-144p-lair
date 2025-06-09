@@ -604,7 +604,10 @@ class Lair:
             if land.dahan.cnt:
                 respond_to = land
             else:
-                respond_to = self.gathers_to[land.key]
+                if self.state.dist[land.key] == 1:
+                    respond_to = self.state.r0
+                else:
+                    respond_to = self.gathers_to[land.key]
             assert respond_to
             response = tipe.response.select_mr(respond_to)
         else:
