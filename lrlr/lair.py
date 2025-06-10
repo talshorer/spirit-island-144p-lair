@@ -410,17 +410,14 @@ class Lair:
             intermediate_lands.append(last.display_name)
         gathers_to = self.gathers_to[last.key]
         assert gathers_to
+        assert self.state.dist.get(gathers_to.key) == 1
 
         if force or (
-            self.state.dist.get(gathers_to.key) == 1
-            and gathers_to.dahan.cnt > 0
-            and tipe.health > self.expected_ravages_left
+            tipe.health > self.expected_ravages_left and gathers_to.dahan.cnt > 0
         ):
             if cost:
                 intermediate_lands.append(gathers_to.display_name)
-                gathers_to = self.gathers_to[gathers_to.key]
-            else:
-                gathers_to = self.state.r0
+            gathers_to = self.state.r0
             cost += 1
             assert gathers_to
 
