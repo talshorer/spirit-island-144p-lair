@@ -63,7 +63,7 @@ def score(lair_conf: lair.LairConf, thelair: lair.LairState) -> Comparable:
         for land in thelair.lands
         if land.land_type in lair_conf.terrain_priority
     )
-    return (cleared_lands, thelair.r0.total_invaders())
+    return (cleared_lands, thelair.r0.total_invaders(), thelair.wasted_invader_gathers)
 
 
 def log_entry_tgt_pieces_to_text(entry: action_log.LogEntry) -> str:
