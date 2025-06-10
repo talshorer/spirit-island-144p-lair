@@ -536,8 +536,12 @@ class Lair:
             gathers -= self._slurp(City, land, gathers)
             gathers -= self._slurp(Town, land, gathers)
             gathers -= self._slurp(Explorer, land, gathers)
-
         self._commit_log()
+
+        for land in self._r1_most_dahan():
+            gathers -= self._gather(Explorer, land, gathers)
+        self._commit_log()
+
         self.state.log.entry(
             LogEntry(text=f"unused gathers left at end of slurp: {gathers}")
         )
