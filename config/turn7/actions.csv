@@ -2,9 +2,9 @@ Source,Destination,City,Town,Explorer,Dahan,Action Name,Action ID,Parent,Notes,A
 🌵Q4M,🌵Q3M,,,,2,Veil of the Night’s Hunt (Sorbjar),1,,,
 💖Q7,LAIRL,,,,,Weave,2,,,
 😎Q5,LAIRL,,,,1,Weave,3,,,
-🌵P5M,🌵P4W,,1,,,Manual slurp (Lair),4,,1 gathers,lair_orange
-🌵P4W,🌵Q3M,,4,7,,Manual slurp (Lair),5,,11 gathers,lair_orange
-🌵Q5J,🌵Q3M,,,10,,Manual slurp (Lair),6,,10 gathers,lair_orange
+🌵P5M,🌵P4W,,1,,,Manual slurp (1 gathers),4,,,lair_orange
+🌵P4W,🌵Q3M,,4,7,,Manual slurp (11 gathers),5,,,lair_orange
+🌵Q5J,🌵Q3M,,,10,,Manual slurp (10 gathers),6,,,lair_orange
 🌵Q3M,,,4,17,,Forests of Living Obsidian (palimpsest),7,,,lair_orange
 🌵Q3M,🌵Q2S,,,,2,FOLO Dahan Push,8,7,,lair_orange
 🌵Q2S,,,1,,,Constant Raiding,9,8,,lair_orange
@@ -14,4 +14,4 @@ Source,Destination,City,Town,Explorer,Dahan,Action Name,Action ID,Parent,Notes,A
 🌵Q2S,🌵Q1J,,,,1,FOLO Dahan Push 1,13,12,,lair_orange
 🌵Q2S,🌵Q3M,,,,5,FOLO Dahan Push 2,14,12,,lair_orange
 🌵Q1J,,,,1,,Constant Raiding,14,13,,lair_orange
-💖P1M,💖P7J,,4,,,Manual slurp,15,,12 gathers,lair_orange
+💖P1M,💖P7J,,4,,,Manual slurp (12 gathers),15,,,lair_orange
