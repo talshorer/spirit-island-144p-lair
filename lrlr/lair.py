@@ -587,11 +587,13 @@ class Lair:
 
     def call(self) -> None:
         with self._top_log("call"):
-            self.state.wasted_invader_gathers += self._call_one(
-                self._r1_most_dahan, Town, 5
-            )
-            self.state.wasted_invader_gathers += self._call_one(
-                self._r1_most_dahan, Explorer, 15
+            wasted_invaders_gathers = self._call_one(self._r1_most_dahan, Town, 5)
+            wasted_invaders_gathers += self._call_one(self._r1_most_dahan, Explorer, 15)
+            self.state.wasted_invader_gathers += wasted_invaders_gathers
+            self.state.log.entry(
+                LogEntry(
+                    text=f"unused gathers left at end of call: {wasted_invaders_gathers}"
+                )
             )
             self.state.wasted_dahan_gathers += self._call_one(
                 self._r1_least_dahan, Dahan, 5
