@@ -231,6 +231,7 @@ class LairConf:
     priority_lands: List[str] = dataclasses.field(default_factory=list)
     display_name_range: bool = False
     allow_missing_r1: bool = False
+    skip_builds: bool = False
 
     def _terrain_priority(self, land_type: str) -> int:
         try:
@@ -681,7 +682,9 @@ class Lair:
         )
 
     def _build(self, land: Land) -> None:
-        if all(tipe.select(land).cnt == 0 for tipe in (Explorer, Town, City)):
+        if self.conf.skip_builds or all(
+            tipe.select(land).cnt == 0 for tipe in (Explorer, Town, City)
+        ):
             return
 
         tipe: PieceType

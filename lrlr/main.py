@@ -617,6 +617,7 @@ def main() -> None:
         ignore_lands=input.get("ignore_lands", []),
         priority_lands=input.get("priority_lands", []),
         display_name_range=display_name_range,
+        skip_builds=input.get("skip_builds", False),
     )
     parse_conf = parse.ParseConf(
         directory=config_dir,
