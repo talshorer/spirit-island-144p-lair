@@ -1,7 +1,7 @@
 import argparse
 import itertools
 import sys
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Optional
 
 import json5
 
@@ -48,7 +48,11 @@ def link_rim(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None
 
 
 class Map144P:
-    def __init__(self, with_ocean: bool = True) -> None:
+    def __init__(
+        self,
+        with_ocean: bool = True,
+        weave_file: Optional[str] = None,
+    ) -> None:
         self._with_ocean = with_ocean
         with open("config/144p_board_layout.json5", encoding="utf-8") as f:
             self.data = json5.load(f)
@@ -57,6 +61,8 @@ class Map144P:
         self._load_continent("orange")
         self._connect_continents()
         self._run_modifications()
+        if weave_file:
+            self._weave(weave_file)
 
     def _load_continent(self, name: str) -> None:
         data = self.data[name]
@@ -228,17 +234,15 @@ class Map144P:
     def land(self, key: str) -> Land:
         return self.boards[key[:-1]].lands[int(key[-1])]
 
-    def weave(self, key1: str, key2: str) -> None:
-        try:
-            self.land(key1).link(self.land(key2), 0)
-        except KeyError:
-            pass
-
-    def weave_from_file(self, path: str) -> None:
+    def _weave(self, path: str) -> None:
         with open(path, encoding="utf-8") as f:
             data = json5.load(f)
         for weave in data:
-            self.weave(*weave.split(","))
+            key1, key2 = weave.split(",")
+            try:
+                self.land(key1).link(self.land(key2), 0)
+            except KeyError:
+                pass
 
 
 def main() -> None:
@@ -259,9 +263,7 @@ def main() -> None:
     path_subparser.add_argument("dst")
     args = parser.parse_args()
 
-    map = Map144P(with_ocean=not args.no_archipelago)
-    if args.weaves:
-        map.weave_from_file(args.weaves)
+    map = Map144P(with_ocean=not args.no_archipelago, weave_file=args.weaves)
 
     match args.sub:
         case "json5":

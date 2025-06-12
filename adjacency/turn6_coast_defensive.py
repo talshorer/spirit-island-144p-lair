@@ -19,9 +19,7 @@ def ensure_map(
 ) -> None:
     global map
     if map is None:
-        map = gen_144p.Map144P(with_ocean=with_ocean)
-        if weaves:
-            map.weave_from_file(weaves)
+        map = gen_144p.Map144P(with_ocean=with_ocean, weave_file=weaves)
 
 
 def tryone(
