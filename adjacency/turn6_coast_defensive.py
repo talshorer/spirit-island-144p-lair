@@ -153,8 +153,8 @@ def main() -> None:
             for land in args.path_to:
                 print(all_dist[land], all_paths[land])
         else:
-            for land in sorted(by_dist.keys()):
-                print(land, by_dist[land])
+            for dist in sorted(by_dist.keys()):
+                print(dist, sorted(by_dist[dist]))
         return
 
     map = gen_144p.Map144P()
