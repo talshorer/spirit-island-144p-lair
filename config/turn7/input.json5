@@ -6,7 +6,7 @@
   ],
   terrain_priority: "WMS",
   blue_lair: {
-    max_range: 2,
+    max_range: 3,
   },
   orange_lair: {
     max_range: 5,
