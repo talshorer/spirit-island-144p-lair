@@ -126,6 +126,42 @@
         "🦋P8",
       ],
     },
+    {
+      power: "dream",
+      board: "👻Z",
+      layout: "E",
+      edges: {
+        clock9: {
+          board: "👻Y",
+          edge: "clock3",
+        }, // clock3/clock6 not connected
+      },
+      corners: {}, // all corners are implicit from edges
+    },
+    {
+      power: "dream",
+      board: "👻V",
+      layout: "D",
+      edges: {
+        clock6: {
+          board: "👻Z",
+          edge: "clock3",
+        }, // clock3/clock9 not connected
+      },
+      corners: {}, // all corners are implicit from edges
+    },
+    {
+      power: "dream",
+      board: "👻W",
+      layout: "G",
+      edges: {
+        clock3: {
+          board: "👻V",
+          edge: "clock3",
+        }, // clock3/clock9 not connected
+      },
+      corners: {}, // all corners are implicit from edges
+    },
   ],
   blue: {
     rim: [
