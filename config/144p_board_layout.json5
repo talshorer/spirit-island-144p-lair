@@ -110,23 +110,6 @@
       board: "🤠U",
     },
     {
-      power: "cast_down",
-      board: "🤖S",
-      weave: [
-        "🤖R1",
-        "🤖R2",
-        "🤖R3",
-        "🤖Q1",
-        "🤖Q2",
-        "🤖Q3",
-        "⚡U1",
-        "⚡U2",
-        "⚡U3",
-        "🏝️S8",
-        "🦋P8",
-      ],
-    },
-    {
       power: "dream",
       board: "👻Z",
       layout: "E",
@@ -161,6 +144,23 @@
         }, // clock3/clock9 not connected
       },
       corners: {}, // all corners are implicit from edges
+    },
+    {
+      power: "cast_down",
+      board: "🤖S",
+      weave: [
+        "🤖R1",
+        "🤖R2",
+        "🤖R3",
+        "🤖Q1",
+        "🤖Q2",
+        "🤖Q3",
+        "⚡U1",
+        "⚡U2",
+        "⚡U3",
+        "🏝️S8",
+        "🦋P8",
+      ],
     },
   ],
   blue: {
