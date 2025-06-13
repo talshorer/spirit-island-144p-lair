@@ -1,7 +1,6 @@
 {
   actions: [
     "call",
-    "call",
     "blur",
   ],
   terrain_priority: "WMS",
