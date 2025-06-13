@@ -16,4 +16,12 @@ Source,Destination,City,Town,Explorer,Dahan,Action Name,Action ID,Parent,Notes,A
 🌵Q2S,🌵Q1J,,,,1,FOLO Dahan Push 1,113,112,,lair_orange
 🌵Q2S,🌵Q3M,,,,5,FOLO Dahan Push 2,114,112,,lair_orange
 🌵Q1J,,,,1,,Constant Raiding,115,113,,lair_orange
-💖P1M,💖P7J,,4,,,Manual slurp (12 gathers),116,,,lair_orange
+💖P1M,💖P7J,,4,,,Manual slurp through 💖P6J 💖P5S (12 gathers),116,,,lair_orange
+🐍R2S,🐍R3M,1,2,2,,Manual slurp (5 gathers),117,,,lair_orange
+🐍R3M,🐍S8J,1,3,4,,Manual slurp (8 gathers),118,,,lair_orange
+🐍S7S,🐍S8J,,,1,,Manual slurp (1 gathers),119,,,lair_orange
+🐍S3J,🐍S2W,,1,,,Manual slurp (1 gathers),120,,,lair_orange
+🐍S2W,🐍S1M,1,1,2,,Manual slurp (4 gathers),121,,,lair_orange
+🐍S8J,🏝️P6M,1,3,5,,Manual slurp (9 gathers),122,,,lair_orange
+🐍S1M,🏝️P6M,1,1,2,,Manual slurp (4 gathers),123,,,lair_orange
+🏝️P6M,LAIRL,2,4,7,,End of slurp – Bargains of Coursing Paths,124,,,lair_orange
