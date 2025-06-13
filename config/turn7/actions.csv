@@ -1,9 +1,21 @@
 Source,Destination,City,Town,Explorer,Dahan,Action Name,Action ID,Parent,Notes,After Toplevel
 🌵Q4M,🌵Q3M,,,,2,Veil of the Night’s Hunt (Sorbjar),1,,,
-💖Q7,LAIRL,,,,,Weave,2,,,
-💖S7,LAIRL,,,,,Weave,3,,,
-😎Q5,LAIRL,,,,1,Weave,4,,,
-🌵Q5J,,,,3,,Damage from Funny Bird Gaming,5,,,
+⚡U1J,LAIRL,,,,,Beach Party Weave,2,,,
+⚡U2S,LAIRL,,1,,2,Beach Party Weave,3,,,
+⚡U3M,LAIRL,,,,3,Beach Party Weave,4,,,
+🤖Q1W,LAIRL,,4,3,1,Beach Party Weave,5,,,
+🤖Q2J,LAIRL,,2,,,Beach Party Weave,6,,,
+🤖Q3W,LAIRL,1,4,1,,Beach Party Weave,7,,,
+🤖R1S,LAIRL,,3,,1,Beach Party Weave,8,,,
+🤖R2M,LAIRL,,3,,1,Beach Party Weave,9,,,
+🤖R3J,LAIRL,,2,,,Beach Party Weave,10,,,
+🤖S1W,LAIRL,3,4,7,1,Beach Party Weave,11,,,
+🦋P8W,LAIRL,,,,,Beach Party Weave,12,,,
+⚡U8W,LAIRL,,,,,Beach Party Cast-Down and escape,13,,,
+💖Q7S,LAIRL,,,,,Weave,80,,,
+💖S7W,LAIRL,,,,,Weave,81,,,
+😎Q5J,LAIRL,,,,1,Weave,82,,,
+🌵Q5J,,,,3,,Damage from Funny Bird Gaming,103,,,
 🌵P5M,🌵P4W,,1,,,Manual slurp (1 gathers),104,,,lair_orange
 🌵P4W,🌵Q3M,,4,7,,Manual slurp (11 gathers),105,,,lair_orange
 🌵Q5J,🌵Q3M,,,7,,Manual slurp (10 gathers),106,,,lair_orange
