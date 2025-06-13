@@ -162,6 +162,10 @@
         "🦋P8",
       ],
     },
+    {
+      power: "cast_down",
+      board: "🦋U",
+    },
   ],
   blue: {
     rim: [
