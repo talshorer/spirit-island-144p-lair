@@ -20,7 +20,7 @@ LRLR optimization takes its input in the form of four files:
   - `blue_lair`/`orange_lair`: Configuration for each Lair's innate. An Object with the following keys:
     - `reserve_gathers`: Amount of gathers to be manually reserved from the innate's third threshold. This many gathers will not be performed, allowing players to instead gather through Finder adjacency for other purposes.
     - `max_range`: Maximum range to perform gathers. Matches the Lair's Air element.
-- `config/turnX/actions.csv` - list of weaved lands, each in the form `"land,land"`, e.g. `"🍪S4,😎R4"`.
+- `config/turnX/weaves.json5` - list of weaved lands, each in the form `"land,land"`, e.g. `"🍪S4,😎R4"`.
 
 The LRLR optimization tool can be run like
 ```
