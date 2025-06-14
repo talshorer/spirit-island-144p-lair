@@ -9,7 +9,7 @@
   },
   orange_lair: {
     max_range: 5,
-    reserve_gathers: 66,
+    reserve_gathers: 63,
   },
   ignore_lands: [
     "💖P1", // range 4, force orange to slurp this via reserved gathers
