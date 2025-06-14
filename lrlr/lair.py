@@ -249,9 +249,6 @@ class LairConf:
         return priority
 
 
-ConvertLand = Callable[[Land], Land]
-
-
 @dataclasses.dataclass
 class LairState:
     r0: Land
