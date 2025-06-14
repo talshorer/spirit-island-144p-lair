@@ -244,6 +244,7 @@ class Parser:
         lands[lair.LAIR_KEY], src = self._parse_initial_lair()
 
         map = Map144P(with_ocean=False, weave_file=self._path(self.WEAVES))
+        ocean_map = Map144P(with_ocean=True, weave_file=self._path(self.WEAVES))
 
         with self._open(self.START) as f:
             it = iter(csv.reader(f))
@@ -286,6 +287,7 @@ class Parser:
                 conf=self.lair_conf,
                 log=log,
                 map=map,
+                ocean_map=ocean_map,
             ),
             csv_actions,
         )

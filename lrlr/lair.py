@@ -259,6 +259,7 @@ class LairState:
     unpathable: List[Land]
     log: Actionlog
     dist: Dict[str, int]
+    real_dist: Dict[str, int]
     total_gathers: int = 0
     wasted_damage: int = 0
     wasted_downgrades: int = 0
@@ -312,11 +313,14 @@ class Lair:
         conf: LairConf,
         log: Actionlog,
         map: gen_144p.Map144P,
+        ocean_map: gen_144p.Map144P,
     ):
         self.map = map
         self.conf = conf
         self.uncommitted: List[LogEntry] = []
         self.expected_ravages_left = 0
+
+        real_dist, _ = dijkstra.distances_from(ocean_map.land(src))
 
         dist, prev = construct_distance_map(conf, lands, map, src)
         self.gathers_to = {
@@ -332,7 +336,7 @@ class Lair:
             if key == LAIR_KEY or key not in prev or dist[key] == 0:
                 continue
             if conf.display_name_range:
-                land.display_name += f" [{dist[key]}]"
+                land.display_name += f" [{real_dist[key]}]"
             if dist[key] == 1:
                 # gathers_to itself, only let pieces that wouldn't die to ravage through
                 self.gathers_to[key] = land
@@ -349,6 +353,7 @@ class Lair:
             unpathable=unpathable,
             log=log,
             dist=dist,
+            real_dist=real_dist,
         )
         self.gather_cost = {
             key: self._calc_gather_cost(lands[key]) for key in self.gathers_to.keys()

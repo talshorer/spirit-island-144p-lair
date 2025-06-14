@@ -238,7 +238,7 @@ def process_diffview(
         zip(orig_lair.state.lands, thelair.lands),
         zip(orig_lair.state.unpathable, thelair.unpathable),
     ):
-        dist = thelair.dist[a.key]
+        dist = thelair.real_dist[a.key]
         all_diff.append((landdiff(a, b, args), dist))
     all_diff.sort(key=lambda tup: tup[args.diff_sort_range])
     all_diff_md = []
