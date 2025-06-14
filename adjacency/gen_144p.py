@@ -1,7 +1,8 @@
 import argparse
+import functools
 import itertools
 import sys
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Type, TypeVar, cast
 
 import json5
 
@@ -13,6 +14,15 @@ For the 144p game specifically -
 
 Generates the adjacency list of the map. Uses board_layout.py
 """
+
+
+T = TypeVar("T")
+
+
+class _MapMeta(type):
+    @functools.cache
+    def __call__(cls: Type[T], *args: Any, **kwargs: Any) -> T:
+        return super(_MapMeta, cast(_MapMeta, cls)).__call__(*args, **kwargs)
 
 
 def link_hub(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None:
@@ -47,7 +57,7 @@ def link_rim(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None
     t.edges[Edge.CLOCK9].link(u.edges[Edge.CLOCK3])
 
 
-class Map144P:
+class Map144P(metaclass=_MapMeta):
     def __init__(
         self,
         with_ocean: bool = True,

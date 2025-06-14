@@ -9,17 +9,7 @@ import json5
 
 from . import dijkstra, gen_144p
 
-map: Optional[gen_144p.Map144P] = None
 dijstra_cache: Dict[str, Tuple[Dict[str, int], Dict[str, str]]] = {}
-
-
-def ensure_map(
-    weaves: Optional[str] = None,
-    with_ocean: bool = True,
-) -> None:
-    global map
-    if map is None:
-        map = gen_144p.Map144P(with_ocean=with_ocean, weave_file=weaves)
 
 
 def tryone(
@@ -35,8 +25,7 @@ def tryone(
     Dict[str, int],
     Dict[str, List[str]],
 ]:
-    ensure_map(weaves, with_ocean)
-    assert map
+    map = gen_144p.Map144P(with_ocean=with_ocean, weave_file=weaves)
     all_dist: Dict[str, int] = {}
     all_paths: Dict[str, List[str]] = {}
     for src in lands:
@@ -61,8 +50,7 @@ def tryone(
 
 
 def tryone_no_dist(lands: List[str]) -> Tuple[Optional[int], List[str]]:
-    ensure_map()
-    assert map
+    map = gen_144p.Map144P()
     try:
         for land in lands:
             map.land(land)
