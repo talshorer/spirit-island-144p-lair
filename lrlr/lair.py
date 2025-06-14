@@ -339,7 +339,10 @@ class Lair:
                 self.gathers_to[key] = land
                 self.r1.append(land)
                 r2.append(land)
-            elif self._r1_gathers_to(land, dist) is not None:
+            elif (
+                self._r1_gathers_to(land, dist) is not None
+                and dist[land.key] == real_dist[land.key]
+            ):
                 r2.append(land)
             else:
                 unpathable.append(land)
