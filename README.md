@@ -20,6 +20,7 @@ LRLR optimization takes its input in the form of four files:
   - `blue_lair`/`orange_lair`: Configuration for each Lair's innate. An Object with the following keys:
     - `reserve_gathers`: Amount of gathers to be manually reserved from the innate's third threshold. This many gathers will not be performed, allowing players to instead gather through Finder adjacency for other purposes.
     - `max_range`: Maximum range to perform gathers. Matches the Lair's Air element.
+- `config/turnX/actions.csv` - list of weaved lands, each in the form `"land,land"`, e.g. `"🍪S4,😎R4"`.
 
 The LRLR optimization tool can be run like
 ```
@@ -30,6 +31,7 @@ The possible output types are:
 - `log`: Output the Lair's full action sequence in detail to be used as the Lair's turn submission.
 - `diff`: Output the initial and final state of surrounding lands that were changed by the Lair's actions.
 - `cat-cafe`: Output a CSV format that is compatible with the [Cat Cafe Chain of Custody](https://docs.google.com/spreadsheets/d/1x9654XIyF7MKBAcl5Itv4OQ9JLdwQlXY1-Y3E6svHwY) document, to update it with the turn's events.
+- `actions.csv`: Output the Lair's full action sequence in CSV format compatible with `config/turnX/actions.csv` files.
 
 Additional useful arguments include:
 - `--split $DIRECTORY`: Split log/diff output into files of the correct size to be sent as discord messages. Those files will use server emojis from the _Spirit Island - Second Wave_ discord server.
