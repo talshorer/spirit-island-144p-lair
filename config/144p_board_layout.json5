@@ -141,6 +141,18 @@
         clock3: {
           board: "👻V",
           edge: "clock3",
+        }, // clock6/clock9 not connected
+      },
+      corners: {}, // all corners are implicit from edges
+    },
+    {
+      power: "dream",
+      board: "👻N",
+      layout: "E",
+      edges: {
+        clock6: {
+          board: "👻W",
+          edge: "clock6",
         }, // clock3/clock9 not connected
       },
       corners: {}, // all corners are implicit from edges
@@ -160,6 +172,7 @@
         "⚡U3",
         "🏝️S8",
         "🦋P8",
+        "👻N5",
       ],
     },
     {
