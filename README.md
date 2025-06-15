@@ -52,3 +52,11 @@ Run
 python3 -m lrlr.missing_start_data --turn T --range R
 ```
 to get a list of all lands in range `R` that are missing data in `config/turn{T}/start.csv`. This is useful during data collection for a for a specific turn.
+
+### New Action Id
+
+Run
+```
+python3 -m lrlr.new_action_id --turn T
+```
+to get an unused action id to use for a new action in `actions.csv`. This is useful because actions may be unordered in regards to their id, providing an easy way to get a new unique id.
