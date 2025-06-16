@@ -158,6 +158,18 @@
       corners: {}, // all corners are implicit from edges
     },
     {
+      power: "dream",
+      board: "👻K",
+      layout: "B",
+      edges: {
+        clock6: {
+          board: "👻N",
+          edge: "clock3",
+        }, // clock3/clock9 not connected
+      },
+      corners: {}, // all corners are implicit from edges
+    },
+    {
       power: "cast_down",
       board: "🤖S",
       weave: [
@@ -172,7 +184,7 @@
         "⚡U3",
         "🏝️S8",
         "🦋P8",
-        "👻N5",
+        "👻K5",
       ],
     },
     {
