@@ -24,7 +24,7 @@ LAIR_KEY = "LAIR"
 
 
 def stringify_pieces(it: Iterator[Tuple[str, int]]) -> str:
-    return " ".join(f"{cnt} {piece}" for piece, cnt in it if cnt) or "CLEAR"
+    return " ".join(f"{cnt} {piece}" for piece, cnt in it if (cnt and piece)) or "CLEAR"
 
 
 class Land:
@@ -137,13 +137,13 @@ class Void(_PieceType):
 
     @classmethod
     def name(cls, pn: PieceNames) -> str:
-        return "void"
+        return ""
 
 
 class Explorer(_PieceType):
     health = 1
     fear = 0
-    response = None
+    response = Void
 
     @classmethod
     def select(cls, land: Land) -> Pieces:
@@ -609,20 +609,18 @@ class Lair:
     def _damage(self, land: Land, tipe: PieceType, dmg: int) -> int:
         assert land.key in self.gathers_to
 
-        respond_to: Optional[Land] = None
-        if tipe.response:
-            if land.dahan.cnt:
-                respond_to = land
-            else:
-                if self.state.dist[land.key] == 1:
-                    respond_to = self.state.r0
-                else:
-                    respond_to = self.gathers_to[land.key]
-            assert respond_to
-            response = tipe.response.select_mr(respond_to)
+        respond_to: Optional[Land]
+        if land.dahan.cnt:
+            respond_to = land
         else:
-            response = Void.new()
+            if self.state.dist[land.key] == 1:
+                respond_to = self.state.r0
+            else:
+                respond_to = self.gathers_to[land.key]
+        assert respond_to
 
+        assert tipe.response
+        response = tipe.response.select_mr(respond_to)
         kill = self._xchg(land, tipe, response, dmg // tipe.health)
         if kill:
             self._noncommit_entry(
@@ -630,12 +628,8 @@ class Lair:
                     action=Action.DESTROY,
                     src_land=land.display_name,
                     src_piece=tipe.name(self.conf.piece_names),
-                    tgt_land=respond_to.display_name if respond_to else "",
-                    tgt_piece=(
-                        tipe.response.name(self.conf.piece_names)
-                        if tipe.response
-                        else ""
-                    ),
+                    tgt_land=respond_to.display_name,
+                    tgt_piece=tipe.response.name(self.conf.piece_names),
                     count=kill,
                 )
             )
