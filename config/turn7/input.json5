@@ -8,7 +8,7 @@
     max_range: 3,
   },
   orange_lair: {
-    max_range: 5,
+    max_range: 6,
     reserve_gathers: 73,
   },
   ignore_lands: [
