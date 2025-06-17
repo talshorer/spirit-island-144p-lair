@@ -9,11 +9,12 @@
   },
   orange_lair: {
     max_range: 6,
-    reserve_gathers: 73,
+    reserve_gathers: 77,
   },
   ignore_lands: [
     "💖P1", // range 4, force orange to slurp this via reserved gathers
     "⚡T8", // force slurp as LRLR request
+    "⚡T6", // only manual slurp
   ],
   priority_lands: [],
   leave_behind: {},
