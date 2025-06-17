@@ -38,18 +38,20 @@ LAIRL,,,1,,,Firestorm (Lixxi),23,,,
 😎T2M,,,2,,,The Wounded Wilds Turns on Its Assailants (palimpsest),32,,,
 ,LAIRL,,,2,,Military Repsponse,33,32,,
 🌵Q5J,,,,3,,Damage from Funny Bird Gaming,103,,,
-🌵P5M,🌵P4W,,1,,,Manual slurp (1 gathers),104,,,lair_orange
-🌵P4W,🌵Q3M,,4,7,,Manual slurp (11 gathers),105,,,lair_orange
+🌵P2M,🌵P5M,1,1,,,Manual slurp (2 gathers),13,,,lair_orange
+🌵P5M,🌵P4W,1,2,,,Manual slurp (3 gathers),104,,,lair_orange
+🌵P4W,🌵Q3M,1,5,7,,Manual slurp (13 gathers),105,,,lair_orange
 🌵Q5J,🌵Q3M,,,7,,Manual slurp (7 gathers),106,,,lair_orange
-🌵Q3M,,,4,14,,Forests of Living Obsidian (palimpsest),107,,,lair_orange
+🌵Q3M,,1,5,14,,Forests of Living Obsidian (palimpsest),107,,,lair_orange
 🌵Q3M,🌵Q2S,,,,2,FOLO Dahan Push,108,107,,lair_orange
 🌵Q2S,,,1,,,Constant Raiding,109,108,,lair_orange
-,🌵Q2S,,,4,,Military Response (🌵Q3 kills),110,107,,lair_orange
+,🌵Q2S,,1,5,,Military Response (🌵Q3 kills),110,107,,lair_orange
 ,🌵Q2S,,,1,,Military Response (🌵Q2 kills),111,109,,lair_orange
-🌵Q2S,,,,12,,Forests of Living Obsidian (palimpsest),112,,,lair_orange
+🌵Q2S,,,1,13,,Forests of Living Obsidian (palimpsest),112,,,lair_orange
 🌵Q2S,🌵Q1J,,,,1,FOLO Dahan Push 1,113,112,,lair_orange
 🌵Q2S,🌵Q3M,,,,5,FOLO Dahan Push 2,114,112,,lair_orange
 🌵Q1J,,,,1,,Constant Raiding,115,113,,lair_orange
+,🌵Q6W,,,1,,Military Response (🌵Q2 kills),14,112,,lair_orange
 💖P1M,💖P7J,,4,,,Manual slurp through 💖P6J 💖P5S (12 gathers),116,,,lair_orange
 ⚡T8S,LAIRL,,,1,,Manual slurp (4 gathers),0,,,lair_orange
 🐍R2S,🐍R3M,1,2,2,,Manual slurp (5 gathers),117,,,lair_orange
