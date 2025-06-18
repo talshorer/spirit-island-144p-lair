@@ -158,6 +158,7 @@ class Split:
                     f"{header_prefix} [{i + 1}/{len(self.files)}]{header_suffix}\n".encode()
                 )
                 f.write(content)
+                f.write(b"\n")
 
 
 def print_or_split(
