@@ -64,7 +64,9 @@ class CsvAction:
             key = key[:-1]
             if key in lands.near:
                 land = lands.near[key]
-                assert land_type == land.land_type
+                assert (
+                    land_type == land.land_type
+                ), f"Land type mismatch in action {self.action_id}, csv says {land_type} but actual is {land.land_type}"
                 allow_negative = False
             else:
                 allow_negative = True
