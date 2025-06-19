@@ -7,7 +7,7 @@ shift 2
 OUTPUTS="log diff"
 
 for phase in before after; do
-    git checkout ${$phase}
+    git checkout ${!phase}
     tgt=$phase
     for output in $OUTPUTS; do
         python3 -m lrlr.main "$@" \
