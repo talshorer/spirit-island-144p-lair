@@ -1,8 +1,20 @@
+import abc
 import argparse
 import functools
 import itertools
 import sys
-from typing import Any, Callable, Dict, Optional, Type, TypeVar, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterator,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    cast,
+)
 
 import json5
 
@@ -55,6 +67,55 @@ def link_rim(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None
     r.edges[Edge.CLOCK9].link(s.edges[Edge.CLOCK3])
     s.edges[Edge.CLOCK9].link(t.edges[Edge.CLOCK3])
     t.edges[Edge.CLOCK9].link(u.edges[Edge.CLOCK3])
+
+
+class DreamLinker(abc.ABC, Generic[T]):
+    @property
+    @abc.abstractmethod
+    def key(self) -> str:
+        pass
+
+    @abc.abstractmethod
+    def get(self, board: Board, key: str) -> T:
+        pass
+
+    @abc.abstractmethod
+    def extract_second(self, data: Any) -> Iterator[Tuple[str, str]]:
+        pass
+
+    @abc.abstractmethod
+    def link(self, first: T, second: T) -> None:
+        pass
+
+
+class DreamEdgeLinker(DreamLinker):
+    key = "edges"
+
+    def get(self, board: Board, key: str) -> BoardEdge:
+        edge = getattr(Edge, key.upper())
+        return board.edges[edge]
+
+    def extract_second(self, data: Any) -> Iterator[Tuple[str, str]]:
+        yield (data["board"], data["edge"])
+
+    def link(self, first: BoardEdge, second: BoardEdge) -> None:
+        first.link(second)
+
+
+class DreamCornerLinker(DreamLinker):
+    key = "corners"
+
+    def get(self, board: Board, key: str) -> Land:
+        corner = getattr(Corner, key.upper())
+        land_number = board.layout.get_corner(corner)
+        return board.lands[land_number]
+
+    def extract_second(self, data: Any) -> Iterator[Tuple[str, str]]:
+        for item in data:
+            yield item["board"], item["corner"]
+
+    def link(self, first: Land, second: Land) -> None:
+        first.link(second)
 
 
 class Map144P(metaclass=_MapMeta):
@@ -204,42 +265,27 @@ class Map144P(metaclass=_MapMeta):
     def _deeps(self, data: Dict[str, Any]) -> None:
         self.land(data["land"]).sink(deeps=True)
 
-    @staticmethod
-    def _get_dream_edge(board: Board, edge_key: str) -> BoardEdge:
-        assert edge_key.islower()
-        edge = getattr(Edge, edge_key.upper())
-        return board.edges[edge]
-
-    @staticmethod
-    def _get_dream_corner(board: Board, corner_key: str) -> Land:
-        assert corner_key.islower()
-        corner = getattr(Corner, corner_key.upper())
-        land_number = board.layout.get_corner(corner)
-        return board.lands[land_number]
+    def _dream_inner(
+        self,
+        board: Board,
+        data: Dict[str, Any],
+        linker_type: Type[DreamLinker],
+    ) -> None:
+        linker = linker_type()
+        for key, value in data[linker.key].items():
+            assert key.islower()
+            first = linker.get(board, key)
+            for second_board, second_key in linker.extract_second(value):
+                second = linker.get(self.boards[second_board], second_key)
+                linker.link(first, second)
 
     def _dream(self, data: Dict[str, Any]) -> None:
         layout = getattr(Layout, data["layout"])
         board = Board(data["board"], layout, with_ocean=self._with_ocean)
         self.boards[board.name] = board
 
-        for edge_key, edge_value in data["edges"].items():
-            assert edge_key.islower()
-            edge = self._get_dream_edge(board, edge_key)
-            other_edge = self._get_dream_edge(
-                self.boards[edge_value["board"]],
-                edge_value["edge"],
-            )
-            edge.link(other_edge)
-
-        for corner_key, corner_values in data["corners"].items():
-            assert corner_key.islower()
-            corner = self._get_dream_corner(board, corner_key)
-            for corner_value in corner_values:
-                other_corner = self._get_dream_corner(
-                    self.boards[corner_value["board"]],
-                    corner_value["corner"],
-                )
-                corner.link(other_corner)
+        self._dream_inner(board, data, DreamEdgeLinker)
+        self._dream_inner(board, data, DreamCornerLinker)
 
     def land(self, key: str) -> Land:
         return self.boards[key[:-1]].lands[int(key[-1])]
