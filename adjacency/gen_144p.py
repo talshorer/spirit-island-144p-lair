@@ -272,7 +272,9 @@ class Map144P(metaclass=_MapMeta):
         linker_type: Type[DreamLinker],
     ) -> None:
         linker = linker_type()
-        for key, value in data[linker.key].items():
+        if (it := data.get(linker.key)) is None:
+            return
+        for key, value in it.items():
             assert key.islower()
             first = linker.get(board, key)
             for second_board, second_key in linker.extract_second(value):

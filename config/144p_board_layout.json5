@@ -76,7 +76,6 @@
           edge: "clock3",
         }, // clock3/clock6 not connected
       },
-      corners: {}, // all corners are implicit from edges
     },
     {
       power: "cast_down",
@@ -119,7 +118,6 @@
           edge: "clock3",
         }, // clock3/clock6 not connected
       },
-      corners: {}, // all corners are implicit from edges
     },
     {
       power: "dream",
@@ -131,7 +129,6 @@
           edge: "clock3",
         }, // clock3/clock9 not connected
       },
-      corners: {}, // all corners are implicit from edges
     },
     {
       power: "dream",
@@ -143,7 +140,6 @@
           edge: "clock3",
         }, // clock6/clock9 not connected
       },
-      corners: {}, // all corners are implicit from edges
     },
     {
       power: "dream",
@@ -155,7 +151,6 @@
           edge: "clock6",
         }, // clock3/clock9 not connected
       },
-      corners: {}, // all corners are implicit from edges
     },
     {
       power: "dream",
@@ -167,7 +162,6 @@
           edge: "clock3",
         }, // clock3/clock9 not connected
       },
-      corners: {}, // all corners are implicit from edges
     },
     {
       power: "cast_down",
