@@ -140,6 +140,12 @@
           edge: "clock3",
         }, // clock6/clock9 not connected
       },
+      archipelago: [
+        "🧩R",
+        "🧩S",
+        "🧩T",
+        "🧩U",
+      ],
     },
     {
       power: "dream",

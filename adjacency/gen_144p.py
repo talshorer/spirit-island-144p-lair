@@ -80,6 +80,10 @@ class DreamLinker(abc.ABC, Generic[T]):
         pass
 
     @abc.abstractmethod
+    def extract_first(self, data: Any) -> Iterator[Tuple[str, str]]:
+        pass
+
+    @abc.abstractmethod
     def extract_second(self, data: Any) -> Iterator[Tuple[str, str]]:
         pass
 
@@ -92,8 +96,12 @@ class DreamEdgeLinker(DreamLinker):
     key = "edges"
 
     def get(self, board: Board, key: str) -> BoardEdge:
+        assert key.islower()
         edge = getattr(Edge, key.upper())
         return board.edges[edge]
+
+    def extract_first(self, data: Any) -> Iterator[Tuple[str, str]]:
+        return data.items()
 
     def extract_second(self, data: Any) -> Iterator[Tuple[str, str]]:
         yield (data["board"], data["edge"])
@@ -106,9 +114,13 @@ class DreamCornerLinker(DreamLinker):
     key = "corners"
 
     def get(self, board: Board, key: str) -> Land:
+        assert key.islower()
         corner = getattr(Corner, key.upper())
         land_number = board.layout.get_corner(corner)
         return board.lands[land_number]
+
+    def extract_first(self, data: Any) -> Iterator[Tuple[str, str]]:
+        return data.items()
 
     def extract_second(self, data: Any) -> Iterator[Tuple[str, str]]:
         for item in data:
@@ -116,6 +128,23 @@ class DreamCornerLinker(DreamLinker):
 
     def link(self, first: Land, second: Land) -> None:
         first.link(second)
+
+
+class DreamArchipelagoLinker(DreamLinker):
+    key = "archipelago"
+
+    def get(self, board: Board, key: str) -> Board:
+        return board
+
+    def extract_first(self, data: Any) -> Iterator[Tuple[str, str]]:
+        for item in data:
+            yield "", item
+
+    def extract_second(self, data: Any) -> Iterator[Tuple[str, str]]:
+        yield data, ""
+
+    def link(self, first: Board, second: Board) -> None:
+        first.link_archipelago(second)
 
 
 class Map144P(metaclass=_MapMeta):
@@ -274,8 +303,7 @@ class Map144P(metaclass=_MapMeta):
         linker = linker_type()
         if (it := data.get(linker.key)) is None:
             return
-        for key, value in it.items():
-            assert key.islower()
+        for key, value in linker.extract_first(it):
             first = linker.get(board, key)
             for second_board, second_key in linker.extract_second(value):
                 second = linker.get(self.boards[second_board], second_key)
@@ -288,6 +316,7 @@ class Map144P(metaclass=_MapMeta):
 
         self._dream_inner(board, data, DreamEdgeLinker)
         self._dream_inner(board, data, DreamCornerLinker)
+        self._dream_inner(board, data, DreamArchipelagoLinker)
 
     def land(self, key: str) -> Land:
         return self.boards[key[:-1]].lands[int(key[-1])]
