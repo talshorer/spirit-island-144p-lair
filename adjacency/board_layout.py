@@ -54,16 +54,17 @@ class Land:
 
     def sink(self, deeps: bool) -> None:
         for link in self.links.values():
+            other = link.land
             if deeps and link.distance == 1:
                 if (ocean := self.board.lands.get(0)) is not None:
-                    link.land.link(ocean)
+                    other.link(ocean)
                 else:
-                    link.land.coastal = True
+                    other.coastal = True
                 for board in self.board.archipelago_links.values():
                     for across in board.lands.values():
                         if across.coastal:
-                            link.land.link(across, distance=2)
-            del link.land.links[self.key]
+                            other.link(across, distance=2)
+            del other.links[self.key]
         del self.board.lands[self.num]
 
 
