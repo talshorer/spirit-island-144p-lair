@@ -59,11 +59,10 @@ class Land:
                     link.land.link(ocean)
                 else:
                     link.land.coastal = True
-                # we're coastal now, link archipelago!
                 for board in self.board.archipelago_links.values():
-                    for other in board.lands.values():
-                        if other.coastal:
-                            link.land.link(other, distance=2)
+                    for across in board.lands.values():
+                        if across.coastal:
+                            link.land.link(across, distance=2)
             del link.land.links[self.key]
         del self.board.lands[self.num]
 
