@@ -60,7 +60,7 @@ class Land:
                     other.link(ocean)
                 else:
                     other.coastal = True
-                for board in self.board.archipelago_links.values():
+                for board in other.board.archipelago_links.values():
                     for across in board.lands.values():
                         if across.coastal:
                             other.link(across, distance=2)
