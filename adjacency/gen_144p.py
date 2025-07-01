@@ -13,7 +13,6 @@ from typing import (
     Tuple,
     Type,
     TypeVar,
-    cast,
 )
 
 import json5
@@ -29,12 +28,6 @@ Generates the adjacency list of the map. Uses board_layout.py
 
 
 T = TypeVar("T")
-
-
-class _MapMeta(type):
-    @functools.cache
-    def __call__(cls: Type[T], *args: Any, **kwargs: Any) -> T:
-        return super(_MapMeta, cast(_MapMeta, cls)).__call__(*args, **kwargs)
 
 
 def link_hub(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None:
@@ -147,7 +140,8 @@ class DreamArchipelagoLinker(DreamLinker):
         first.link_archipelago(second)
 
 
-class Map144P(metaclass=_MapMeta):
+@functools.cache
+class Map144P:
     def __init__(
         self,
         with_ocean: bool = True,
