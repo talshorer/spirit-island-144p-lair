@@ -7,6 +7,7 @@ from typing import Any, Dict, Iterator, List, Tuple, cast
 
 import json5
 
+from adjacency.anymap import MapConf
 from adjacency.board_layout import Terrain
 from adjacency.gen_144p import Map144P
 
@@ -245,8 +246,18 @@ class Parser:
 
         lands[lair.LAIR_KEY], src = self._parse_initial_lair()
 
-        map = Map144P(with_ocean=False, weave_file=self._path(self.WEAVES))
-        ocean_map = Map144P(with_ocean=True, weave_file=self._path(self.WEAVES))
+        map = Map144P(
+            MapConf(
+                with_ocean=False,
+                weave_file=self._path(self.WEAVES),
+            )
+        )
+        ocean_map = Map144P(
+            MapConf(
+                with_ocean=True,
+                weave_file=self._path(self.WEAVES),
+            )
+        )
 
         with self._open(self.START) as f:
             it = iter(csv.reader(f))

@@ -7,7 +7,7 @@ from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 import json5
 
-from . import dijkstra, gen_144p
+from . import anymap, dijkstra, gen_144p
 
 dijstra_cache: Dict[str, Tuple[Dict[str, int], Dict[str, str]]] = {}
 
@@ -25,7 +25,7 @@ def tryone(
     Dict[str, int],
     Dict[str, List[str]],
 ]:
-    map = gen_144p.Map144P(with_ocean=with_ocean, weave_file=weaves)
+    map = gen_144p.Map144P(anymap.MapConf(with_ocean=with_ocean, weave_file=weaves))
     all_dist: Dict[str, int] = {}
     all_paths: Dict[str, List[str]] = {}
     for src in lands:
@@ -50,7 +50,7 @@ def tryone(
 
 
 def tryone_no_dist(lands: List[str]) -> Tuple[Optional[int], List[str]]:
-    map = gen_144p.Map144P()
+    map = gen_144p.Map144P(anymap.MapConf())
     try:
         for land in lands:
             map.land(land)
@@ -143,9 +143,9 @@ def main() -> None:
                 print(dist, sorted(by_dist[dist]))
         return
 
-    map = gen_144p.Map144P()
-    blue_diags = list(diags(map.data["blue"]["spokes"]))
-    orange_diags = list(diags(map.data["orange"]["spokes"]))
+    map = gen_144p.Map144P(anymap.MapConf())
+    blue_diags = list(diags(map._data["blue"]["spokes"]))
+    orange_diags = list(diags(map._data["orange"]["spokes"]))
     res = []
     total_tasks = len(blue_diags) * len(orange_diags) * 8 * 8 * 8 * 8
     start = time.monotonic()

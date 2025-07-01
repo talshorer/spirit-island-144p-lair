@@ -1,0 +1,56 @@
+{
+  boards: [
+    {
+      layout: "A",
+    },
+    {
+      layout: "B",
+      edges: {
+        clock3: {
+          board: "A",
+          edge: "clock6",
+        },
+      },
+    },
+    {
+      layout: "C",
+      edges: {
+        clock3: {
+          board: "B",
+          edge: "clock6",
+        },
+      },
+    },
+    {
+      layout: "D",
+      edges: {
+        clock3: {
+          board: "C",
+          edge: "clock6",
+        },
+      },
+    },
+    {
+      layout: "E",
+      edges: {
+        clock3: {
+          board: "D",
+          edge: "clock6",
+        },
+      },
+    },
+    {
+      layout: "F",
+      edges: {
+        clock3: {
+          board: "E",
+          edge: "clock6",
+        },
+        clock6: {
+          board: "A",
+          edge: "clock3",
+        },
+      },
+    },
+  ],
+}

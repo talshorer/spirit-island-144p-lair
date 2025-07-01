@@ -1,33 +1,18 @@
-import abc
 import argparse
 import functools
 import itertools
-import sys
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    Iterator,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-)
+from typing import Callable
 
 import json5
 
-from . import dijkstra
-from .board_layout import Board, BoardEdge, Corner, Edge, Land, Layout
+from . import anymap
+from .board_layout import Board, Edge, Layout
 
 """
 For the 144p game specifically -
 
 Generates the adjacency list of the map. Uses board_layout.py
 """
-
-
-T = TypeVar("T")
 
 
 def link_hub(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None:
@@ -62,104 +47,18 @@ def link_rim(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None
     t.edges[Edge.CLOCK9].link(u.edges[Edge.CLOCK3])
 
 
-class DreamLinker(abc.ABC, Generic[T]):
-    @property
-    @abc.abstractmethod
-    def key(self) -> str:
-        pass
-
-    @abc.abstractmethod
-    def get(self, board: Board, key: str) -> T:
-        pass
-
-    @abc.abstractmethod
-    def extract_first(self, data: Any) -> Iterator[Tuple[str, str]]:
-        pass
-
-    @abc.abstractmethod
-    def extract_second(self, data: Any) -> Iterator[Tuple[str, str]]:
-        pass
-
-    @abc.abstractmethod
-    def link(self, first: T, second: T) -> None:
-        pass
-
-
-class DreamEdgeLinker(DreamLinker):
-    key = "edges"
-
-    def get(self, board: Board, key: str) -> BoardEdge:
-        assert key.islower()
-        edge = getattr(Edge, key.upper())
-        return board.edges[edge]
-
-    def extract_first(self, data: Any) -> Iterator[Tuple[str, str]]:
-        return data.items()
-
-    def extract_second(self, data: Any) -> Iterator[Tuple[str, str]]:
-        yield (data["board"], data["edge"])
-
-    def link(self, first: BoardEdge, second: BoardEdge) -> None:
-        first.link(second)
-
-
-class DreamCornerLinker(DreamLinker):
-    key = "corners"
-
-    def get(self, board: Board, key: str) -> Land:
-        assert key.islower()
-        corner = getattr(Corner, key.upper())
-        land_number = board.layout.get_corner(corner)
-        return board.lands[land_number]
-
-    def extract_first(self, data: Any) -> Iterator[Tuple[str, str]]:
-        return data.items()
-
-    def extract_second(self, data: Any) -> Iterator[Tuple[str, str]]:
-        for item in data:
-            yield item["board"], item["corner"]
-
-    def link(self, first: Land, second: Land) -> None:
-        first.link(second)
-
-
-class DreamArchipelagoLinker(DreamLinker):
-    key = "archipelago"
-
-    def get(self, board: Board, key: str) -> Board:
-        return board
-
-    def extract_first(self, data: Any) -> Iterator[Tuple[str, str]]:
-        for item in data:
-            yield "", item
-
-    def extract_second(self, data: Any) -> Iterator[Tuple[str, str]]:
-        yield data, ""
-
-    def link(self, first: Board, second: Board) -> None:
-        first.link_archipelago(second)
-
-
 @functools.cache
-class Map144P:
-    def __init__(
-        self,
-        with_ocean: bool = True,
-        weave_file: Optional[str] = None,
-    ) -> None:
-        self._with_ocean = with_ocean
+class Map144P(anymap.Map):
+    def _load(self) -> None:
         with open("config/144p_board_layout.json5", encoding="utf-8") as f:
-            self.data = json5.load(f)
-        self.boards: Dict[str, Board] = {}
+            self._data = json5.load(f)
         self._load_continent("blue")
         self._load_continent("orange")
         self._connect_continents()
-        self._run_modifications()
-        if weave_file:
-            self._weave(weave_file)
+        self._run_modifications(self._data["modifications"])
 
     def _load_continent(self, name: str) -> None:
-        data = self.data[name]
+        data = self._data[name]
 
         for islet in data["rim"]:
             self._load_islet(islet, link_rim)
@@ -213,7 +112,7 @@ class Map144P:
 
             hub1_letter = "U" if (i % 2 == 0) else "Q"
             hub1_board = self.boards[f"{hub1}{hub1_letter}"]
-            if self._with_ocean:
+            if self._conf.with_ocean:
                 for spoke_letter in "PQR":
                     self.boards[f"{spoke}{spoke_letter}"].link_archipelago(hub1_board)
                 self.boards[f"{rim}Q"].link_archipelago(hub1_board)
@@ -248,120 +147,24 @@ class Map144P:
 
     def _load_board(self, islet: str, letter: str) -> Board:
         name = f"{islet}{letter}"
-        layout = getattr(Layout, self.data["boards"][name])
-        board = Board(name, layout, with_ocean=self._with_ocean)
+        layout = getattr(Layout, self._data["boards"][name])
+        board = Board(name, layout, with_ocean=self._conf.with_ocean)
         self.boards[name] = board
         return board
 
     def _connect_continents(self) -> None:
-        if not self._with_ocean:
+        if not self._conf.with_ocean:
             return
 
         for rim1, rim2 in zip(
-            self.data["blue"]["rim"],  # 🧀
-            self.data["orange"]["rim"],  # 🍌
+            self._data["blue"]["rim"],  # 🧀
+            self._data["orange"]["rim"],  # 🍌
         ):
             for letter in "PRSTU":
                 rim1_board = self.boards[f"{rim1}{letter}"]
                 rim2_board = self.boards[f"{rim2}{letter}"]
                 rim1_board.link_archipelago(rim2_board)
 
-    def _run_modifications(self) -> None:
-        for mod in self.data["modifications"]:
-            match mod["power"]:
-                case "cast_down":
-                    self._cast_down(mod)
-                case "deeps":
-                    self._deeps(mod)
-                case "dream":
-                    self._dream(mod)
-                case unknown:
-                    raise ValueError(f"Unknown modification type {unknown}")
-
-    def _cast_down(self, data: Dict[str, Any]) -> None:
-        board = data["board"]
-        self.boards[board].cast_down()
-        del self.boards[board]
-        for land in data.get("weave", ()):
-            self.land(land).sink(deeps=False)
-
-    def _deeps(self, data: Dict[str, Any]) -> None:
-        self.land(data["land"]).sink(deeps=True)
-
-    def _dream_inner(
-        self,
-        board: Board,
-        data: Dict[str, Any],
-        linker_type: Type[DreamLinker],
-    ) -> None:
-        linker = linker_type()
-        if (it := data.get(linker.key)) is None:
-            return
-        for key, value in linker.extract_first(it):
-            first = linker.get(board, key)
-            for second_board, second_key in linker.extract_second(value):
-                second = linker.get(self.boards[second_board], second_key)
-                linker.link(first, second)
-
-    def _dream(self, data: Dict[str, Any]) -> None:
-        layout = getattr(Layout, data["layout"])
-        board = Board(data["board"], layout, with_ocean=self._with_ocean)
-        self.boards[board.name] = board
-
-        self._dream_inner(board, data, DreamEdgeLinker)
-        self._dream_inner(board, data, DreamCornerLinker)
-        self._dream_inner(board, data, DreamArchipelagoLinker)
-
-    def land(self, key: str) -> Land:
-        return self.boards[key[:-1]].lands[int(key[-1])]
-
-    def _weave(self, path: str) -> None:
-        with open(path, encoding="utf-8") as f:
-            data = json5.load(f)
-        for weave in data:
-            key1, key2 = weave.split(",")
-            try:
-                self.land(key1).link(self.land(key2), 0)
-            except KeyError:
-                pass
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--no-archipelago",
-        action="store_true",
-        help="Don't link archipelagos for distance calculation",
-    )
-    parser.add_argument(
-        "--weaves",
-        help="Path to weaves file",
-    )
-    subparsers = parser.add_subparsers(dest="sub", required=True)
-    subparsers.add_parser("json5")
-    path_subparser = subparsers.add_parser("path")
-    path_subparser.add_argument("src")
-    path_subparser.add_argument("dst")
-    args = parser.parse_args()
-
-    map = Map144P(with_ocean=not args.no_archipelago, weave_file=args.weaves)
-
-    match args.sub:
-        case "json5":
-            adj = {
-                land.key: list(land.links.keys())
-                for board in map.boards.values()
-                for land in board.lands.values()
-            }
-            json5.dump(adj, sys.stdout, indent=2, sort_keys=True, ensure_ascii=False)
-            print()
-        case "path":
-            dist, prev = dijkstra.distances_from(map.land(args.src))
-            print(
-                dist[args.dst],
-                " ".join(dijkstra.construct_path(prev, args.src, args.dst)),
-            )
-
 
 if __name__ == "__main__":
-    main()
+    anymap.main(Map144P, argparse.ArgumentParser())
