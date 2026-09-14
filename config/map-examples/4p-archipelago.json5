@@ -1,0 +1,36 @@
+// G-> <-F
+// H-> <-E
+{
+  boards: [
+    {
+      layout: "G",
+    },
+    {
+      layout: "H",
+      edges: {
+        clock9: {
+          board: "G",
+          edge: "clock3",
+        },
+      },
+    },
+    {
+      layout: "E",
+      archipelago: [
+        "H",
+      ],
+    },
+    {
+      layout: "F",
+      edges: {
+        clock9: {
+          board: "E",
+          edge: "clock3",
+        },
+      },
+      archipelago: [
+        "G",
+      ],
+    },
+  ],
+}
