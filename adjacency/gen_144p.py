@@ -47,8 +47,7 @@ def link_rim(p: Board, q: Board, r: Board, s: Board, t: Board, u: Board) -> None
     t.edges[Edge.CLOCK9].link(u.edges[Edge.CLOCK3])
 
 
-@functools.cache
-class Map144P(anymap.Map):
+class _Map144P(anymap.Map):
     def _load(self) -> None:
         with open("config/144p_board_layout.json5", encoding="utf-8") as f:
             self._data = json5.load(f)
@@ -166,5 +165,10 @@ class Map144P(anymap.Map):
                 rim1_board.link_archipelago(rim2_board)
 
 
+@functools.cache
+class Map144P(_Map144P):
+    pass
+
+
 if __name__ == "__main__":
-    anymap.main(Map144P, argparse.ArgumentParser())
+    anymap.main(_Map144P, argparse.ArgumentParser())
